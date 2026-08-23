@@ -117,11 +117,6 @@ object RepositoryManager {
             name = "Karma",
             url = "https://raw.githubusercontent.com/Kraptor123/cs-Karma/refs/heads/master/repo.json",
             iconUrl = null
-        ),
-        RepositoryData(
-            name = "CNC",
-            url = "https://raw.githubusercontent.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/refs/heads/builds/CNC.json",
-            iconUrl = null
         )
     )
     private val GH_REGEX =
