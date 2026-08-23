@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.CommonActivity.activity
 import com.lagradost.cloudstream3.HomePageList
+import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainActivity
@@ -54,11 +55,20 @@ import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.EnumSet
 import java.util.concurrent.CopyOnWriteArrayList
 
 class HomeViewModel : ViewModel() {
     companion object {
+        private const val CACHE_TTL_HOURS = 4L
+        private const val STAGE1_PLUGIN_COUNT = 3
+        private const val STAGE1_TOTAL_TIMEOUT_MS = 8_000L
+        private const val STAGE2_TOTAL_TIMEOUT_MS = 15_000L
+        private const val TOTAL_LOAD_TIMEOUT_MS = 20_000L
+        private const val PER_PLUGIN_TIMEOUT_MS = 5_000L
+        private const val MAX_CONCURRENT_PLUGIN_LOADS = 2
+
         suspend fun getResumeWatching(): List<DataStoreHelper.ResumeWatchingResult>? {
             val resumeWatching = withContext(Dispatchers.IO) {
                 getAllResumeStateIds()?.mapNotNull { id ->
@@ -314,91 +324,131 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    private fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>) {
+        if (resource is Resource.Success) {
+            resource.value.forEach { home ->
+                home?.items?.forEach { list ->
+                    val filteredList = context?.filterHomePageListByFilmQuality(list) ?: list
+                    val key = list.name
+                    val existing = expandable[key]
+                    if (existing != null) {
+                        existing.list.list += filteredList.list
+                        existing.list.list = existing.list.list.distinctBy { it.url }
+                    } else {
+                        expandable[key] = ExpandableHomepageList(
+                            filteredList.copy(list = filteredList.list.toList()),
+                            1,
+                            false
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun load(): Job = ioSafe {
         repo = null
 
         _apiName.postValue("Home")
         _randomItems.postValue(listOf())
 
-        _page.postValue(Resource.Loading())
-        _preview.postValue(Resource.Loading())
         // cancel the current preview expand as that is no longer relevant
         addJob?.cancel()
 
-        val validAPIs = context?.filterProviderByPreferredMedia() ?: emptyList()
-        val allHomeData = validAPIs.amap { api ->
-            APIRepository(api).getMainPage(1, null)
+        val startTime = System.currentTimeMillis()
+        var cachedShown = false
+
+        // a. Try cache first
+        val cached = DataStoreHelper.getCachedHomeData()
+        if (cached != null) {
+            expandable.clear()
+            expandable.putAll(cached)
+            _page.postValue(Resource.Success(expandable))
+            cachedShown = true
         }
 
-        try {
-            expandable.clear()
-            allHomeData.forEach { resource ->
-                if (resource is Resource.Success) {
-                    resource.value.forEach { home ->
-                        home?.items?.forEach { list ->
-                            val filteredList =
-                                context?.filterHomePageListByFilmQuality(list) ?: list
-                            val key = list.name
-                            val existing = expandable[key]
-                            if (existing != null) {
-                                existing.list.list += filteredList.list
-                            } else {
-                                expandable[key] =
-                                    ExpandableHomepageList(
-                                        filteredList.copy(
-                                            list = filteredList.list.toList()
-                                        ), 1, false // home.hasNext
-                                    )
-                            }
-                        }
+        // b. Set _page to Loading if no cache was shown
+        if (!cachedShown) {
+            _page.postValue(Resource.Loading())
+            _preview.postValue(Resource.Loading())
+        }
+
+        // c. Get all valid plugins
+        val validAPIs = (context?.filterProviderByPreferredMedia() ?: emptyList()).shuffled()
+        if (validAPIs.isEmpty()) {
+            if (!cachedShown) {
+                _page.postValue(Resource.Success(emptyMap()))
+                _preview.postValue(Resource.Failure(false, "No plugins found"))
+            }
+            return@ioSafe
+        }
+
+        // d. Stage 1: Pick 3 random plugins
+        val stage1Plugins = validAPIs.take(STAGE1_PLUGIN_COUNT)
+        val stage2Plugins = validAPIs.drop(STAGE1_PLUGIN_COUNT)
+
+        suspend fun loadPlugins(plugins: List<MainAPI>, stageDeadline: Long) {
+            plugins.chunked(MAX_CONCURRENT_PLUGIN_LOADS).forEach { chunk ->
+                if (System.currentTimeMillis() - startTime > TOTAL_LOAD_TIMEOUT_MS) return@forEach
+                if (System.currentTimeMillis() - startTime > stageDeadline) return@forEach
+
+                chunk.amap { api ->
+                    withTimeoutOrNull(PER_PLUGIN_TIMEOUT_MS) {
+                        APIRepository(api).getMainPage(1, null)
+                    }
+                }.forEach { result ->
+                    if (result != null) {
+                        mergeHomeResult(result)
                     }
                 }
+                
+                // Post intermediate result
+                _page.postValue(Resource.Success(expandable))
             }
+        }
 
-            // Deduplicate items in each row
-            expandable.forEach { (_, exp) ->
-                exp.list.list = exp.list.list.distinctBy { it.url }
-            }
+        // Load Stage 1
+        loadPlugins(stage1Plugins, STAGE1_TOTAL_TIMEOUT_MS)
 
-            val allItems = expandable.values.flatMap { it.list.list }.distinctBy { it.url }
+        // Post Stage 1 result to Preview
+        updatePreviewFromExpandable()
 
-            previewResponses.clear()
-            previewResponsesAdded.clear()
+        // Load Stage 2
+        loadPlugins(stage2Plugins, STAGE2_TOTAL_TIMEOUT_MS)
 
-            //val home = data.value
-            if (allItems.isNotEmpty()) {
-                val shuffledItems = allItems.shuffled()
-                if (shuffledItems.isNotEmpty()) {
-                    val randomItems =
-                        context?.filterSearchResultByFilmQuality(shuffledItems)
-                            ?: shuffledItems
+        // Final Preview Update
+        updatePreviewFromExpandable()
 
-                    updatePreviewResponses(
-                        previewResponses,
-                        previewResponsesAdded,
-                        randomItems,
-                        3
-                    )
+        // g. Cache update
+        DataStoreHelper.cacheHomeData(expandable)
+    }
 
-                    _randomItems.postValue(randomItems)
-                    currentShuffledList = randomItems
+    private fun updatePreviewFromExpandable() {
+        val allItems = expandable.values.flatMap { it.list.list }.distinctBy { it.url }
+
+        if (allItems.isNotEmpty()) {
+            val shuffledItems = allItems.shuffled()
+            val randomItems = context?.filterSearchResultByFilmQuality(shuffledItems) ?: shuffledItems
+
+            viewModelScope.launchSafe {
+                previewResponses.clear()
+                previewResponsesAdded.clear()
+                updatePreviewResponses(
+                    previewResponses,
+                    previewResponsesAdded,
+                    randomItems,
+                    3
+                )
+
+                _randomItems.postValue(randomItems)
+                currentShuffledList = randomItems
+                
+                if (previewResponses.isNotEmpty()) {
+                    _preview.postValue(Resource.Success((previewResponsesAdded.size < currentShuffledList.size) to previewResponses))
+                } else if (_preview.value !is Resource.Success) {
+                    _preview.postValue(Resource.Failure(false, "No preview items"))
                 }
             }
-            if (previewResponses.isEmpty()) {
-                _preview.postValue(
-                    Resource.Failure(
-                        false,
-                        "No homepage responses"
-                    )
-                )
-            } else {
-                _preview.postValue(Resource.Success((previewResponsesAdded.size < currentShuffledList.size) to previewResponses))
-            }
-            _page.postValue(Resource.Success(expandable))
-        } catch (e: Exception) {
-            _randomItems.postValue(emptyList())
-            logError(e)
-            _page.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
         }
     }
 
