@@ -210,13 +210,6 @@ class HomeViewModel : ViewModel() {
     }
 
     private var onGoingLoad: Job? = null
-    private var isCurrentlyLoadingName: String? = null
-    private fun loadAndCancel(api: MainAPI) {
-        //println("loaded ${api.name}")
-        onGoingLoad?.cancel()
-        isCurrentlyLoadingName = api.name
-        onGoingLoad = load(api)
-    }
 
     data class ExpandableHomepageList(
         var list: HomePageList,
@@ -302,7 +295,12 @@ class HomeViewModel : ViewModel() {
         }
 
         val add = addItems.amap { searchResponse ->
-            repo?.load(searchResponse.url)
+            val api = getApiFromNameNull(searchResponse.apiName)
+            if (api != null) {
+                APIRepository(api).load(searchResponse.url)
+            } else {
+                null
+            }
         }.mapNotNull { if (it != null && it is Resource.Success) it.value else null }
         current.addAll(add)
         return add.size
@@ -316,103 +314,92 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    private fun load(api: MainAPI): Job = ioSafe {
-        repo = //if (api != null) {
-            APIRepository(api)
-        //} else {
-        //    autoloadRepo()
-        //}
+    private fun load(): Job = ioSafe {
+        repo = null
 
-        _apiName.postValue(repo?.name)
+        _apiName.postValue("Home")
         _randomItems.postValue(listOf())
-
-        if (repo?.hasMainPage != true) {
-            _page.postValue(Resource.Success(emptyMap()))
-            _preview.postValue(Resource.Failure(false, "No homepage"))
-            return@ioSafe
-        }
-
 
         _page.postValue(Resource.Loading())
         _preview.postValue(Resource.Loading())
         // cancel the current preview expand as that is no longer relevant
         addJob?.cancel()
 
-        when (val data = repo?.getMainPage(1, null)) {
-            is Resource.Success -> {
-                try {
-                    expandable.clear()
-                    data.value.forEach { home ->
+        val validAPIs = context?.filterProviderByPreferredMedia() ?: emptyList()
+        val allHomeData = validAPIs.amap { api ->
+            APIRepository(api).getMainPage(1, null)
+        }
+
+        try {
+            expandable.clear()
+            allHomeData.forEach { resource ->
+                if (resource is Resource.Success) {
+                    resource.value.forEach { home ->
                         home?.items?.forEach { list ->
                             val filteredList =
                                 context?.filterHomePageListByFilmQuality(list) ?: list
-                            expandable[list.name] =
-                                ExpandableHomepageList(
-                                    filteredList.copy(
-                                        list = CopyOnWriteArrayList(
-                                            filteredList.list
-                                        )
-                                    ), 1, home.hasNext
-                                )
+                            val key = list.name
+                            val existing = expandable[key]
+                            if (existing != null) {
+                                existing.list.list += filteredList.list
+                            } else {
+                                expandable[key] =
+                                    ExpandableHomepageList(
+                                        filteredList.copy(
+                                            list = filteredList.list.toList()
+                                        ), 1, false // home.hasNext
+                                    )
+                            }
                         }
                     }
-
-                    val items = data.value.mapNotNull { it?.items }.flatten()
-
-
-                    previewResponses.clear()
-                    previewResponsesAdded.clear()
-
-                    //val home = data.value
-                    if (items.isNotEmpty()) {
-                        val currentList =
-                            items.shuffled().filter { it.list.isNotEmpty() }
-                                .flatMap { it.list }
-                                .distinctBy { it.url }.toList()
-
-                        if (currentList.isNotEmpty()) {
-                            val randomItems =
-                                context?.filterSearchResultByFilmQuality(currentList.shuffled())
-                                    ?: currentList.shuffled()
-
-                            updatePreviewResponses(
-                                previewResponses,
-                                previewResponsesAdded,
-                                randomItems,
-                                3
-                            )
-
-                            _randomItems.postValue(randomItems)
-                            currentShuffledList = randomItems
-                        }
-                    }
-                    if (previewResponses.isEmpty()) {
-                        _preview.postValue(
-                            Resource.Failure(
-                                false,
-                                "No homepage responses"
-                            )
-                        )
-                    } else {
-                        _preview.postValue(Resource.Success((previewResponsesAdded.size < currentShuffledList.size) to previewResponses))
-                    }
-                    _page.postValue(Resource.Success(expandable))
-                } catch (e: Exception) {
-                    _randomItems.postValue(emptyList())
-                    logError(e)
                 }
             }
 
-            is Resource.Failure -> {
-                @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
-                _page.postValue(data!!)
-                @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
-                _preview.postValue(data!!)
+            // Deduplicate items in each row
+            expandable.forEach { (_, exp) ->
+                exp.list.list = exp.list.list.distinctBy { it.url }
             }
 
-            else -> Unit
+            val allItems = expandable.values.flatMap { it.list.list }.distinctBy { it.url }
+
+            previewResponses.clear()
+            previewResponsesAdded.clear()
+
+            //val home = data.value
+            if (allItems.isNotEmpty()) {
+                val shuffledItems = allItems.shuffled()
+                if (shuffledItems.isNotEmpty()) {
+                    val randomItems =
+                        context?.filterSearchResultByFilmQuality(shuffledItems)
+                            ?: shuffledItems
+
+                    updatePreviewResponses(
+                        previewResponses,
+                        previewResponsesAdded,
+                        randomItems,
+                        3
+                    )
+
+                    _randomItems.postValue(randomItems)
+                    currentShuffledList = randomItems
+                }
+            }
+            if (previewResponses.isEmpty()) {
+                _preview.postValue(
+                    Resource.Failure(
+                        false,
+                        "No homepage responses"
+                    )
+                )
+            } else {
+                _preview.postValue(Resource.Success((previewResponsesAdded.size < currentShuffledList.size) to previewResponses))
+            }
+            _page.postValue(Resource.Success(expandable))
+        } catch (e: Exception) {
+            _randomItems.postValue(emptyList())
+            logError(e)
+            _page.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
         }
-        isCurrentlyLoadingName = null
     }
 
     fun click(callback: SearchClickCallback) {
@@ -504,49 +491,15 @@ class HomeViewModel : ViewModel() {
         fromUI: Boolean = false
     ) =
         ioSafe {
-            //println("trying to load $preferredApiName")
-            // Since plugins are loaded in stages this function can get called multiple times.
-            // The issue with this is that the homepage may be fetched multiple times while the first request is loading
-            // api?.let { expandable[it.name]?.list?.list?.isNotEmpty() } == true
             val currentPage = page.value
 
-            // if we don't need to reload and we have a valid homepage or currently loading the same thing then return
-            val currentLoading = isCurrentlyLoadingName
-            if (!forceReload && (currentPage is Resource.Success && currentPage.value.isNotEmpty() || (currentLoading != null && currentLoading == preferredApiName))) {
+            // if we don't need to reload and we have a valid homepage then return
+            if (!forceReload && (currentPage is Resource.Success && currentPage.value.isNotEmpty())) {
                 return@ioSafe
             }
 
-            val api = getApiFromNameNull(preferredApiName)
-            if (preferredApiName == noneApi.name) {
-                // just set to random
-                if (fromUI) DataStoreHelper.currentHomePage = noneApi.name
-                loadAndCancel(noneApi)
-            } else if (preferredApiName == randomApi.name) {
-                // randomize the api, if none exist like if not loaded or not installed
-                // then use nothing
-                val validAPIs = context?.filterProviderByPreferredMedia()
-                if (validAPIs.isNullOrEmpty()) {
-                    loadAndCancel(noneApi)
-                } else {
-                    val apiRandom = validAPIs.random()
-                    loadAndCancel(apiRandom)
-                    if (fromUI) DataStoreHelper.currentHomePage = apiRandom.name
-                }
-            } else if (api == null) {
-                // API is not found aka not loaded or removed, post the loading
-                // progress if waiting for plugins, otherwise nothing
-                if (PluginManager.loadedOnlinePlugins || PluginManager.isSafeMode()) {
-                    loadAndCancel(noneApi)
-                } else {
-                    _page.postValue(Resource.Loading())
-                    if (preferredApiName != null)
-                        _apiName.postValue(preferredApiName)
-                }
-            } else {
-                // if the api is found, then set it to it and save key
-                if (fromUI) DataStoreHelper.currentHomePage = api.name
-                loadAndCancel(api)
-            }
+            onGoingLoad?.cancel()
+            onGoingLoad = load()
             reloadAccount()
         }
 }
