@@ -31,6 +31,10 @@ import com.lagradost.cloudstream3.ui.result.EpisodeSortType
 import com.lagradost.cloudstream3.ui.result.ResultEpisode
 import com.lagradost.cloudstream3.ui.result.VideoWatchState
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
+import com.lagradost.cloudstream3.utils.AppUtils.toJson
+import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
+import com.lagradost.cloudstream3.ui.home.HomeViewModel
+import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
 import com.lagradost.cloudstream3.utils.serializers.WriteOnlySerializer
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -58,6 +62,10 @@ const val RESULT_SEASON = "result_season"
 const val RESULT_DUB = "result_dub"
 const val KEY_RESULT_SORT = "result_sort"
 const val USER_PINNED_PROVIDERS = "user_pinned_providers" // Key for pinned user set
+
+const val HOME_CACHE_KEY = "home_cache"
+const val HOME_CACHE_TIME_KEY = "home_cache_time"
+const val HOME_CACHE_TTL_HOURS = 4L
 
 class UserPreferenceDelegate<T : Any>(
     private val key: String,
@@ -821,6 +829,82 @@ object DataStoreHelper {
     fun getSync(id: Int, idPrefixes: List<String>): List<String?> {
         return idPrefixes.map { idPrefix ->
             getKey<String>("${idPrefix}_sync", id.toString())
+        }
+    }
+
+    @Serializable
+    data class HomeCachedItem(
+        @JsonProperty("name") @SerialName("name") override val name: String,
+        @JsonProperty("url") @SerialName("url") override val url: String,
+        @JsonProperty("apiName") @SerialName("apiName") override val apiName: String,
+        @JsonProperty("type") @SerialName("type") override var type: TvType? = null,
+        @JsonProperty("posterUrl") @SerialName("posterUrl") override var posterUrl: String? = null,
+        @JsonProperty("id") @SerialName("id") override var id: Int? = null,
+        @JsonProperty("quality") @SerialName("quality") override var quality: SearchQuality? = null,
+        @JsonProperty("posterHeaders") @SerialName("posterHeaders") override var posterHeaders: Map<String, String>? = null,
+        @JsonProperty("score") @SerialName("score") override var score: Score? = null,
+    ) : SearchResponse
+
+    @Serializable
+    data class CachedHomeRow(
+        @JsonProperty("name") @SerialName("name") val name: String,
+        @JsonProperty("items") @SerialName("items") val items: List<HomeCachedItem>,
+        @JsonProperty("isHorizontalImages") @SerialName("isHorizontalImages") val isHorizontalImages: Boolean,
+        @JsonProperty("hasNext") @SerialName("hasNext") val hasNext: Boolean
+    )
+
+    @Serializable
+    data class CachedHomePage(
+        @JsonProperty("timestamp") @SerialName("timestamp") val timestamp: Long,
+        @JsonProperty("rows") @SerialName("rows") val rows: Map<String, CachedHomeRow>
+    )
+
+    fun cacheHomeData(data: Map<String, HomeViewModel.ExpandableHomepageList>) {
+        val cached = CachedHomePage(
+            timestamp = System.currentTimeMillis(),
+            rows = data.mapValues { (_, exp) ->
+                CachedHomeRow(
+                    name = exp.list.name,
+                    items = exp.list.list.map { item ->
+                        HomeCachedItem(
+                            name = item.name,
+                            url = item.url,
+                            apiName = item.apiName,
+                            type = item.type,
+                            posterUrl = item.posterUrl,
+                            id = item.id,
+                            quality = item.quality,
+                            posterHeaders = item.posterHeaders,
+                            score = item.score
+                        )
+                    },
+                    isHorizontalImages = exp.list.isHorizontalImages,
+                    hasNext = exp.hasNext
+                )
+            }
+        )
+        setKey(HOME_CACHE_KEY, currentAccount, cached.toJson())
+        setKey(HOME_CACHE_TIME_KEY, currentAccount, cached.timestamp)
+    }
+
+    fun getCachedHomeData(): Map<String, HomeViewModel.ExpandableHomepageList>? {
+        val lastCacheTime = getKey<Long>(HOME_CACHE_TIME_KEY, currentAccount) ?: return null
+        val hoursSinceCache = (System.currentTimeMillis() - lastCacheTime) / (1000 * 60 * 60)
+
+        if (hoursSinceCache > HOME_CACHE_TTL_HOURS) {
+            removeKey(HOME_CACHE_KEY, currentAccount)
+            removeKey(HOME_CACHE_TIME_KEY, currentAccount)
+            return null
+        }
+
+        return getKey<String>(HOME_CACHE_KEY, currentAccount)?.let { json ->
+            tryParseJson<CachedHomePage>(json)?.rows?.mapValues { (_, row) ->
+                HomeViewModel.ExpandableHomepageList(
+                    list = HomePageList(row.name, row.items, row.isHorizontalImages),
+                    currentPage = 1,
+                    hasNext = row.hasNext
+                )
+            }
         }
     }
 
