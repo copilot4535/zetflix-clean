@@ -385,7 +385,6 @@
     <string name="dns_pref_summary">ISP 차단을 우회하는 데 유용합니다</string>
     <string name="resize_fit">화면 맞춤</string>
     <string name="display_subbed_dubbed_settings">더빙/자막 애니메이션 표시</string>
-    <string name="legal_notice">거부</string>
     <string name="pref_category_bypass">ISP 우회</string>
     <string name="pref_category_app_updates">앱 업데이트</string>
     <string name="pref_category_extensions">확장 기능</string>

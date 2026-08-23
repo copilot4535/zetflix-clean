@@ -244,7 +244,6 @@
     <string name="provider_lang_settings">لغات الإضافات</string>
     <string name="category_general">عام</string>
     <string name="download_path_pref">ممر التنزيل</string>
-    <string name="legal_notice">إخلاء مسؤولية</string>
     <string name="nginx_url_pref">رابط سيرڤر \"أنجن أكس\" (Nginx)</string>
     <string name="add_site_pref">نسوخ موقع (clone site)</string>
     <string name="random_button_settings">زر العشوائي</string>

@@ -234,7 +234,6 @@
     <string name="add_site_pref">Клон сайта</string>
     <string name="dns_pref">DNS через HTTPS</string>
     <string name="remove_site_pref">Удалить сайт</string>
-    <string name="legal_notice">Оговорка</string>
     <string name="subtitle_offset">Синхронизация субтитров</string>
     <string name="add_site_summary">Добавить клон существующего сайта с другим URL-адресом</string>
     <string name="dns_pref_summary">Используется для обхода блокировок интернет-провайдера</string>
