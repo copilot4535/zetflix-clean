@@ -12,25 +12,6 @@ import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.ErrorLoadingException
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
-import com.lagradost.cloudstream3.actions.temp.BiglyBTPackage
-import com.lagradost.cloudstream3.actions.temp.CopyClipboardAction
-import com.lagradost.cloudstream3.actions.temp.JustPlayerPackage
-import com.lagradost.cloudstream3.actions.temp.LibreTorrentPackage
-import com.lagradost.cloudstream3.actions.temp.MpvExPackage
-import com.lagradost.cloudstream3.actions.temp.MpvKtPackage
-import com.lagradost.cloudstream3.actions.temp.MpvKtPreviewPackage
-import com.lagradost.cloudstream3.actions.temp.MpvPackage
-import com.lagradost.cloudstream3.actions.temp.MpvRxPackage
-import com.lagradost.cloudstream3.actions.temp.MpvYTDLPackage
-import com.lagradost.cloudstream3.actions.temp.NextPlayerPackage
-import com.lagradost.cloudstream3.actions.temp.OnlyPlayer
-import com.lagradost.cloudstream3.actions.temp.PlayInBrowserAction
-import com.lagradost.cloudstream3.actions.temp.PlayMirrorAction
-import com.lagradost.cloudstream3.actions.temp.ViewM3U8Action
-import com.lagradost.cloudstream3.actions.temp.VlcNightlyPackage
-import com.lagradost.cloudstream3.actions.temp.VlcPackage
-import com.lagradost.cloudstream3.actions.temp.WebVideoCastPackage
-import com.lagradost.cloudstream3.actions.temp.fcast.FcastAction
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.ui.result.LinkLoadingResult
 import com.lagradost.cloudstream3.ui.result.ResultEpisode
@@ -44,29 +25,8 @@ import java.util.concurrent.Callable
 import java.util.concurrent.FutureTask
 
 object VideoClickActionHolder {
-    val allVideoClickActions = atomicListOf(
-        // Default
-        PlayInBrowserAction(),
-        CopyClipboardAction(),
-        ViewM3U8Action(),
-        PlayMirrorAction(),
-        // main support external apps
-        VlcPackage(),
-        MpvPackage(),
-        MpvExPackage(),
-        NextPlayerPackage(),
-        JustPlayerPackage(),
-        FcastAction(),
-        LibreTorrentPackage(),
-        BiglyBTPackage(),
-        // forks/backup apps
-        VlcNightlyPackage(),
-        WebVideoCastPackage(),
-        MpvYTDLPackage(),
-        MpvKtPackage(),
-        MpvKtPreviewPackage(),
-        OnlyPlayer(),
-        MpvRxPackage(),
+    val allVideoClickActions = atomicListOf<VideoClickAction>(
+        // TODO: External player integration removed. Keep internal playback only.
         // Always Ask option
         AlwaysAskAction(),
         // added by plugins

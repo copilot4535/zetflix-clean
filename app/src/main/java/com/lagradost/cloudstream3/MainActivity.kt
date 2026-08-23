@@ -76,7 +76,6 @@ import com.lagradost.cloudstream3.CommonActivity.setActivityInstance
 import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.CommonActivity.updateLocale
 import com.lagradost.cloudstream3.CommonActivity.updateTheme
-import com.lagradost.cloudstream3.actions.temp.fcast.FcastManager
 import com.lagradost.cloudstream3.databinding.ActivityMainBinding
 import com.lagradost.cloudstream3.databinding.ActivityMainTvBinding
 import com.lagradost.cloudstream3.databinding.BottomResultviewPreviewBinding
@@ -278,143 +277,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             str: String?,
             isWebview: Boolean,
             extraArgs: Bundle? = null
-        ): Boolean =
-            with(activity) {
-                // TODO MUCH BETTER HANDLING
-
-                // Invalid URIs can crash
-                fun safeURI(uri: String) = safe { URI(uri) }
-
-                if (str != null && this != null) {
-                    if (str.startsWith("https://cs.repo")) {
-                        val realUrl = "https://" + str.substringAfter("?")
-                        println("Repository url: $realUrl")
-                        loadRepository(realUrl)
-                        return true
-                    } else if (str.contains(APP_STRING)) {
-                        for (api in AccountManager.allApis) {
-                            if (api.isValidRedirectUrl(str)) {
-                                ioSafe {
-                                    Log.i(TAG, "handleAppIntent $str")
-                                    try {
-                                        val isSuccessful = api.login(str)
-                                        if (isSuccessful) {
-                                            Log.i(TAG, "authenticated ${api.name}")
-                                        } else {
-                                            Log.i(TAG, "failed to authenticate ${api.name}")
-                                        }
-                                        showToast(
-                                            if (isSuccessful) {
-                                                txt(R.string.authenticated_user, api.name)
-                                            } else {
-                                                txt(R.string.authenticated_user_fail, api.name)
-                                            }
-                                        )
-                                    } catch (t: Throwable) {
-                                        logError(t)
-                                        showToast(
-                                            txt(R.string.authenticated_user_fail, api.name)
-                                        )
-                                    }
-                                }
-                                return true
-                            }
-                        }
-                        // This specific intent is used for the gradle deployWithAdb
-                        // https://github.com/recloudstream/gradle/blob/master/src/main/kotlin/com/lagradost/cloudstream3/gradle/tasks/DeployWithAdbTask.kt#L46
-                        if (str == "$APP_STRING:") {
-                            ioSafe {
-                                PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_hotReloadAllLocalPlugins(
-                                    activity
-                                )
-                            }
-                        }
-                    } else if (safeURI(str)?.scheme == APP_STRING_REPO) {
-                        val url = str.replaceFirst(APP_STRING_REPO, "https")
-                        loadRepository(url)
-                        return true
-                    } else if (safeURI(str)?.scheme == APP_STRING_SEARCH) {
-                        val query = str.substringAfter("$APP_STRING_SEARCH://")
-                        nextSearchQuery =
-                            try {
-                                URLDecoder.decode(query, "UTF-8")
-                            } catch (t: Throwable) {
-                                logError(t)
-                                query
-                            }
-                        // Use both navigation views to support both layouts.
-                        // It might be better to use the QuickSearch.
-                        activity?.findViewById<BottomNavigationView>(R.id.nav_view)?.selectedItemId =
-                            R.id.navigation_search
-                        activity?.findViewById<NavigationRailView>(R.id.nav_rail_view)?.selectedItemId =
-                            R.id.navigation_search
-                    } else if (safeURI(str)?.scheme == APP_STRING_PLAYER) {
-                        val uri = str.toUri()
-                        val name = uri.getQueryParameter("name")
-                        val url = URLDecoder.decode(uri.authority, "UTF-8")
-
-                        navigate(
-                            R.id.global_to_navigation_player,
-                            GeneratorPlayer.newInstance(
-                                LinkGenerator(
-                                    listOf(BasicLink(url, name)),
-                                    extract = true,
-                                    id = url.hashCode()
-                                ), 0
-                            )
-                        )
-                    } else if (safeURI(str)?.scheme == APP_STRING_RESUME_WATCHING) {
-                        val id =
-                            str.substringAfter("$APP_STRING_RESUME_WATCHING://").toIntOrNull()
-                                ?: return false
-                        ioSafe {
-                            val resumeWatchingCard =
-                                HomeViewModel.getResumeWatching()?.firstOrNull { it.id == id }
-                                    ?: return@ioSafe
-                            activity.loadSearchResult(
-                                resumeWatchingCard,
-                                START_ACTION_RESUME_LATEST
-                            )
-                        }
-                    } else if (str.startsWith(APP_STRING_SHARE)) {
-                        try {
-                            val data = str.substringAfter("$APP_STRING_SHARE:")
-                            val parts = data.split("?", limit = 2)
-                            loadResult(
-                                String(base64DecodeArray(parts[1]), Charsets.UTF_8),
-                                String(base64DecodeArray(parts[0]), Charsets.UTF_8),
-                                ""
-                            )
-                            return true
-                        } catch (e: Exception) {
-                            showToast("Invalid Uri", Toast.LENGTH_SHORT)
-                            return false
-                        }
-                    } else if (!isWebview) {
-                        if (str.startsWith(DOWNLOAD_NAVIGATE_TO)) {
-                            this.navigate(R.id.navigation_downloads)
-                            return true
-                        } else {
-                            val apiName = extraArgs?.getString(API_NAME_EXTRA_KEY)
-                                ?.takeIf { it.isNotBlank() }
-                            // if provided, try to match the api name instead of the api url
-                            // this is in order to also support providers that use JSON dataUrls
-                            // for example
-                            if (apiName != null) {
-                                loadResult(str, apiName, "")
-                                return true
-                            }
-
-                            val matchedApi = apis.filter { str.startsWith(it.mainUrl) }.firstOrNull()
-                            if (matchedApi != null) {
-                                loadResult(str, matchedApi.name, "")
-                                return true
-                            }
-                        }
-                    }
-                }
-                return false
-            }
+        ): Boolean = false
 
 
         fun centerView(view: View?) {
@@ -1889,7 +1752,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             runAutoUpdate()
         }
 
-        FcastManager().init(this, false)
+        // FcastManager().init(this, false)
 
         APIRepository.dubStatusActive = getApiDubstatusSettings()
 
