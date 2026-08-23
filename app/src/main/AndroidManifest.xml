@@ -10,13 +10,11 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" /> <!-- Used for player vertical slide -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /> <!-- Used for app update -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> <!-- Used for app notifications on Android 13+ -->
-    <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" /> <!-- Used for Android TV watch next -->
     <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" /> <!-- Used for updates without prompt -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- Used for update service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" /> <!-- We can use this directly as CS3 is not on Play Store -->
-    <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA" />  <!-- We can use to read the tv channel list -->
     <!-- Required for OpenInAppAction and getting arbitrary Aniyomi packages  -->
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
@@ -63,12 +61,8 @@
         <package android:name="com.biglybt.android.client" />
     </queries>
 
-    <!-- Fixes android tv fuckery -->
     <uses-feature
         android:name="android.hardware.touchscreen"
-        android:required="false" />
-    <uses-feature
-        android:name="android.software.leanback"
         android:required="false" />
 
     <!-- Without the large heap Exoplayer buffering gets reset due to OOM. -->
@@ -77,7 +71,6 @@
         android:name=".CloudStreamApp"
         android:allowBackup="true"
         android:appCategory="video"
-        android:banner="@mipmap/ic_banner"
         android:fullBackupContent="@xml/backup_descriptor"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
@@ -168,7 +161,6 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

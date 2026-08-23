@@ -32,13 +32,8 @@ object Globals {
     }
 
     private fun Context.layoutIntCorrected(): Int {
-        return when(getLayoutInt()) {
-            -1 -> if (isAutoTv()) TV else PHONE
-            0 -> PHONE
-            1 -> TV
-            2 -> EMULATOR
-            else -> PHONE
-        }
+        // TODO: TV/emulator layout removed. Always use phone layout.
+        return PHONE
     }
 
     fun Context.updateTv() {

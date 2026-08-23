@@ -93,33 +93,6 @@ class SettingsUI : BasePreferenceFragmentCompat() {
             return@setOnPreferenceClickListener true
         }
 
-        getPref(R.string.app_layout_key)?.setOnPreferenceClickListener {
-            val prefNames = resources.getStringArray(R.array.app_layout)
-            val prefValues = resources.getIntArray(R.array.app_layout_values)
-
-            val currentLayout =
-                settingsManager.getInt(getString(R.string.app_layout_key), -1)
-
-            activity?.showBottomDialog(
-                items = prefNames.toList(),
-                selectedIndex = prefValues.indexOf(currentLayout),
-                name = getString(R.string.app_layout),
-                showApply = true,
-                dismissCallback = {},
-                callback = {
-                    try {
-                        settingsManager.edit {
-                            putInt(getString(R.string.app_layout_key), prefValues[it])
-                        }
-                        context?.updateTv()
-                        activity?.recreate()
-                    } catch (e: Exception) {
-                        logError(e)
-                    }
-                }
-            )
-            return@setOnPreferenceClickListener true
-        }
 
         getPref(R.string.pref_filter_search_quality_key)?.setOnPreferenceClickListener {
             val names = enumValues<SearchQuality>().sorted().map { it.name }
@@ -147,7 +120,6 @@ class SettingsUI : BasePreferenceFragmentCompat() {
             return@setOnPreferenceClickListener true
         }
 
-        getPref(R.string.tv_layout_clock_key)?.hideOn(PHONE or EMULATOR)
 
         getPref(R.string.confirm_exit_key)?.setOnPreferenceClickListener {
             val prefNames = resources.getStringArray(R.array.confirm_exit)
