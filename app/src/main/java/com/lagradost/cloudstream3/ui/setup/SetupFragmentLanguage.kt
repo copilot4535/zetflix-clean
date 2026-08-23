@@ -31,6 +31,10 @@ class SetupFragmentLanguage : BaseFragment<FragmentSetupLanguageBinding>(
     }
 
     override fun onBindingCreated(binding: FragmentSetupLanguageBinding) {
+        if (com.lagradost.cloudstream3.CloudStreamApp.getKey<Boolean>(HAS_DONE_SETUP_KEY, false) == true) {
+            findNavController().navigate(R.id.navigation_home)
+            return
+        }
         // We don't want a crash for all users
         safe {
             val ctx = context ?: return@safe

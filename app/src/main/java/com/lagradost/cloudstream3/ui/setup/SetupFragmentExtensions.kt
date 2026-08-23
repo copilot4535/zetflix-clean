@@ -16,6 +16,7 @@ import com.lagradost.cloudstream3.ui.settings.extensions.PluginsViewModel
 import com.lagradost.cloudstream3.ui.settings.extensions.RepoAdapter
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
+import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
 
 class SetupFragmentExtensions : BaseFragment<FragmentSetupExtensionsBinding>(
     BaseFragment.BindingCreator.Inflate(FragmentSetupExtensionsBinding::inflate)
@@ -69,6 +70,10 @@ class SetupFragmentExtensions : BaseFragment<FragmentSetupExtensionsBinding>(
     }
 
     override fun onBindingCreated(binding: FragmentSetupExtensionsBinding) {
+        if (getKey<Boolean>(HAS_DONE_SETUP_KEY, false) == true) {
+            findNavController().navigate(R.id.navigation_home)
+            return
+        }
         val isSetup = arguments?.getBoolean(SETUP_EXTENSION_BUNDLE_IS_SETUP) ?: false
 
         safe {
