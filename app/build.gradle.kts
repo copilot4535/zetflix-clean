@@ -129,6 +129,11 @@ android {
         ) // TODO: Verify NORMAL_REPO_MANIFEST_URL before production
         buildConfigField(
             "String",
+            "SELF_UPDATE_URL",
+            "\"PLACEHOLDER_SELF_UPDATE_URL\""
+        ) // TODO: Replace SELF_UPDATE_URL before production
+        buildConfigField(
+            "String",
             "SIMKL_CLIENT_ID",
             "\"" + (System.getenv("SIMKL_CLIENT_ID") ?: localProperties["simkl.id"]) + "\""
         )

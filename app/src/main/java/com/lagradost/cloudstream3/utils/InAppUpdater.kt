@@ -98,7 +98,7 @@ object InAppUpdater {
     }
 
     private suspend fun Activity.getReleaseUpdate(): Update {
-        val url = "https://api.github.com/repos/$GITHUB_USER_NAME/$GITHUB_REPO/releases"
+        val url = BuildConfig.SELF_UPDATE_URL
         val headers = mapOf("Accept" to "application/vnd.github.v3+json")
         val response = parseJson<Array<GithubRelease>>(
             app.get(url, headers = headers).text
@@ -151,9 +151,8 @@ object InAppUpdater {
     }
 
     private suspend fun Activity.getPreReleaseUpdate(): Update {
-        val tagUrl =
-            "https://api.github.com/repos/$GITHUB_USER_NAME/$GITHUB_REPO/git/ref/tags/pre-release"
-        val releaseUrl = "https://api.github.com/repos/$GITHUB_USER_NAME/$GITHUB_REPO/releases"
+        val tagUrl = BuildConfig.SELF_UPDATE_URL
+        val releaseUrl = BuildConfig.SELF_UPDATE_URL
         val headers = mapOf("Accept" to "application/vnd.github.v3+json")
         val response = parseJson<Array<GithubRelease>>(
             app.get(releaseUrl, headers = headers).text

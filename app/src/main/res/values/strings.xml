@@ -182,7 +182,7 @@
     <string name="search">Search</string>
     <string name="library">Library</string>
     <string name="category_account">Accounts and Security</string>
-    <string name="category_updates">Updates and Backup</string>
+    <string name="category_updates">App update</string>
     <string name="settings_info">Info</string>
     <string name="advanced_search">Advanced Search</string>
     <string name="advanced_search_des">Gives you the search results separated by provider</string>
