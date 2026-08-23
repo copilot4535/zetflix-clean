@@ -218,9 +218,8 @@ object CommonActivity {
      * https://iso639-3.sil.org/code_tables/639/data/all
      */
     fun setLocale(context: Context?, languageTag: String?) {
-        if (context == null || languageTag == null) return
-        val locale = Locale.forLanguageTag(languageTag)
-        val resources: Resources = context.resources
+        val locale = Locale.ENGLISH
+        val resources: Resources = context?.resources ?: return
         val config = resources.configuration
         Locale.setDefault(locale)
         config.setLocale(locale)
@@ -232,13 +231,11 @@ object CommonActivity {
         resources.updateConfiguration(
             config,
             resources.displayMetrics
-        ) // FIXME this should be replaced
+        )
     }
 
     fun Context.updateLocale() {
-        val settingsManager = PreferenceManager.getDefaultSharedPreferences(this)
-        val localeCode = settingsManager.getString(getString(R.string.locale_key), null)
-        setLocale(this, localeCode)
+        setLocale(this, "en")
     }
 
     fun init(act: Activity) {
