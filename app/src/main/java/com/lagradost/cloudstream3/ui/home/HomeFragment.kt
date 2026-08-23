@@ -605,18 +605,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         super.onDestroyView()
     }
 
-    private val apiChangeClickListener = View.OnClickListener { view ->
-        view.context.selectHomepage(currentApiName) { api ->
-            homeViewModel.loadAndCancel(api, forceReload = true, fromUI = true)
-        }
-        /*val validAPIs = view.context?.filterProviderByPreferredMedia()?.toMutableList() ?: mutableListOf()
-
-        validAPIs.add(0, randomApi)
-        validAPIs.add(0, noneApi)
-        view.popupMenuNoIconsAndNoStringRes(validAPIs.mapIndexed { index, api -> Pair(index, api.name) }) {
-            homeViewModel.loadAndCancel(validAPIs[itemId].name)
-        }*/
-    }
 
     private var currentApiName: String? = null
     private var toggleRandomButton = false
@@ -665,19 +653,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             handleTvBackPress(this)
         }
         binding.apply {
-            //homeChangeApiLoading.setOnClickListener(apiChangeClickListener)
-            //homeChangeApiLoading.setOnClickListener(apiChangeClickListener)
-            homeApiFab.setOnClickListener(apiChangeClickListener)
-            homeApiFab.setOnLongClickListener {
-                if (currentApiName == noneApi.name) return@setOnLongClickListener false
-                homeViewModel.loadAndCancel(currentApiName, forceReload = true, fromUI = true)
-                showToast(R.string.action_reload, Toast.LENGTH_SHORT)
-                true
-            }
-            homeChangeApi.setOnClickListener(apiChangeClickListener)
-            homeSwitchAccount.setOnClickListener {
+            /*homeSwitchAccount.setOnClickListener {
                 activity?.showAccountSelectLinear()
-            }
+            }*/
 
             homeMasterAdapter = HomeParentItemAdapterPreview(
                 homeViewModel, accountViewModel
@@ -685,21 +663,21 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             homeMasterRecycler.setRecycledViewPool(ParentItemAdapter.sharedPool)
             homeMasterRecycler.adapter = homeMasterAdapter
 
-            homeApiFab.isVisible = isLayout(PHONE)
+            // homeApiFab.isVisible = isLayout(PHONE)
 
-            homePreviewReloadProvider.setOnClickListener {
+            /*homePreviewReloadProvider.setOnClickListener {
                 homeViewModel.loadAndCancel(
                     homeViewModel.apiName.value ?: noneApi.name,
                     forceReload = true,
                     fromUI = true
                 )
                 showToast(R.string.action_reload, Toast.LENGTH_SHORT)
-            }
+            }*/
 
-            homePreviewSearchButton.setOnClickListener { _ ->
+            /*homePreviewSearchButton.setOnClickListener { _ ->
                 // Open blank screen.
                 homeViewModel.queryTextSubmit("")
-            }
+            }*/
 
             // Load value for toggling Tv layout real time clock. Hide by default at startup
             // set visibility first, to apply a scroll effect later
@@ -720,7 +698,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
 
             homeMasterRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    if (isLayout(PHONE)) {
+                    /*if (isLayout(PHONE)) {
                         // Fab is only relevant to Phone
                         if (dy > 0) { //check for scroll down
                             homeApiFab.shrink() // hide
@@ -731,15 +709,16 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                                 homeRandom.extend()
                             }
                         }
-                    } else {
+                    } else {*/
+                    if (!isLayout(PHONE)) {
                         // Header scrolling is only relevant to TV/Emulator
 
                         val view = recyclerView.findViewHolderForAdapterPosition(0)?.itemView
-                        val scrollParent = binding.homeApiHolder
+                        // val scrollParent = binding.homeApiHolder
 
                         if (view == null) {
                             // The first view is not visible, so we can assume we have scrolled past it
-                            scrollParent.isVisible = false
+                            // scrollParent.isVisible = false
                         } else {
                             // A bit weird, but this is a major limitation we are working around here
                             // 1. We cant have a real parent to the recyclerview as android cant layout that without lagging
@@ -753,10 +732,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                             // Then it manually "scrolls" it to the correct position
                             //
                             // Hopefully getLocationInWindow acts correctly on all devices
-                            val rect = IntArray(2)
-                            view.getLocationInWindow(rect)
-                            scrollParent.isVisible = true
-                            scrollParent.translationY = rect[1].toFloat() - 60.toPx
+                            // val rect = IntArray(2)
+                            // view.getLocationInWindow(rect)
+                            // scrollParent.isVisible = true
+                            // scrollParent.translationY = rect[1].toFloat() - 60.toPx
 
                             // Move the TV layout real time clock out of the way too
                             // We check if we have the correct layout and if the clock is enabled
@@ -784,18 +763,18 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                     getString(R.string.random_button_key),
                     false
                 )
-            binding.homeRandom.visibility = View.GONE
-            binding.homeRandomButtonTv.visibility = View.GONE
+            // binding.homeRandom.visibility = View.GONE
+            // binding.homeRandomButtonTv.visibility = View.GONE
         }
 
         observe(homeViewModel.apiName) { apiName ->
             currentApiName = apiName
-            binding.apply {
+            /*binding.apply {
                 homeApiFab.text = apiName
                 homeChangeApi.text = apiName
                 homePreviewReloadProvider.isGone = (apiName == noneApi.name)
                 homePreviewSearchButton.isGone = (apiName == noneApi.name)
-            }
+            }*/
         }
 
         observe(homeViewModel.page) { data ->
@@ -816,7 +795,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                         homeMasterRecycler.isVisible = true
                         homeLoadingShimmer.stopShimmer()
                         //home_loaded?.isVisible = true
-                        if (toggleRandomButton) {
+                        /*if (toggleRandomButton) {
                             val distinct = d.values
                                 .flatMap { it.list.list }
                                 .distinctBy { it.url }
@@ -833,12 +812,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                         } else {
                             homeRandom.isGone = true
                             homeRandomButtonTv.isGone = true
-                        }
+                        }*/
                     }
 
                     is Resource.Failure -> {
                         homeLoadingShimmer.stopShimmer()
-                        homeReloadConnectionerror.setOnClickListener(apiChangeClickListener)
+                        // homeReloadConnectionerror.setOnClickListener(apiChangeClickListener)
                         homeReloadConnectionOpenInBrowser.setOnClickListener { view ->
                             val validAPIs = apis//.filter { api -> api.hasMainPage }
 
@@ -974,16 +953,16 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             isInsideRecycler -> {
                 binding?.homeMasterRecycler?.scrollToPosition(0)
                 // Defer focus request until after scroll ends
-                binding?.homeChangeApi?.post {
+                /*binding?.homeChangeApi?.post {
                     binding?.homeChangeApi?.requestFocus()
-                }
+                }*/
             }
             // Case 2: Focus is on plugin selector or nearby buttons -> Move to home navigation
-            currentFocus.id == R.id.home_change_api ||
+            /*currentFocus.id == R.id.home_change_api ||
             currentFocus.id == R.id.home_preview_reload_provider ||
             currentFocus.id == R.id.home_preview_search_button -> {
                 activity?.findViewById<View>(R.id.navigation_home)?.requestFocus()
-            }
+            }*/
             // Case 3: Any other location -> Use default back behavior
             else -> helper.runDefault()
         }
