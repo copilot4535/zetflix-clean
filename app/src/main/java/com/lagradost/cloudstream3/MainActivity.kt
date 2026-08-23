@@ -1620,11 +1620,11 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             .setPopUpTo(navController.graph.startDestination, false)
             .build()*/
 
-        val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.colorPrimary, 0.1f))
+        // val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.colorPrimary, 0.1f))
 
         binding?.navView?.apply {
-            itemRippleColor = rippleColor
-            itemActiveIndicatorColor = rippleColor
+            itemRippleColor = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+            itemActiveIndicatorColor = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
             setupWithNavController(navController)
             setOnItemSelectedListener { item ->
                 onNavDestinationSelected(
@@ -1636,16 +1636,14 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         }
 
         binding?.navRailView?.apply {
-            if (isLayout(PHONE)) {
-                itemRippleColor = rippleColor
-                itemActiveIndicatorColor = rippleColor
-            } else {
-                val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.textColor, 1.0f))
-                val rippleColorTransparent =
-                    ColorStateList.valueOf(getResourceColor(R.attr.textColor, 0.2f))
+            itemRippleColor = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+            itemActiveIndicatorColor = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+
+            if (!isLayout(PHONE)) {
+                // val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.textColor, 1.0f))
+                // val rippleColorTransparent =
+                //     ColorStateList.valueOf(getResourceColor(R.attr.textColor, 0.2f))
                 itemSpacing = 12.toPx // expandedItemSpacing does not have an attr
-                itemRippleColor = rippleColorTransparent
-                itemActiveIndicatorColor = rippleColor
             }
             setupWithNavController(navController)
             /*if (isLayout(TV or EMULATOR)) {
