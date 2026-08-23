@@ -801,7 +801,7 @@ class ResultViewModel2 : ViewModel() {
 
             if (currentStatus != status) {
                 MainActivity.bookmarksUpdatedEvent(true)
-                MainActivity.reloadLibraryEvent(true)
+                
             }
 
             _watchStatus.postValue(status)
@@ -848,7 +848,7 @@ class ResultViewModel2 : ViewModel() {
             removeSubscribedData(currentId)
             statusChangedCallback?.invoke(false)
             _subscribeStatus.postValue(if (response is EpisodeResponse) false else null)
-            MainActivity.reloadLibraryEvent(true)
+            
         } else {
             if (response !is EpisodeResponse) {
                 return
@@ -898,7 +898,7 @@ class ResultViewModel2 : ViewModel() {
 
                 _subscribeStatus.postValue(true)
                 statusChangedCallback?.invoke(true)
-                MainActivity.reloadLibraryEvent(true)
+                
             }
         }
     }
@@ -945,7 +945,7 @@ class ResultViewModel2 : ViewModel() {
             removeFavoritesData(currentId)
             statusChangedCallback?.invoke(false)
             _favoriteStatus.postValue(false)
-            MainActivity.reloadLibraryEvent(true)
+            
         } else {
             checkAndWarnDuplicates(
                 context,
@@ -991,7 +991,7 @@ class ResultViewModel2 : ViewModel() {
 
                 _favoriteStatus.postValue(true)
                 statusChangedCallback?.invoke(true)
-                MainActivity.reloadLibraryEvent(true)
+                
             }
         }
     }

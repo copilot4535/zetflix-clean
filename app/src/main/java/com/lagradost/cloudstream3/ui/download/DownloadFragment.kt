@@ -1,7 +1,6 @@
 package com.lagradost.cloudstream3.ui.download
 
 import android.app.Activity
-import android.app.Dialog
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -21,7 +20,6 @@ import androidx.fragment.app.activityViewModels
 import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentDownloadsBinding
-import com.lagradost.cloudstream3.databinding.StreamInputBinding
 import com.lagradost.cloudstream3.isEpisodeBased
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.safe
@@ -30,9 +28,6 @@ import com.lagradost.cloudstream3.mvvm.observeNullable
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.ui.download.DownloadButtonSetup.handleDownloadClick
 import com.lagradost.cloudstream3.ui.download.queue.DownloadQueueViewModel
-import com.lagradost.cloudstream3.ui.player.BasicLink
-import com.lagradost.cloudstream3.ui.player.GeneratorPlayer
-import com.lagradost.cloudstream3.ui.player.LinkGenerator
 import com.lagradost.cloudstream3.ui.player.OfflinePlaybackHelper.playUri
 import com.lagradost.cloudstream3.ui.result.FOCUS_SELF
 import com.lagradost.cloudstream3.ui.result.setLinearListLayout
@@ -235,25 +230,17 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
                 isGone = isLayout(TV)
                 setOnClickListener { openLocalVideo() }
             }
-            downloadStreamButton.apply {
-                isGone = isLayout(TV)
-                setOnClickListener { showStreamInputDialog(it.context) }
-            }
 
             downloadQueueButton.setOnClickListener {
                 activity?.navigate(R.id.action_navigation_global_to_navigation_download_queue)
             }
 
-            downloadStreamButtonTv.isFocusableInTouchMode = isLayout(TV)
             downloadAppbar.isFocusableInTouchMode = isLayout(TV)
-
-            downloadStreamButtonTv.setOnClickListener { showStreamInputDialog(it.context) }
-            steamImageviewHolder.isVisible = isLayout(TV)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.downloadList.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
-                handleScroll(scrollY - oldScrollY)
+            binding.downloadList.setOnScrollChangeListener { _, _, _, _, _ ->
+                // handleScroll(scrollY - oldScrollY)
             }
         }
 
@@ -315,6 +302,7 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
         }
     }
 
+    /*
     private fun showStreamInputDialog(context: Context) {
         val dialog = Dialog(context, R.style.AlertDialogCustom)
         val binding = StreamInputBinding.inflate(dialog.layoutInflater)
@@ -375,6 +363,7 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
             binding?.downloadStreamButton?.extend()
         }
     }
+    */
 
     // Open local video from files using content provider x safeFile
     private val videoResultLauncher = registerForActivityResult(

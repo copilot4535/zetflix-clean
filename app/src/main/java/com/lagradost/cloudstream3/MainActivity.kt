@@ -106,7 +106,6 @@ import com.lagradost.cloudstream3.ui.WatchType
 import com.lagradost.cloudstream3.ui.account.AccountHelper.showAccountSelectLinear
 import com.lagradost.cloudstream3.ui.download.DOWNLOAD_NAVIGATE_TO
 import com.lagradost.cloudstream3.ui.home.HomeViewModel
-import com.lagradost.cloudstream3.ui.library.LibraryViewModel
 import com.lagradost.cloudstream3.ui.player.BasicLink
 import com.lagradost.cloudstream3.ui.player.GeneratorPlayer
 import com.lagradost.cloudstream3.ui.player.LinkGenerator
@@ -264,10 +263,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
          */
         val reloadHomeEvent = Event<Boolean>()
 
-        /**
-         * Used by DataStoreHelper to fully reload library when switching accounts
-         */
-        val reloadLibraryEvent = Event<Boolean>()
 
         /**
          * Used by DataStoreHelper to fully reload Navigation Rail header picture
@@ -501,7 +496,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         val isNavVisible = listOf(
             R.id.navigation_home,
             R.id.navigation_search,
-            R.id.navigation_library,
             R.id.navigation_downloads,
             R.id.navigation_settings,
             R.id.navigation_download_child,
@@ -764,7 +758,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
             // R.id.navigation_home -> R.id.home_preview_change_api
             R.id.navigation_search -> R.id.main_search
-            R.id.navigation_library -> R.id.main_search
             R.id.navigation_downloads -> R.id.download_appbar
             else -> null
         }
@@ -777,7 +770,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     R.id.navigation_downloads,
                     R.id.navigation_home,
                     R.id.navigation_search,
-                    R.id.navigation_library,
                     R.id.navigation_settings,
                 )) {
                     fromView.findViewById<View?>(focusView)?.nextFocusRightId = targetView
@@ -844,7 +836,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
     lateinit var viewModel: ResultViewModel2
     lateinit var syncViewModel: SyncViewModel
-    private var libraryViewModel: LibraryViewModel? = null
 
     /** kinda dirty, however it signals that we should use the watch status as sync or not*/
     var isLocalList: Boolean = false
@@ -1585,28 +1576,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 //        }
 
         // init accounts
-        ioSafe {
-            // we need to run this after we init all apis, otherwise currentSyncApi will fuck itself
-            this@MainActivity.runOnUiThread {
-                // Change library icon with logo of current api in sync
-                libraryViewModel =
-                    ViewModelProvider(this@MainActivity)[LibraryViewModel::class.java]
-                libraryViewModel?.currentApiName?.observe(this@MainActivity) {
-                    val syncAPI = libraryViewModel?.currentSyncApi
-                    Log.i("SYNC_API", "${syncAPI?.name}, ${syncAPI?.idPrefix}")
-                    val icon = if (syncAPI?.idPrefix == localListApi.idPrefix) {
-                        R.drawable.library_icon_selector
-                    } else {
-                        syncAPI?.icon ?: R.drawable.library_icon_selector
-                    }
-
-                    binding?.apply {
-                        navRailView.menu.findItem(R.id.navigation_library)?.setIcon(icon)
-                        navView.menu.findItem(R.id.navigation_library)?.setIcon(icon)
-                    }
-                }
-            }
-        }
 
         SearchResultBuilder.updateCache(this)
 
@@ -1747,7 +1716,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             for (id in arrayOf(
                 R.id.navigation_home,
                 R.id.navigation_search,
-                R.id.navigation_library,
                 R.id.navigation_downloads,
                 R.id.navigation_settings
             )) {
@@ -1791,22 +1759,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 return@setOnLongClickListener recycler != null
             }
 
-            view?.findViewById<View?>(R.id.navigation_library)?.setOnLongClickListener {
-                val viewPager = binding?.root?.findViewById<ViewPager2?>(R.id.viewpager)
-                    ?: return@setOnLongClickListener false
-                try {
-                    val children = (viewPager[0] as? RecyclerView)?.children
-                        ?: return@setOnLongClickListener false
-                    for (child in children) {
-                        child.findViewById<RecyclerView?>(R.id.page_recyclerview)
-                            ?.smoothScrollToPosition(0)
-                    }
-                } catch (_: IndexOutOfBoundsException) {
-                } catch (t: Throwable) {
-                    logError(t)
-                }
-                return@setOnLongClickListener true
-            }
 
             view?.findViewById<View?>(R.id.navigation_search)?.setOnLongClickListener {
                 for (recyclerId in arrayOf(

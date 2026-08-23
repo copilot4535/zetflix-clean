@@ -9,10 +9,23 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.ShowStatus
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.ui.SyncWatchType
-import com.lagradost.cloudstream3.ui.library.ListSorting
+import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.utils.Levenshtein
 import com.lagradost.cloudstream3.utils.UiText
 import java.util.Date
+import androidx.annotation.StringRes
+
+enum class ListSorting(@StringRes val stringRes: Int) {
+    Query(R.string.none),
+    RatingHigh(R.string.sort_rating_desc),
+    RatingLow(R.string.sort_rating_asc),
+    UpdatedNew(R.string.sort_updated_new),
+    UpdatedOld(R.string.sort_updated_old),
+    AlphabeticalA(R.string.sort_alphabetical_a),
+    AlphabeticalZ(R.string.sort_alphabetical_z),
+    ReleaseDateNew(R.string.sort_release_date_new),
+    ReleaseDateOld(R.string.sort_release_date_old),
+}
 
 /**
  * Stateless synchronization class, used for syncing status about a specific movie/show.

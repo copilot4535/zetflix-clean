@@ -24,7 +24,7 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.syncproviders.AccountManager
 import com.lagradost.cloudstream3.syncproviders.SyncAPI
 import com.lagradost.cloudstream3.ui.WatchType
-import com.lagradost.cloudstream3.ui.library.ListSorting
+import com.lagradost.cloudstream3.syncproviders.ListSorting
 import com.lagradost.cloudstream3.ui.player.ExtractorUri
 import com.lagradost.cloudstream3.ui.player.NEXT_WATCH_EPISODE_PERCENTAGE
 import com.lagradost.cloudstream3.ui.result.EpisodeSortType
@@ -201,7 +201,7 @@ object DataStoreHelper {
         AccountManager.updateAccountIds()
         showToast(context?.getString(R.string.logged_account, account.name) ?: account.name)
         MainActivity.bookmarksUpdatedEvent(true)
-        MainActivity.reloadLibraryEvent(true)
+        
         val oldAccount = accounts.find { it.keyIndex == account.keyIndex }
         if (oldAccount != null && currentHomePage != homepage) {
             // This is not a new account, and the homepage has changed, reload it
