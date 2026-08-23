@@ -700,11 +700,7 @@ object AppContextUtils {
     //private val viewModel: ResultViewModel by activityViewModels()
 
     private fun getResultsId(): Int {
-        return if (Globals.isLayout(Globals.TV or Globals.EMULATOR)) {
-            R.id.global_to_navigation_results_tv
-        } else {
-            R.id.global_to_navigation_results_phone
-        }
+        return R.id.global_to_navigation_results_phone
     }
 
     fun loadResult(

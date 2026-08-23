@@ -168,11 +168,7 @@ open class ParentItemAdapter(
     }
 
     override fun onCreateContent(parent: ViewGroup): ParentItemHolder {
-        val layoutResId = when {
-            isLayout(TV) -> R.layout.homepage_parent_tv
-            isLayout(EMULATOR) -> R.layout.homepage_parent_emulator
-            else -> R.layout.homepage_parent
-        }
+        val layoutResId = R.layout.homepage_parent
 
         val inflater = LayoutInflater.from(parent.context)
         val binding = try {

@@ -28,7 +28,6 @@ import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.databinding.FragmentHomeHeadBinding
-import com.lagradost.cloudstream3.databinding.FragmentHomeHeadTvBinding
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.debugException
 import com.lagradost.cloudstream3.mvvm.logError
@@ -77,32 +76,7 @@ class HomeParentItemAdapterPreview(
     override val headers = 1
     override fun onCreateHeader(parent: ViewGroup): ViewHolderState<Bundle> {
         val inflater = LayoutInflater.from(parent.context)
-        val binding = if (isLayout(TV or EMULATOR)) FragmentHomeHeadTvBinding.inflate(
-            inflater,
-            parent,
-            false
-        ) else FragmentHomeHeadBinding.inflate(inflater, parent, false)
-
-        if (binding is FragmentHomeHeadTvBinding && isLayout(EMULATOR)) {
-            binding.homeBookmarkParentItemMoreInfo.isVisible = true
-
-            val marginInDp = 50
-            val density = binding.horizontalScrollChips.context.resources.displayMetrics.density
-            val marginInPixels = (marginInDp * density).toInt()
-
-            val params = binding.horizontalScrollChips.layoutParams as ViewGroup.MarginLayoutParams
-            params.marginEnd = marginInPixels
-            binding.horizontalScrollChips.layoutParams = params
-            binding.homeWatchParentItemTitle.setCompoundDrawablesWithIntrinsicBounds(
-                null,
-                null,
-                ContextCompat.getDrawable(
-                    parent.context,
-                    R.drawable.ic_baseline_arrow_forward_24
-                ),
-                null
-            )
-        }
+        val binding = FragmentHomeHeadBinding.inflate(inflater, parent, false)
 
         return HeaderViewHolder(binding, viewModel, accountViewModel)
     }
@@ -338,75 +312,6 @@ class HomeParentItemAdapterPreview(
         private val homeNonePadding: View = itemView.findViewById(R.id.home_none_padding)
 
         fun onSelect(item: LoadResponse, position: Int) {
-            (binding as? FragmentHomeHeadTvBinding)?.apply {
-                homePreviewDescription.isGone = item.plot.isNullOrBlank()
-                homePreviewDescription.text = item.plot?.html() ?: ""
-
-                val scoreText = item.score?.toStringNull(0.1, 10, 1, false)
-
-                scoreText?.let { score ->
-                    homePreviewScore.text =
-                        homePreviewScore.context.getString(R.string.extension_rating, score)
-
-                    // while it should never fail, we do this just in case
-                    val rating = score.toDoubleOrNull() ?: item.score?.toDouble() ?: 0.0
-
-                    val color = when {
-                        rating < 5.0 -> "#eb2f2f".toColorInt() // Red
-                        rating < 8.0 -> "#eda009".toColorInt() // Yellow
-                        else -> "#3bb33b".toColorInt() // Green
-                    }
-                    homePreviewScore.backgroundTintList =
-                        android.content.res.ColorStateList.valueOf(color)
-                }
-                homePreviewScore.isGone = scoreText == null
-
-                item.year?.let { year ->
-                    homePreviewYear.text = year.toString()
-                }
-                homePreviewYear.isGone = item.year == null
-
-                val duration = item.duration
-                duration?.let { min ->
-                    homePreviewDuration.text =
-                        homePreviewDuration.context.getString(R.string.duration_format, min)
-                }
-                homePreviewDuration.isGone = duration == null || duration <= 0
-
-                val castText = item.actors?.take(3)?.joinToString(", ") { it.actor.name }
-                if (!castText.isNullOrBlank()) {
-                    homePreviewCast.text =
-                        homePreviewCast.context.getString(R.string.cast_format, castText)
-                    homePreviewCast.isVisible = true
-                } else {
-                    homePreviewCast.isVisible = false
-                }
-
-                homePreviewText.text = item.name.html()
-                populateChips(
-                    homePreviewTags,
-                    item.tags?.take(6) ?: emptyList(),
-                    R.style.ChipFilledSemiTransparent,
-                    null
-                )
-
-
-                bindLogo(
-                    url = item.logoUrl,
-                    headers = item.posterHeaders,
-                    titleView = homePreviewText,
-                    logoView = homeBackgroundPosterWatermarkBadgeHolder
-                )
-
-                homePreviewTags.isGone =
-                    item.tags.isNullOrEmpty()
-
-                homePreviewInfoBtt.setOnClickListener { view ->
-                    viewModel.click(
-                        LoadClickCallback(0, view, position, item)
-                    )
-                }
-            }
             (binding as? FragmentHomeHeadBinding)?.apply {
                 //homePreviewImage.setImage(item.posterUrl, item.posterHeaders)
 
@@ -539,8 +444,8 @@ class HomeParentItemAdapterPreview(
                 }
             }
 
-            headProfilePicCard?.isGone = isLayout(TV or EMULATOR)
-            alternateHeadProfilePicCard?.isGone = isLayout(TV or EMULATOR)
+            headProfilePicCard?.isGone = false
+            alternateHeadProfilePicCard?.isGone = false
 
             (headProfilePic ?: alternateHeadProfilePic)?.observe(viewModel.currentAccount) { currentAccount ->
                 headProfilePic?.loadImage(currentAccount?.image)
@@ -581,60 +486,6 @@ class HomeParentItemAdapterPreview(
                 activity?.showAccountSelectLinear()
             }
 
-            (binding as? FragmentHomeHeadTvBinding)?.apply {
-                /*homePreviewChangeApi.setOnClickListener { view ->
-                    view.context.selectHomepage(viewModel.repo?.name) { api ->
-                        viewModel.loadAndCancel(api, forceReload = true, fromUI = true)
-                    }
-                }
-                homePreviewReloadProvider.setOnClickListener {
-                    viewModel.loadAndCancel(
-                        viewModel.apiName.value ?: noneApi.name,
-                        forceReload = true,
-                        fromUI = true
-                    )
-                    showToast(R.string.action_reload, Toast.LENGTH_SHORT)
-                    true
-                }
-                homePreviewSearchButton.setOnClickListener { _ ->
-                    // Open blank screen.
-                    viewModel.queryTextSubmit("")
-                }*/
-
-                // A workaround to the focus problem of always centering the view on focus
-                // as that causes higher android versions to stretch the ui when switching between shows
-                var lastFocusTimeoutMs = 0L
-                homePreviewInfoBtt.setOnFocusChangeListener { view, hasFocus ->
-                    val lastFocusMs = lastFocusTimeoutMs
-                    // Always reset timer, as we only want to update
-                    // it if we have not interacted in half a second
-                    lastFocusTimeoutMs = System.currentTimeMillis()
-                    if (!hasFocus) return@setOnFocusChangeListener
-                    if (lastFocusMs + 500L < System.currentTimeMillis()) {
-                        MainActivity.centerView(view)
-                    }
-                }
-
-                homePreviewHiddenNextFocus.setOnFocusChangeListener { _, hasFocus ->
-                    if (!hasFocus) return@setOnFocusChangeListener
-                    previewViewpager.setCurrentItem(previewViewpager.currentItem + 1, true)
-                    homePreviewInfoBtt.requestFocus()
-                }
-
-                homePreviewHiddenPrevFocus.setOnFocusChangeListener { _, hasFocus ->
-                    if (!hasFocus) return@setOnFocusChangeListener
-                    if (previewViewpager.currentItem <= 0) {
-                        //Focus the Home item as the default focus will be the header item
-                        (activity as? MainActivity)?.binding?.navRailView?.findViewById<NavigationBarItemView>(
-                            R.id.navigation_home
-                        )?.requestFocus()
-                    } else {
-                        previewViewpager.setCurrentItem(previewViewpager.currentItem - 1, true)
-                        binding.homePreviewInfoBtt.requestFocus()
-                        //binding.homePreviewPlayBtt.requestFocus()
-                    }
-                }
-            }
 
             (binding as? FragmentHomeHeadBinding)?.apply {
                 homeSearch.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -682,9 +533,6 @@ class HomeParentItemAdapterPreview(
                     previewViewpager.isVisible = true
                     previewViewpagerText.isVisible = true
                     alternativeAccountPadding?.isVisible = false
-                    (binding as? FragmentHomeHeadTvBinding)?.apply {
-                        homePreviewInfoBtt.isVisible = true
-                    }
                     // Explicitly bind the current item to ensure instant loading
                     val currentPos = previewViewpager.currentItem
                     val item = preview.value.second.getOrNull(currentPos)
@@ -699,9 +547,6 @@ class HomeParentItemAdapterPreview(
                     previewViewpager.isVisible = false
                     previewViewpagerText.isVisible = false
                     alternativeAccountPadding?.isVisible = true
-                    (binding as? FragmentHomeHeadTvBinding)?.apply {
-                        homePreviewInfoBtt.isVisible = false
-                    }
                     //previewHeader.isVisible = false
                 }
             }
@@ -711,13 +556,8 @@ class HomeParentItemAdapterPreview(
             resumeHolder.isVisible = resumeWatching.isNotEmpty()
             resumeAdapter.submitList(resumeWatching)
 
-            if (
-                binding is FragmentHomeHeadBinding ||
-                binding is FragmentHomeHeadTvBinding &&
-                isLayout(EMULATOR)
-            ) {
-                val title = (binding as? FragmentHomeHeadBinding)?.homeWatchParentItemTitle
-                    ?: (binding as? FragmentHomeHeadTvBinding)?.homeWatchParentItemTitle
+            if (binding is FragmentHomeHeadBinding) {
+                val title = binding.homeWatchParentItemTitle
 
                 title?.setOnClickListener {
                     viewModel.popup(
@@ -741,13 +581,8 @@ class HomeParentItemAdapterPreview(
             bookmarkHolder.isVisible = visible
             bookmarkAdapter.submitList(list)
 
-            if (
-                binding is FragmentHomeHeadBinding ||
-                binding is FragmentHomeHeadTvBinding &&
-                isLayout(EMULATOR)
-            ) {
-                val title = (binding as? FragmentHomeHeadBinding)?.homeBookmarkParentItemTitle
-                    ?: (binding as? FragmentHomeHeadTvBinding)?.homeBookmarkParentItemTitle
+            if (binding is FragmentHomeHeadBinding) {
+                val title = binding.homeBookmarkParentItemTitle
 
                 title?.setOnClickListener {
                     val items = toggleList.map { it.first }.filter { it.isChecked }
@@ -777,12 +612,6 @@ class HomeParentItemAdapterPreview(
                 observe(viewModel.preview) {
                     updatePreview(it)
                 }
-                /*if (binding is FragmentHomeHeadTvBinding) {
-                    observe(viewModel.apiName) { name ->
-                        binding.homePreviewChangeApi.text = name
-                        binding.homePreviewReloadProvider.isGone = (name == noneApi.name)
-                    }
-                }*/
                 observe(viewModel.resumeWatching) {
                     updateResume(it)
                 }

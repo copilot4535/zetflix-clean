@@ -495,7 +495,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         binding?.castMiniControllerHolder?.isVisible =
             !listOf(
                 R.id.navigation_results_phone,
-                R.id.navigation_results_tv,
                 R.id.navigation_player
             ).contains(destination.id)
 
@@ -1232,52 +1231,9 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         // just in case, MAIN SHOULD *NEVER* BOOT LOOP CRASH
         binding = try {
-            if (isLayout(TV or EMULATOR)) {
-                val newLocalBinding = ActivityMainTvBinding.inflate(layoutInflater, null, false)
-                setContentView(newLocalBinding.root)
-
-                if (isLayout(TV) && ANIMATED_OUTLINE) {
-                    TvFocus.focusOutline = WeakReference(newLocalBinding.focusOutline)
-                    newLocalBinding.root.viewTreeObserver.addOnScrollChangedListener {
-                        TvFocus.updateFocusView(TvFocus.lastFocus.get(), same = true)
-                    }
-                    newLocalBinding.root.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
-                        TvFocus.updateFocusView(newFocus)
-                    }
-                } else {
-                    newLocalBinding.focusOutline.isVisible = false
-                }
-
-                if (isLayout(TV)) {
-                    // Put here any button you don't want focusing it to center the view
-                    val exceptionButtons = listOf(
-                        //R.id.home_preview_play_btt,
-                        R.id.home_preview_info_btt,
-                        R.id.home_preview_hidden_next_focus,
-                        R.id.home_preview_hidden_prev_focus,
-                        R.id.result_play_movie_button,
-                        R.id.result_play_series_button,
-                        R.id.result_resume_series_button,
-                        R.id.result_play_trailer_button,
-                        R.id.result_bookmark_Button,
-                        R.id.result_favorite_Button,
-                        R.id.result_subscribe_Button,
-                        R.id.result_search_Button,
-                        R.id.result_episodes_show_button,
-                    )
-
-                    newLocalBinding.root.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
-                        if (exceptionButtons.contains(newFocus?.id)) return@addOnGlobalFocusChangeListener
-                        centerView(newFocus)
-                    }
-                }
-
-                ActivityMainBinding.bind(newLocalBinding.root) // this may crash
-            } else {
-                val newLocalBinding = ActivityMainBinding.inflate(layoutInflater, null, false)
-                setContentView(newLocalBinding.root)
-                newLocalBinding
-            }
+            val newLocalBinding = ActivityMainBinding.inflate(layoutInflater, null, false)
+            setContentView(newLocalBinding.root)
+            newLocalBinding
         } catch (t: Throwable) {
             showToast(txt(R.string.unable_to_inflate, t.message ?: ""), Toast.LENGTH_LONG)
             null

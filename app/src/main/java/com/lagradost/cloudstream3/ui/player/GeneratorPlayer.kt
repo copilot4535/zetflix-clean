@@ -2057,8 +2057,7 @@ class GeneratorPlayer : FullScreenPlayer() {
      * settings and some TV devices are not classified as TV
      * for some reason.
      */
-    override fun pickLayout(): Int =
-        if (isLayout(TV or EMULATOR)) R.layout.fragment_player_tv else R.layout.fragment_player
+    override fun pickLayout(): Int = R.layout.fragment_player
 
     var skipAnimator: ValueAnimator? = null
     var skipIndex = 0
@@ -2167,18 +2166,6 @@ class GeneratorPlayer : FullScreenPlayer() {
                 // Scroll to current episode
                 viewModel.state.generatorState?.index?.let { index ->
                     playerEpisodeList.scrollToPosition(index)
-                    // Ensure focus on tv
-                    if (isLayout(TV)) {
-                        playerEpisodeList.post {
-                            val viewHolder =
-                                playerEpisodeList.findViewHolderForAdapterPosition(index)
-                            viewHolder?.itemView?.requestFocus()
-                            viewHolder?.itemView?.let { itemView ->
-                                itemView.isFocusableInTouchMode = true
-                                itemView.requestFocus()
-                            }
-                        }
-                    }
                 }
 
                 // update overlay season title
@@ -2272,13 +2259,7 @@ class GeneratorPlayer : FullScreenPlayer() {
                 } ?: listOf()
             }
 
-            // Set up TV clock visibility
-            if (isLayout(TV)) {
-                val showTvClock = settingsManager.getBoolean(ctx.getString(R.string.tv_layout_clock_key), false)
-                playerBinding?.playerVideoClock?.isVisible = showTvClock
-            } else {
-                playerBinding?.playerVideoClock?.isVisible = false
-            }
+            playerBinding?.playerVideoClock?.isVisible = false
         }
 
         unwrapBundle(savedInstanceState)
