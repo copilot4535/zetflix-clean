@@ -50,16 +50,17 @@
         <!--<item name="preferenceTheme">@style/PreferencesTheme</item>-->
 
         <!-- DEF STYLE -->
-        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimary">@color/zetflix_accent</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="textColor">@color/textColor</item>
-        <item name="colorOnPrimary">@color/whiteText</item>
-        <item name="grayTextColor">@color/grayTextColor</item>
-        <item name="primaryGrayBackground">@color/primaryGrayBackground</item>
+        <item name="colorAccent">@color/zetflix_accent</item>
+        <item name="textColor">@color/zetflix_text_primary</item>
+        <item name="colorOnPrimary">@color/zetflix_text_primary</item>
+        <item name="grayTextColor">@color/zetflix_text_secondary</item>
+        <item name="primaryGrayBackground">@color/zetflix_background</item>
         <item name="primaryBlackBackground">@color/primaryBlackBackground</item>
-        <item name="iconGrayBackground">@color/iconGrayBackground</item>
-        <item name="boxItemBackground">@color/boxItemBackground</item>
+        <item name="iconGrayBackground">@color/zetflix_surface_light</item>
+        <item name="boxItemBackground">@color/zetflix_surface</item>
+        <item name="colorSearch">@color/zetflix_surface</item>
         <item name="iconColor">@color/iconColor</item>
         <item name="white">@color/white</item>
         <item name="black">@color/black</item>

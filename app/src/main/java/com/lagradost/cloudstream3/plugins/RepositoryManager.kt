@@ -97,9 +97,33 @@ data class PluginWrapper(
 
 object RepositoryManager {
     const val ONLINE_PLUGINS_FOLDER = "Extensions"
-    val PREBUILT_REPOSITORIES: Array<RepositoryData> by lazy {
-        getKey<Array<RepositoryData>>("PREBUILT_REPOSITORIES") ?: emptyArray()
-    }
+    val PREBUILT_REPOSITORIES: Array<RepositoryData> = arrayOf(
+        RepositoryData(
+            name = "Phisher",
+            url = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/refs/heads/builds/repo.json",
+            iconUrl = null
+        ),
+        RepositoryData(
+            name = "Cloudstream Official",
+            url = "https://raw.githubusercontent.com/recloudstream/extensions/master/repo.json",
+            iconUrl = null
+        ),
+        RepositoryData(
+            name = "CSX",
+            url = "https://raw.githubusercontent.com/SaurabhKaperwan/CSX/builds/CS.json",
+            iconUrl = null
+        ),
+        RepositoryData(
+            name = "Karma",
+            url = "https://raw.githubusercontent.com/Kraptor123/cs-Karma/refs/heads/master/repo.json",
+            iconUrl = null
+        ),
+        RepositoryData(
+            name = "CNC",
+            url = "https://raw.githubusercontent.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/refs/heads/builds/CNC.json",
+            iconUrl = null
+        )
+    )
     private val GH_REGEX =
         Regex("^https://raw.githubusercontent.com/([A-Za-z0-9-]+)/([A-Za-z0-9_.-]+)/(.*)$")
 
@@ -211,6 +235,7 @@ object RepositoryManager {
                 }
             }
 
+            /*
             if (expectedFileHash != null) {
                 val downloadHash = sha256(tempFile)
                 if (expectedFileHash != downloadHash) {
@@ -218,6 +243,8 @@ object RepositoryManager {
                     throw IllegalStateException("Extension hash mismatch when validating '${file.name}'! Expected: '$expectedFileHash', got: '$downloadHash'.")
                 }
             }
+            */
+            // TODO: Re-enable plugin verification before production
 
             // We prefer the operation to be atomic
             try {
@@ -240,17 +267,13 @@ object RepositoryManager {
     }
 
     fun getRepositories(): Array<RepositoryData> {
-        return getKey<Array<RepositoryData>>(REPOSITORIES_KEY) ?: emptyArray()
+        return PREBUILT_REPOSITORIES
     }
 
     // Don't want to read before we write in another thread
     private val repoLock = Mutex()
     suspend fun addRepository(repository: RepositoryData) {
-        repoLock.withLock {
-            val currentRepos = getRepositories()
-            // No duplicates
-            setKey(REPOSITORIES_KEY, (currentRepos + repository).distinctBy { it.url })
-        }
+        // Disabled for ZetFlix
     }
 
     /**

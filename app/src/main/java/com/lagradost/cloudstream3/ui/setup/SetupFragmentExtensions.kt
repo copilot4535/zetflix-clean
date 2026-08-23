@@ -49,7 +49,7 @@ class SetupFragmentExtensions : BaseFragment<FragmentSetupExtensionsBinding>(
 
     private fun setRepositories(success: Boolean = true) {
         main {
-            val repositories = RepositoryManager.getRepositories() + PREBUILT_REPOSITORIES
+            val repositories = PREBUILT_REPOSITORIES
             val hasRepos = repositories.isNotEmpty()
             binding?.repoRecyclerView?.isVisible = hasRepos
             binding?.blankRepoScreen?.isVisible = !hasRepos

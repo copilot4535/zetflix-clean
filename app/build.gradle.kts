@@ -101,7 +101,7 @@ android {
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.lagradost.cloudstream3"
+        applicationId = "com.zetflix.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = libs.versions.versionCode.get().toInt()
@@ -117,6 +117,16 @@ android {
             "BUILD_DATE",
             "${System.currentTimeMillis()}"
         )
+        buildConfigField(
+            "String",
+            "BACKEND_BASE_URL",
+            "\"https://zetflix.abishekyadav157.com.np\""
+        ) // TODO: Verify BACKEND_BASE_URL before production
+        buildConfigField(
+            "String",
+            "NORMAL_REPO_MANIFEST_URL",
+            "\"https://raw.githubusercontent.com/self-similarity/MegaRepo/builds/repo.json\""
+        ) // TODO: Verify NORMAL_REPO_MANIFEST_URL before production
         buildConfigField(
             "String",
             "SIMKL_CLIENT_ID",
@@ -287,6 +297,9 @@ dependencies {
     // Downloading & Networking
     implementation(libs.work.runtime.ktx)
     implementation(libs.nicehttp) // HTTP Lib
+
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     implementation(project(":library"))
 }

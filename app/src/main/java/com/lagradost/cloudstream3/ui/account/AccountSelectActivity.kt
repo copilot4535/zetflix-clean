@@ -15,6 +15,9 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.ActivityAccountSelectBinding
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.AutofitRecyclerView
+import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
+import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
+import android.content.Intent
 import com.lagradost.cloudstream3.ui.account.AccountAdapter.Companion.VIEW_TYPE_EDIT_ACCOUNT
 import com.lagradost.cloudstream3.ui.account.AccountAdapter.Companion.VIEW_TYPE_SELECT_ACCOUNT
 import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
@@ -47,6 +50,12 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (!ZetFlixAuthPrefs.isZetFlixAuthenticated(this)) {
+            startActivity(Intent(this, ZetFlixLoginActivity::class.java))
+            finish()
+            return
+        }
 
         // Are we editing and coming from MainActivity?
         val isEditingFromMainActivity = intent.getBooleanExtra(

@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3d50fa</color>
+    <!-- ZetFlix Netflix-style palette -->
+    <color name="zetflix_background">#0b0b0f</color>       <!-- Main background -->
+    <color name="zetflix_surface">#1a1a24</color>          <!-- Cards/inputs -->
+    <color name="zetflix_surface_light">#121218</color>    <!-- Elevated surfaces -->
+    <color name="zetflix_border">#2c2c3a</color>           <!-- Borders -->
+    <color name="zetflix_text_primary">#ffffff</color>     <!-- Primary text -->
+    <color name="zetflix_text_secondary">#a0a0b0</color>   <!-- Secondary text -->
+    <color name="zetflix_error">#ff5c5c</color>            <!-- Error text -->
+    <color name="zetflix_accent">#e50914</color>           <!-- Brand red -->
+
+    <color name="colorPrimary">#e50914</color>
     <color name="colorPrimarySecond">@color/colorPrimary</color>
-    <color name="colorSearch">#303135</color> <!--#3444D1 @color/itemBackground-->
+    <color name="colorSearch">#1a1a24</color> <!--#3444D1 @color/itemBackground-->
     <color name="colorOngoing">#F53B66</color> <!--FF8181-->
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#3b65f5</color> <!-- 818fff-->
+    <color name="colorPrimaryDark">#b0070f</color>
+    <color name="colorAccent">#e50914</color> <!-- 818fff-->
 
-    <color name="primaryGrayBackground">#2B2C30</color> <!--0f0f10 0E0E10 303135 2B2C30-->
-    <color name="primaryBlackBackground">#111111</color> <!--1C1C20 191a1f 19181E 202125 1C1C20-->
-    <color name="iconGrayBackground">#1C1C20</color> <!--141419 202125-->
-    <color name="boxItemBackground">#161616</color> <!-- 17171B 1B1B20-->
+    <color name="primaryGrayBackground">#0b0b0f</color> <!--0f0f10 0E0E10 303135 2B2C30-->
+    <color name="primaryBlackBackground">#000000</color> <!--1C1C20 191a1f 19181E 202125 1C1C20-->
+    <color name="iconGrayBackground">#121218</color> <!--141419 202125-->
+    <color name="boxItemBackground">#1a1a24</color> <!-- 17171B 1B1B20-->
 
-    <color name="textColor">#e9eaee</color> <!--FFF-->
-    <color name="grayTextColor">#9ba0a4</color> <!-- 5e5f62-->
+    <color name="textColor">#ffffff</color> <!--FFF-->
+    <color name="grayTextColor">#a0a0b0</color> <!-- 5e5f62-->
     <color name="grayShimmer">#DCDCDC</color> <!-- 5e5f62-->
 
     <color name="searchColorTransparent">#1AFFFFFF</color> <!--DADADA-->

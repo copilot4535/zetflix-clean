@@ -51,8 +51,7 @@ class ExtensionsViewModel : ViewModel() {
     //TODO CACHE GET REQUESTS
     // DO not use viewModelScope.launchSafe, it will ANR on slow internet
     fun loadStats() = ioSafe {
-        val urls = (getKey<Array<RepositoryData>>(REPOSITORIES_KEY)
-            ?: emptyArray()) + PREBUILT_REPOSITORIES
+        val urls = RepositoryManager.getRepositories()
 
         val onlinePlugins = urls.toList().amap {
             RepositoryManager.getRepoPlugins(it)?.toList() ?: emptyList()
@@ -86,8 +85,7 @@ class ExtensionsViewModel : ViewModel() {
         _pluginStats.postValue(stats)
     }
 
-    private fun repos() = (getKey<Array<RepositoryData>>(REPOSITORIES_KEY)
-        ?: emptyArray()) + PREBUILT_REPOSITORIES
+    private fun repos() = RepositoryManager.getRepositories()
 
     fun loadRepositories() {
         val urls = repos()

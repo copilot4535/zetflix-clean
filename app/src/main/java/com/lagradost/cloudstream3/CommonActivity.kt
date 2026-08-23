@@ -338,61 +338,10 @@ object CommonActivity {
 
     fun loadThemes(act: Activity?) {
         if (act == null) return
-        val settingsManager = PreferenceManager.getDefaultSharedPreferences(act)
 
-        val currentTheme =
-            when (settingsManager.getString(act.getString(R.string.app_theme_key), "AmoledLight")) {
-                "System" -> mapSystemTheme(act)
-                "Black" -> R.style.AppTheme
-                "Light" -> R.style.LightMode
-                "Amoled" -> R.style.AmoledMode
-                "AmoledLight" -> R.style.AmoledModeLight
-                "Monet" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                    R.style.MonetMode else R.style.AppTheme
-
-                "Dracula" -> R.style.DraculaMode
-                "Lavender" -> R.style.LavenderMode
-                "SilentBlue" -> R.style.SilentBlueMode
-
-                else -> R.style.AppTheme
-            }
-
-        val currentOverlayTheme =
-            when (settingsManager.getString(act.getString(R.string.primary_color_key), "Normal")) {
-                "Normal" -> R.style.OverlayPrimaryColorNormal
-                "DandelionYellow" -> R.style.OverlayPrimaryColorDandelionYellow
-                "CarnationPink" -> R.style.OverlayPrimaryColorCarnationPink
-                "Orange" -> R.style.OverlayPrimaryColorOrange
-                "DarkGreen" -> R.style.OverlayPrimaryColorDarkGreen
-                "Maroon" -> R.style.OverlayPrimaryColorMaroon
-                "NavyBlue" -> R.style.OverlayPrimaryColorNavyBlue
-                "Grey" -> R.style.OverlayPrimaryColorGrey
-                "White" -> R.style.OverlayPrimaryColorWhite
-                "CoolBlue" -> R.style.OverlayPrimaryColorCoolBlue
-                "Brown" -> R.style.OverlayPrimaryColorBrown
-                "Purple" -> R.style.OverlayPrimaryColorPurple
-                "Green" -> R.style.OverlayPrimaryColorGreen
-                "GreenApple" -> R.style.OverlayPrimaryColorGreenApple
-                "Red" -> R.style.OverlayPrimaryColorRed
-                "Banana" -> R.style.OverlayPrimaryColorBanana
-                "Party" -> R.style.OverlayPrimaryColorParty
-                "Pink" -> R.style.OverlayPrimaryColorPink
-                "Lavender" -> R.style.OverlayPrimaryColorLavender
-                "Monet" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                    R.style.OverlayPrimaryColorMonet else R.style.OverlayPrimaryColorNormal
-
-                "Monet2" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                    R.style.OverlayPrimaryColorMonetTwo else R.style.OverlayPrimaryColorNormal
-
-                else -> R.style.OverlayPrimaryColorNormal
-            }
-
-        act.theme.applyStyle(currentTheme, true)
-        act.theme.applyStyle(currentOverlayTheme, true)
-        appliedTheme = currentTheme
-        appliedColor = currentOverlayTheme
-        act.updateTv()
-        if (isLayout(TV)) act.theme.applyStyle(R.style.AppThemeTvOverlay, true)
+        act.theme.applyStyle(R.style.AppTheme, true)
+        appliedTheme = R.style.AppTheme
+        appliedColor = 0
         act.theme.applyStyle(
             R.style.LoadedStyle,
             true

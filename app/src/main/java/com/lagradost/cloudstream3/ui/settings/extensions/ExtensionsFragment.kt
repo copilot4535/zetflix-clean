@@ -91,6 +91,7 @@ class ExtensionsFragment : BaseFragment<FragmentExtensionsBinding>(
                 nextLeft = R.id.nav_rail_view
             )
 
+            /*
             if (!isLayout(TV))
                 binding.addRepoButton.let { button ->
                     button.post {
@@ -102,7 +103,9 @@ class ExtensionsFragment : BaseFragment<FragmentExtensionsBinding>(
                         )
                     }
                 }
+            */
 
+            /*
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
                     val dy = scrollY - oldScrollY
@@ -113,6 +116,7 @@ class ExtensionsFragment : BaseFragment<FragmentExtensionsBinding>(
                     }
                 }
             }
+            */
             adapter = RepoAdapter(false, {
                 findNavController().navigate(
                     R.id.navigation_settings_extensions_to_navigation_settings_plugins,
@@ -252,6 +256,7 @@ class ExtensionsFragment : BaseFragment<FragmentExtensionsBinding>(
         }
 
 
+        /*
         val addRepositoryClick = View.OnClickListener {
             val ctx = context ?: return@OnClickListener
             val binding = AddRepoInputBinding.inflate(LayoutInflater.from(ctx), null, false)
@@ -327,19 +332,19 @@ class ExtensionsFragment : BaseFragment<FragmentExtensionsBinding>(
                 dialog.dismissSafe(activity)
             }
         }
-
+        */
 
         val isTv = isLayout(TV)
         binding.apply {
-            addRepoButton.isGone = isTv
-            addRepoButtonImageviewHolder.isVisible = isTv
+            addRepoButton.isGone = true // Forced gone for ZetFlix
+            addRepoButtonImageviewHolder.isVisible = false // Forced invisible for ZetFlix
 
             // Band-aid for Fire TV
             pluginStorageAppbar.isFocusableInTouchMode = isTv
-            addRepoButtonImageview.isFocusableInTouchMode = isTv
+            // addRepoButtonImageview.isFocusableInTouchMode = isTv
 
-            addRepoButton.setOnClickListener(addRepositoryClick)
-            addRepoButtonImageview.setOnClickListener(addRepositoryClick)
+            // addRepoButton.setOnClickListener(addRepositoryClick)
+            // addRepoButtonImageview.setOnClickListener(addRepositoryClick)
         }
         reloadRepositories()
     }

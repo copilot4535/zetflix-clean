@@ -278,8 +278,7 @@ object PluginManager {
         ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(activity)
         afterPluginsLoadedEvent.invoke(false)
 
-        val urls = (getKey<Array<RepositoryData>>(REPOSITORIES_KEY)
-            ?: emptyArray()) + PREBUILT_REPOSITORIES
+        val urls = RepositoryManager.getRepositories()
 
         val onlinePlugins = urls.toList().amap {
             getRepoPlugins(it) ?: emptyList()
@@ -835,8 +834,7 @@ object PluginManager {
         ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(activity)
         afterPluginsLoadedEvent.invoke(false)
 
-        val urls = (getKey<Array<RepositoryData>>(REPOSITORIES_KEY)
-            ?: emptyArray()) + PREBUILT_REPOSITORIES
+        val urls = RepositoryManager.getRepositories()
         val onlinePlugins = urls.toList().amap {
             getRepoPlugins(it) ?: emptyList()
         }.flatten().distinctBy { it.plugin.url }

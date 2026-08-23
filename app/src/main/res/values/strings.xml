@@ -27,7 +27,7 @@
     <string name="new_update_format" formatted="true">New update found!\n%1$s -&gt; %2$s</string>
     <string name="filler" formatted="true">Filler</string>
     <string name="duration_format" formatted="true">%d min</string>
-    <string name="app_name">CloudStream</string>
+    <string name="app_name">ZetFlix</string>
     <string name="play_with_app_name">Play with CloudStream</string>
     <string name="title_home">Home</string>
     <string name="title_search">Search</string>
@@ -792,4 +792,16 @@
         <item quantity="other">%d downloads queued</item>
     </plurals>
     <string name="player_is_live">Live</string>
+
+    <string name="zetflix_login_title">ZetFlix</string>
+    <string name="zetflix_login_subtitle">Login to continue</string>
+    <string name="zetflix_phone_hint">Enter phone number</string>
+    <string name="zetflix_email_hint">Enter Gmail address</string>
+    <string name="zetflix_password_hint">Enter local password</string>
+    <string name="zetflix_agree_privacy">I agree to the privacy policy</string>
+    <string name="zetflix_login_button">Login</string>
+    <string name="zetflix_google_link">Sign in with Google</string>
+    <string name="zetflix_email_error">Enter the Gmail Address</string>
+    <string name="zetflix_password_error">Password must be at least 4 characters</string>
+    <string name="zetflix_phone_error">Please enter a valid phone number</string>
 </resources>

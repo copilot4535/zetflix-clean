@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0b0b0f"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/zetflix_card_bg"
+            android:orientation="vertical"
+            android:padding="24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/zetflix_login_title"
+                android:textColor="#ffffff"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="@string/zetflix_login_subtitle"
+                android:textColor="#a0a0b0"
+                android:textSize="16sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:orientation="horizontal">
+
+                <Spinner
+                    android:id="@+id/country_code_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:background="@drawable/zetflix_input_bg"
+                    android:paddingEnd="8dp"
+                    android:paddingStart="8dp" />
+
+                <EditText
+                    android:id="@+id/phone_number_edit"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/zetflix_input_bg"
+                    android:hint="@string/zetflix_phone_hint"
+                    android:inputType="phone"
+                    android:paddingEnd="12dp"
+                    android:paddingStart="12dp"
+                    android:textColor="#ffffff"
+                    android:textColorHint="#80ffffff" />
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/email_edit"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/zetflix_input_bg"
+                android:hint="@string/zetflix_email_hint"
+                android:inputType="textEmailAddress"
+                android:paddingEnd="12dp"
+                android:paddingStart="12dp"
+                android:textColor="#ffffff"
+                android:textColorHint="#80ffffff" />
+
+            <EditText
+                android:id="@+id/password_edit"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/zetflix_input_bg"
+                android:hint="@string/zetflix_password_hint"
+                android:inputType="textPassword"
+                android:paddingEnd="12dp"
+                android:paddingStart="12dp"
+                android:textColor="#ffffff"
+                android:textColorHint="#80ffffff" />
+
+            <CheckBox
+                android:id="@+id/privacy_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/zetflix_agree_privacy"
+                android:textColor="#a0a0b0" />
+
+            <Button
+                android:id="@+id/login_button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/zetflix_button_bg"
+                android:text="@string/zetflix_login_button"
+                android:textAllCaps="false"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                app:backgroundTint="@null" />
+
+            <TextView
+                android:id="@+id/google_signin_link"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="@string/zetflix_google_link"
+                android:textColor="#ffffff"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
