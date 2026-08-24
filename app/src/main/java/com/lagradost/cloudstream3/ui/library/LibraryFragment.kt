@@ -1,7 +1,6 @@
 package com.lagradost.cloudstream3.ui.library
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -20,14 +19,9 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.lagradost.cloudstream3.APIHolder
-import com.lagradost.cloudstream3.APIHolder.allProviders
-import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
-import com.lagradost.cloudstream3.CloudStreamApp.Companion.openBrowser
-import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.SearchResponse
@@ -59,8 +53,7 @@ import kotlinx.serialization.Serializable
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.abs
 
-const val LIBRARY_FOLDER = "library_folder"
-
+/*
 enum class LibraryOpenerType(@StringRes val stringRes: Int) {
     Default(R.string.action_default),
     Provider(R.string.none),
@@ -80,6 +73,7 @@ data class LibraryOpener(
 data class ProviderLibraryData(
     @JsonProperty("apiName") @SerialName("apiName") val apiName: String,
 )
+*/
 
 class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     BaseFragment.BindingCreator.Bind(FragmentLibraryBinding::bind)
@@ -135,8 +129,8 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
         binding: FragmentLibraryBinding,
         savedInstanceState: Bundle?
     ) {
-        binding.sortFab.setOnClickListener(sortChangeClickListener)
-        binding.librarySort.setOnClickListener(sortChangeClickListener)
+        // binding.sortFab.setOnClickListener(sortChangeClickListener)
+        // binding.librarySort.setOnClickListener(sortChangeClickListener)
 
         binding.libraryRoot.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
             ?.apply {
@@ -147,23 +141,23 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 }
             }
 
-        val searchCallback = Runnable {
+        /*val searchCallback = Runnable {
             val newText = binding.mainSearch.query.toString()
             libraryViewModel.sort(ListSorting.Query, newText)
-        }
+        }*/
 
         binding.mainSearch.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                libraryViewModel.sort(ListSorting.Query, query)
+                // libraryViewModel.sort(ListSorting.Query, query)
                 return true
             }
 
             // This is required to prevent the first text change
             // When this is attached it'll immediately send a onQueryTextChange("")
             // Which we do not want
-            var hasInitialized = false
+            // var hasInitialized = false
             override fun onQueryTextChange(newText: String?): Boolean {
-                if (!hasInitialized) {
+                /*if (!hasInitialized) {
                     hasInitialized = true
                     return true
                 }
@@ -172,7 +166,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
                 // Delay the execution of the search operation by 1 second (adjust as needed)
                 // this prevents running search when the user is typing
-                binding.mainSearch.postDelayed(searchCallback, 1000)
+                binding.mainSearch.postDelayed(searchCallback, 1000)*/
 
                 return true
             }
@@ -180,7 +174,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
         libraryViewModel.reloadPages(false)
 
-        binding.listSelector.setOnClickListener {
+        /*binding.listSelector.setOnClickListener {
             val items = libraryViewModel.availableApiNames
             val currentItem = libraryViewModel.currentApiName.value
 
@@ -193,7 +187,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 val selectedItem = items.getOrNull(index) ?: return@showBottomDialog
                 libraryViewModel.switchList(selectedItem)
             }
-        }
+        }*/
 
         //Load value for toggling Random button. Hide at startup
         context?.let {
@@ -207,6 +201,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
             binding.libraryRandomButtonTv.visibility = View.GONE
         }
 
+        /*
         /**
          * Shows a plugin selection dialogue and saves the response
          **/
@@ -272,11 +267,12 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 )
             }
         }
+        */
 
-        binding.providerSelector.setOnClickListener {
+        /*binding.providerSelector.setOnClickListener {
             val syncName = libraryViewModel.currentSyncApi?.syncIdName ?: return@setOnClickListener
             activity?.showPluginSelectionDialog(syncName.name, syncName)
-        }
+        }*/
 
         binding.viewpager.setPageTransformer(LibraryScrollTransformer())
 
@@ -494,59 +490,21 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     }
 
     private fun loadLibraryItem(
-        syncName: SyncIdName,
-        syncId: String,
+        _syncName: SyncIdName,
+        _syncId: String,
         card: SearchResponse
     ) {
-        // This basically first selects the individual opener and if that is default then
-        // selects the whole list opener
-        val savedListSelection =
-            getKey<LibraryOpener>("$currentAccount/$LIBRARY_FOLDER", syncName.name)
-
-        val savedSelection = getKey<LibraryOpener>(
-            "$currentAccount/$LIBRARY_FOLDER",
-            syncId
-        ).takeIf {
-            it?.openType != LibraryOpenerType.Default
-        } ?: savedListSelection
-
-        when (savedSelection?.openType) {
-            null, LibraryOpenerType.Default -> {
-                // Prevents opening MAL/AniList as a provider
-                if (APIHolder.getApiFromNameNull(card.apiName) != null) {
-                    activity?.loadSearchResult(
-                        card
-                    )
-                } else {
-                    // Search when no provider can open
-                    QuickSearchFragment.pushSearch(
-                        activity,
-                        card.name
-                    )
-                }
-            }
-
-            LibraryOpenerType.None -> {}
-            LibraryOpenerType.Provider ->
-                savedSelection.providerData?.apiName?.let { apiName ->
-                    activity?.loadResult(
-                        card.url,
-                        apiName,
-                        card.name
-                    )
-                }
-
-            LibraryOpenerType.Browser ->
-                openBrowser(card.url)
-
-            LibraryOpenerType.Search -> {
-                QuickSearchFragment.pushSearch(
-                    activity,
-                    card.name
-                )
-            }
+        if (APIHolder.getApiFromNameNull(card.apiName) != null) {
+            activity?.loadSearchResult(
+                card
+            )
+        } else {
+            // Search when no provider can open
+            QuickSearchFragment.pushSearch(
+                activity,
+                card.name
+            )
         }
-
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -555,6 +513,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
         adapter.notifyItemRangeChanged(0, adapter.itemCount)
     }
 
+    /*
     private val sortChangeClickListener = View.OnClickListener { view ->
         val methods = libraryViewModel.sortingMethods.map {
             txt(it.stringRes).asString(view.context)
@@ -571,6 +530,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 libraryViewModel.sort(method)
             })
     }
+    */
 }
 
 class MenuSearchView(context: Context) : SearchView(context)

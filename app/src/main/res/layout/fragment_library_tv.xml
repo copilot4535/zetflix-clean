@@ -44,6 +44,7 @@
                 android:padding="2dp"
                 android:src="@drawable/ic_baseline_extension_24"
                 android:tag="@string/tv_no_focus_tag"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <ImageView
@@ -59,6 +60,7 @@
                 android:nextFocusRight="@id/list_selector"
                 android:src="@drawable/ic_baseline_sort_24"
                 android:tag="@string/tv_no_focus_tag"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <ImageView
@@ -75,6 +77,7 @@
                 android:padding="1dp"
                 android:src="@drawable/ic_baseline_filter_list_24"
                 android:tag="@string/tv_no_focus_tag"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <FrameLayout
