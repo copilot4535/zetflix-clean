@@ -39,7 +39,6 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:contentDescription="@string/change_providers_img_des"
                 android:src="@drawable/ic_baseline_extension_24"
-                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <ImageView
@@ -100,7 +99,6 @@
                     android:nextFocusRight="@id/main_search"
                     android:padding="10dp"
                     android:src="@drawable/ic_baseline_filter_list_24"
-                    android:visibility="gone"
                     app:tint="?attr/textColor" />
 
             </FrameLayout>
@@ -186,7 +184,6 @@
             style="@style/ExtendedFloatingActionButton"
             android:text="@string/sort"
             android:textColor="?attr/textColor"
-            android:visibility="gone"
             app:icon="@drawable/ic_baseline_sort_24"
             tools:ignore="ContentDescription" />
     </FrameLayout>

@@ -1920,8 +1920,13 @@ interface LoadResponse {
         fun LoadResponse.addKitsuId(id: Int?) {}
         fun LoadResponse.addAniListId(id: Int?) {}
 
-        fun LoadResponse.addSimklId(id: Int?) {}
-        fun LoadResponse.addImdbUrl(url: String?) {}
+        fun LoadResponse.addSimklId(id: Int?) {
+            this.addSimklId(SimklSyncServices.Simkl, id.toString())
+        }
+
+        fun LoadResponse.addImdbUrl(url: String?) {
+            addImdbId(imdbUrlToIdNullable(url))
+        }
 
         /**better to call addTrailer with multiple trailers directly instead of calling this multiple times*/
         @Suppress("RedundantSuspendModifier")

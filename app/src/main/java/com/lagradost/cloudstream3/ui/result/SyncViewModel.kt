@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import com.lagradost.cloudstream3.Score
 import com.lagradost.cloudstream3.amap
 import com.lagradost.cloudstream3.mvvm.Resource
-import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.throwAbleToResource
 import com.lagradost.cloudstream3.syncproviders.AccountManager
 import com.lagradost.cloudstream3.syncproviders.SyncAPI

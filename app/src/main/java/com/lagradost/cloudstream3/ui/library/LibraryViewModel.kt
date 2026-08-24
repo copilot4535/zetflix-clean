@@ -110,8 +110,17 @@ class LibraryViewModel : ViewModel() {
                     )
                 }
 
-                // always sort newest first
-                sort(ListSorting.UpdatedNew, null, pages)
+                val desiredSortingMethod =
+                    ListSorting.entries.getOrNull(DataStoreHelper.librarySortingMode)
+                if (desiredSortingMethod != null && library.supportedListSorting.contains(
+                        desiredSortingMethod
+                    )
+                ) {
+                    sort(desiredSortingMethod, null, pages)
+                } else {
+                    // null query = no sorting
+                    sort(ListSorting.Query, null, pages)
+                }
             }
         }
     }

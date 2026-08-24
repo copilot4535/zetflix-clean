@@ -5,7 +5,11 @@ import com.lagradost.cloudstream3.mvvm.safeAsync
 import com.lagradost.cloudstream3.syncproviders.SyncIdName
 
 object SyncRedirector {
-    private val syncIds = emptyList<Pair<SyncIdName, Regex>>()
+    private val syncIds =
+        listOf(
+            SyncIdName.MyAnimeList to Regex("""myanimelist\.net/anime/(\d+)"""),
+            SyncIdName.Anilist to Regex("""anilist\.co/anime/(\d+)""")
+        )
 
     suspend fun redirect(
         url: String,

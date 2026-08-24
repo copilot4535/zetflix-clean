@@ -8,12 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import androidx.viewpager2.widget.ViewPager2
@@ -487,19 +484,6 @@ class HomeParentItemAdapterPreview(
             }
 
 
-            (binding as? FragmentHomeHeadBinding)?.apply {
-                homeSearch.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                    override fun onQueryTextSubmit(query: String): Boolean {
-                        viewModel.queryTextSubmit(query)
-                        return true
-                    }
-
-                    override fun onQueryTextChange(newText: String): Boolean {
-                        viewModel.queryTextChange(newText)
-                        return true
-                    }
-                })
-            }
         }
 
         private fun updatePreview(preview: Resource<Pair<Boolean, List<LoadResponse>>>) {
