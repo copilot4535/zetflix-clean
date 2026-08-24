@@ -10,10 +10,6 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.throwAbleToResource
 import com.lagradost.cloudstream3.syncproviders.AccountManager
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.aniListApi
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.kitsuApi
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.malApi
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.simklApi
 import com.lagradost.cloudstream3.syncproviders.SyncAPI
 import com.lagradost.cloudstream3.ui.SyncWatchType
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
@@ -98,11 +94,11 @@ class SyncViewModel : ViewModel() {
     }
 
     private fun setMalId(id: String?): Boolean {
-        return addSync(malApi.idPrefix, id ?: return false)
+        return false
     }
 
     private fun setAniListId(id: String?): Boolean {
-        return addSync(aniListApi.idPrefix, id ?: return false)
+        return false
     }
 
     var hasAddedFromUrl: HashSet<String> = hashSetOf()
@@ -238,18 +234,6 @@ class SyncViewModel : ViewModel() {
         var lastError: Resource<SyncAPI.SyncResult> = Resource.Failure(false, "No data")
         val current = ArrayList(syncs.toList())
 
-        // shitty way to sort anilist first, as it has trailers while mal does not
-        if (syncs.containsKey(aniListApi.idPrefix)) {
-            try { // swap can throw error
-                Collections.swap(
-                    current,
-                    current.indexOfFirst { it.first == aniListApi.idPrefix },
-                    0
-                )
-            } catch (t: Throwable) {
-                logError(t)
-            }
-        }
 
         current.forEach { (prefix, id) ->
             repos.firstOrNull { it.idPrefix == prefix }?.let { repo ->
@@ -275,15 +259,7 @@ class SyncViewModel : ViewModel() {
     }
 
     fun syncName(syncName: String): String? {
-        // fix because of bad old data :pensive:
-        val realName = when (syncName) {
-            "MAL" -> malApi.idPrefix
-            "Kitsu" -> kitsuApi.idPrefix
-            "Simkl" -> simklApi.idPrefix
-            "AniList" -> aniListApi.idPrefix
-            else -> syncName
-        }
-        return repos.firstOrNull { it.idPrefix == realName }?.idPrefix
+        return repos.firstOrNull { it.idPrefix == syncName }?.idPrefix
     }
 
     fun setSync(syncName: String, syncId: String) {

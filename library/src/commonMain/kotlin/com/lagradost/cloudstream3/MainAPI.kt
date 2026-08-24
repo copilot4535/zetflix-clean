@@ -1851,11 +1851,10 @@ interface LoadResponse {
         get() = score?.toOld()
 
     companion object {
-        var malIdPrefix = "" //malApi.idPrefix
-
-        var kitsuIdPrefix = "" //kitsuApi.idPrefix
-        var aniListIdPrefix = "" //aniListApi.idPrefix
-        var simklIdPrefix = "" //simklApi.idPrefix
+        var malIdPrefix = ""
+        var kitsuIdPrefix = ""
+        var aniListIdPrefix = ""
+        var simklIdPrefix = ""
         var isTrailersEnabled = true
 
         /**
@@ -1910,50 +1909,19 @@ interface LoadResponse {
             this.actors = actors?.map { actor -> ActorData(actor) }
         }
 
-        fun LoadResponse.getMalId(): String? {
-            return this.syncData[malIdPrefix]
-        }
+        fun LoadResponse.getMalId(): String? = null
+        fun LoadResponse.getKitsuId(): String? = null
+        fun LoadResponse.getAniListId(): String? = null
 
-        fun LoadResponse.getKitsuId(): String? {
-            return this.syncData[kitsuIdPrefix]
-        }
-        fun LoadResponse.getAniListId(): String? {
-            return this.syncData[aniListIdPrefix]
-        }
+        fun LoadResponse.getImdbId(): String? = null
+        fun LoadResponse.getTMDbId(): String? = null
 
-        fun LoadResponse.getImdbId(): String? {
-            return safe {
-                readIdFromString(this.syncData[simklIdPrefix])[SimklSyncServices.Imdb]
-            }
-        }
+        fun LoadResponse.addMalId(id: Int?) {}
+        fun LoadResponse.addKitsuId(id: Int?) {}
+        fun LoadResponse.addAniListId(id: Int?) {}
 
-        fun LoadResponse.getTMDbId(): String? {
-            return safe {
-                readIdFromString(this.syncData[simklIdPrefix])[SimklSyncServices.Tmdb]
-            }
-        }
-
-        fun LoadResponse.addMalId(id: Int?) {
-            this.syncData[malIdPrefix] = (id ?: return).toString()
-            this.addSimklId(SimklSyncServices.Mal, id.toString())
-        }
-
-        fun LoadResponse.addKitsuId(id: Int?) {
-            this.syncData[kitsuIdPrefix] = (id ?: return).toString()
-        }
-
-        fun LoadResponse.addAniListId(id: Int?) {
-            this.syncData[aniListIdPrefix] = (id ?: return).toString()
-            this.addSimklId(SimklSyncServices.AniList, id.toString())
-        }
-
-        fun LoadResponse.addSimklId(id: Int?) {
-            this.addSimklId(SimklSyncServices.Simkl, id.toString())
-        }
-
-        fun LoadResponse.addImdbUrl(url: String?) {
-            addImdbId(imdbUrlToIdNullable(url))
-        }
+        fun LoadResponse.addSimklId(id: Int?) {}
+        fun LoadResponse.addImdbUrl(url: String?) {}
 
         /**better to call addTrailer with multiple trailers directly instead of calling this multiple times*/
         @Suppress("RedundantSuspendModifier")

@@ -42,7 +42,6 @@
     <string name="show_fillers_key">show_fillers_key</string>
     <string name="show_player_metadata_key">show_player_metadata_key</string>
     <string name="show_trailers_key">show_trailers_key</string>
-    <string name="show_kitsu_posters_key">show_kitsu_posters_key</string>
     <string name="show_cast_in_details_key">show_cast_in_details_key</string>
     <string name="random_button_key">random_button_key</string>
     <string name="provider_lang_key">provider_lang_key</string>
@@ -93,10 +92,6 @@
     <string name="software_decoding_key">software_decoding_key2</string>
     <string name="manual_update_plugins_key">manual_update_plugins</string>
     <string name="speedup_key">speedup_key</string>
-    <string name="anilist_key">anilist_key</string>
-    <string name="simkl_key">simkl_key</string>
-    <string name="mal_key">mal_key</string>
-    <string name="kitsu_key">kitsu_key</string>
     <string name="opensubtitles_key">opensubtitles_key</string>
     <string name="subdl_key">subdl_key</string>
     <string name="animeskip_key">animeskip_key</string>

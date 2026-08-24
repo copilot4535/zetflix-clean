@@ -68,7 +68,6 @@ import com.lagradost.cloudstream3.sortUrls
 import com.lagradost.cloudstream3.syncproviders.AccountManager
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.secondsToReadable
 import com.lagradost.cloudstream3.syncproviders.SyncAPI
-import com.lagradost.cloudstream3.syncproviders.providers.Kitsu
 import com.lagradost.cloudstream3.ui.APIRepository
 import com.lagradost.cloudstream3.ui.WatchType
 import com.lagradost.cloudstream3.ui.player.GeneratorPlayer
@@ -1019,8 +1018,8 @@ class ResultViewModel2 : ViewModel() {
 
         val imdbId = getImdbIdFromSyncData(syncData)
         val tmdbId = getTMDbIdFromSyncData(syncData)
-        val malId = syncData?.get(AccountManager.malApi.idPrefix)
-        val aniListId = syncData?.get(AccountManager.aniListApi.idPrefix)
+        val malId = null
+        val aniListId = null
         val normalizedName = normalizeString(checkDuplicateData.name)
         val year = checkDuplicateData.year
 
@@ -1031,8 +1030,8 @@ class ResultViewModel2 : ViewModel() {
             val checks = listOf(
                 { imdbId != null && getImdbIdFromSyncData(librarySyncData) == imdbId },
                 { tmdbId != null && getTMDbIdFromSyncData(librarySyncData) == tmdbId },
-                { malId != null && librarySyncData?.get(AccountManager.malApi.idPrefix) == malId },
-                { aniListId != null && librarySyncData?.get(AccountManager.aniListApi.idPrefix) == aniListId },
+                { malId != null },
+                { aniListId != null },
                 { normalizedName == normalizeString(it.name) && yearCheck }
             )
 
@@ -1104,21 +1103,11 @@ class ResultViewModel2 : ViewModel() {
     }
 
     private fun getImdbIdFromSyncData(syncData: Map<String, String>?): String? {
-        return safe {
-            val imdbId = readIdFromString(
-                syncData?.get(AccountManager.simklApi.idPrefix)
-            )[SimklSyncServices.Imdb]
-            if (imdbId == "null") null else imdbId
-        }
+        return null
     }
 
     private fun getTMDbIdFromSyncData(syncData: Map<String, String>?): String? {
-        return safe {
-            val tmdbId = readIdFromString(
-                syncData?.get(AccountManager.simklApi.idPrefix)
-            )[SimklSyncServices.Tmdb]
-            if (tmdbId == "null") null else tmdbId
-        }
+        return null
     }
 
     private fun startChromecast(
@@ -1669,7 +1658,6 @@ class ResultViewModel2 : ViewModel() {
         syncs: Map<String, String>? = null
     ): Pair<LoadResponse, Boolean> {
         //if (meta == null) return resp to false
-        var updateEpisodes = false
         val out = resp.apply {
             Log.i(TAG, "applyMeta")
 
@@ -1709,98 +1697,11 @@ class ResultViewModel2 : ViewModel() {
 
             runAllAsync(
                 {
-                    if (this !is AnimeLoadResponse) return@runAllAsync
-                    // already exist, no need to run getTracker
-                    if (this.getAniListId() != null && this.getKitsuId() != null && this.getMalId() != null) return@runAllAsync
-
-                    val res = APIHolder.getTracker(
-                        listOfNotNull(
-                            this.engName,
-                            this.name,
-                            this.japName
-                        ).filter { it.length > 2 }
-                            .distinct().map {
-                                // this actually would be nice if we improved a bit as 3rd season == season 3 == III ect
-                                // right now it just removes the dubbed status
-                                it.lowercase().replace(Regex("""\(?[ds]ub(bed)?\)?(\s|$)"""), "")
-                                    .trim()
-                            },
-                        TrackerType.getTypes(this.type),
-                        this.year
-                    )
-
-                    val kitsuId = AccountManager.kitsuApi.getAnimeIdByTitle(this.name)
-
-                    val ids = arrayOf(
-                        AccountManager.malApi.idPrefix to res?.malId?.toString(),
-                        AccountManager.aniListApi.idPrefix to res?.aniId,
-                        AccountManager.kitsuApi.idPrefix to kitsuId
-                    )
-
-                    if (ids.any { (id, new) ->
-                            val current = syncData[id]
-                            new != null && current != null && current != new
-                        }
-                    ) {
-                        // getTracker fucked up as it conflicts with current implementation
-                        return@runAllAsync
-                    }
-
-                    // set all the new data, prioritise old correct data
-                    ids.forEach { (id, new) ->
-                        new?.let {
-                            syncData[id] = syncData[id] ?: it
-                        }
-                    }
-
-                    // set posters, might fuck up due to headers idk
-                    posterUrl = posterUrl ?: res?.image
-                    backgroundPosterUrl = backgroundPosterUrl ?: res?.cover
-                    logoUrl = logoUrl
-                },
-                {
                     if (meta == null) return@runAllAsync
                     addTrailer(meta.trailers)
-                }, {
-                    if (this !is AnimeLoadResponse) return@runAllAsync
-                    val map =
-                        Kitsu.getEpisodesDetails(
-                            getMalId(),
-                            getAniListId(),
-                            isResponseRequired = false
-                        )
-                    if (map.isNullOrEmpty()) return@runAllAsync
-                    updateEpisodes = DubStatus.entries.map { dubStatus ->
-                        val current =
-                            this.episodes[dubStatus]?.mapIndexed { index, episode ->
-                                episode.apply {
-                                    this.episode = this.episode ?: (index + 1)
-                                }
-                            }?.sortedBy { it.episode ?: 0 }?.toMutableList()
-                        if (current.isNullOrEmpty()) return@map false
-                        val episodeNumbers = current.map { ep -> ep.episode!! }
-                        var updateCount = 0
-                        map.forEach { (episode, node) ->
-                            episodeNumbers.binarySearch(episode).let { index ->
-                                current.getOrNull(index)?.let { currentEp ->
-                                    current[index] = currentEp.apply {
-                                        updateCount++
-                                        this.description = this.description ?: node.description?.en
-                                        this.name = this.name ?: node.titles?.canonical
-                                        this.episode =
-                                            this.episode ?: node.num ?: episodeNumbers[index]
-                                        this.posterUrl =
-                                            this.posterUrl ?: node.thumbnail?.original?.url
-                                    }
-                                }
-                            }
-                        }
-                        this.episodes[dubStatus] = current
-                        updateCount > 0
-                    }.any { it }
                 })
         }
-        return out to updateEpisodes
+        return out to false
     }
 
     fun setMeta(meta: SyncAPI.SyncResult, syncs: Map<String, String>?) {

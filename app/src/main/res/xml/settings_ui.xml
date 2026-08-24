@@ -59,11 +59,6 @@
             android:title="@string/show_trailers_settings" />
         <SwitchPreference
             android:defaultValue="true"
-            android:icon="@drawable/kitsu_icon"
-            android:key="@string/show_kitsu_posters_key"
-            android:title="@string/kitsu_settings" />
-        <SwitchPreference
-            android:defaultValue="true"
             android:icon="@drawable/ic_baseline_people_24"
             android:key="@string/show_cast_in_details_key"
             android:title="@string/show_cast_in_details" />    

@@ -71,7 +71,6 @@ import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.plugins.RepositoryManager
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.APP_STRING_RESUME_WATCHING
-import com.lagradost.cloudstream3.syncproviders.providers.Kitsu
 import com.lagradost.cloudstream3.ui.WebviewFragment
 import com.lagradost.cloudstream3.ui.player.SubtitleData
 import com.lagradost.cloudstream3.ui.result.ResultFragment
@@ -720,13 +719,6 @@ object AppContextUtils {
         startAction: Int = 0,
         startValue: Int = 0
     ) {
-        try {
-            val settingsManager = PreferenceManager.getDefaultSharedPreferences(this)
-            Kitsu.isEnabled =
-                settingsManager.getBoolean(this.getString(R.string.show_kitsu_posters_key), true)
-        } catch (t: Throwable) {
-            logError(t)
-        }
 
         this.runOnUiThread {
             // viewModelStore.clear()
