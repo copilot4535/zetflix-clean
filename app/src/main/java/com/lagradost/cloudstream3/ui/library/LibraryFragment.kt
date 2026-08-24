@@ -1,15 +1,12 @@
 package com.lagradost.cloudstream3.ui.library
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS
-import android.view.ViewGroup.FOCUS_BLOCK_DESCENDANTS
 import android.view.animation.AlphaAnimation
 import android.widget.TextView
 import androidx.annotation.StringRes
@@ -22,12 +19,7 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
 import com.lagradost.cloudstream3.APIHolder
-import com.lagradost.cloudstream3.APIHolder.allProviders
-import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
-import com.lagradost.cloudstream3.CloudStreamApp.Companion.openBrowser
-import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.SearchResponse
@@ -59,27 +51,6 @@ import kotlinx.serialization.Serializable
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.abs
 
-const val LIBRARY_FOLDER = "library_folder"
-
-enum class LibraryOpenerType(@StringRes val stringRes: Int) {
-    Default(R.string.action_default),
-    Provider(R.string.none),
-    Browser(R.string.browser),
-    Search(R.string.search),
-    None(R.string.none),
-}
-
-/** Used to store how the user wants to open said poster */
-@Serializable
-data class LibraryOpener(
-    @JsonProperty("openType") @SerialName("openType") val openType: LibraryOpenerType,
-    @JsonProperty("providerData") @SerialName("providerData") val providerData: ProviderLibraryData?,
-)
-
-@Serializable
-data class ProviderLibraryData(
-    @JsonProperty("apiName") @SerialName("apiName") val apiName: String,
-)
 
 class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     BaseFragment.BindingCreator.Bind(FragmentLibraryBinding::bind)
@@ -101,25 +72,15 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
         if (isLayout(PHONE)) R.layout.fragment_library else R.layout.fragment_library_tv
 
     override fun onSaveInstanceState(outState: Bundle) {
+        /*
         binding?.viewpager?.currentItem?.let { currentItem ->
             outState.putInt(VIEWPAGER_ITEM_KEY, currentItem)
         }
+        */
         super.onSaveInstanceState(outState)
     }
 
     private fun updateRandomVisibility(binding: FragmentLibraryBinding) {
-        if (!toggleRandomButton) {
-            binding.libraryRandom.isGone = true
-            binding.libraryRandomButtonTv.isGone = true
-            return
-        }
-        val position = libraryViewModel.currentPage.value ?: 0
-        val pages = (libraryViewModel.pages.value as? Resource.Success)?.value ?: return
-        val hasItems = pages[position].items.isNotEmpty()
-        val isPhone = isLayout(PHONE)
-
-        binding.libraryRandom.isVisible = isPhone && hasItems
-        binding.libraryRandomButtonTv.isVisible = !isPhone && hasItems
     }
 
     override fun fixLayout(view: View) {
@@ -135,8 +96,8 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
         binding: FragmentLibraryBinding,
         savedInstanceState: Bundle?
     ) {
-        binding.sortFab.setOnClickListener(sortChangeClickListener)
-        binding.librarySort.setOnClickListener(sortChangeClickListener)
+        // binding.sortFab.setOnClickListener(sortChangeClickListener)
+        // binding.librarySort.setOnClickListener(sortChangeClickListener)
 
         binding.libraryRoot.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
             ?.apply {
@@ -147,23 +108,23 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 }
             }
 
-        val searchCallback = Runnable {
+        /*val searchCallback = Runnable {
             val newText = binding.mainSearch.query.toString()
             libraryViewModel.sort(ListSorting.Query, newText)
-        }
+        }*/
 
         binding.mainSearch.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                libraryViewModel.sort(ListSorting.Query, query)
+                // libraryViewModel.sort(ListSorting.Query, query)
                 return true
             }
 
             // This is required to prevent the first text change
             // When this is attached it'll immediately send a onQueryTextChange("")
             // Which we do not want
-            var hasInitialized = false
+            // var hasInitialized = false
             override fun onQueryTextChange(newText: String?): Boolean {
-                if (!hasInitialized) {
+                /*if (!hasInitialized) {
                     hasInitialized = true
                     return true
                 }
@@ -172,7 +133,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
                 // Delay the execution of the search operation by 1 second (adjust as needed)
                 // this prevents running search when the user is typing
-                binding.mainSearch.postDelayed(searchCallback, 1000)
+                binding.mainSearch.postDelayed(searchCallback, 1000)*/
 
                 return true
             }
@@ -180,7 +141,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
         libraryViewModel.reloadPages(false)
 
-        binding.listSelector.setOnClickListener {
+        /*binding.listSelector.setOnClickListener {
             val items = libraryViewModel.availableApiNames
             val currentItem = libraryViewModel.currentApiName.value
 
@@ -193,7 +154,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 val selectedItem = items.getOrNull(index) ?: return@showBottomDialog
                 libraryViewModel.switchList(selectedItem)
             }
-        }
+        }*/
 
         //Load value for toggling Random button. Hide at startup
         context?.let {
@@ -207,6 +168,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
             binding.libraryRandomButtonTv.visibility = View.GONE
         }
 
+        /*
         /**
          * Shows a plugin selection dialogue and saves the response
          **/
@@ -272,24 +234,14 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 )
             }
         }
+        */
 
-        binding.providerSelector.setOnClickListener {
+        /*binding.providerSelector.setOnClickListener {
             val syncName = libraryViewModel.currentSyncApi?.syncIdName ?: return@setOnClickListener
             activity?.showPluginSelectionDialog(syncName.name, syncName)
-        }
+        }*/
 
-        binding.viewpager.setPageTransformer(LibraryScrollTransformer())
-
-        binding.viewpager.adapter = ViewpagerAdapter(
-            { isScrollingDown: Boolean ->
-                if (isScrollingDown) {
-                    binding.sortFab.shrink()
-                    binding.libraryRandom.shrink()
-                } else {
-                    binding.sortFab.extend()
-                    binding.libraryRandom.extend()
-                }
-            }) callback@{ searchClickCallback ->
+        val libraryAdapter = LibrarySectionAdapter { searchClickCallback ->
             // To prevent future accidents
             debugAssert({
                 searchClickCallback.card !is SyncAPI.LibraryItem
@@ -299,7 +251,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
             val syncId = (searchClickCallback.card as SyncAPI.LibraryItem).syncId
             val syncName =
-                libraryViewModel.currentSyncApi?.syncIdName ?: return@callback
+                libraryViewModel.currentSyncApi?.syncIdName ?: return@LibrarySectionAdapter
 
             when (searchClickCallback.action) {
                 SEARCH_ACTION_SHOW_METADATA -> {
@@ -307,11 +259,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                         searchClickCallback.card,
                         load = false
                     )
-                    /*activity?.showPluginSelectionDialog(
-                            syncId,
-                            syncName,
-                            searchClickCallback.card.apiName
-                        )*/
                 }
 
                 SEARCH_ACTION_LOAD -> {
@@ -319,10 +266,12 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 }
             }
         }
+        binding.librarySectionsRecycler.adapter = libraryAdapter
+
 
         binding.apply {
-            viewpager.offscreenPageLimit = 2
-            viewpager.reduceDragSensitivity()
+            // viewpager.offscreenPageLimit = 2
+            // viewpager.reduceDragSensitivity()
             searchBar.setExpanded(true)
         }
 
@@ -364,34 +313,13 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                             }
                         }
 
-                        (viewpager.adapter as? ViewpagerAdapter)?.submitList(pages.map {
-                            it.copy(
-                                items = CopyOnWriteArrayList(it.items)
-                            )
-                        })
-                        //fix focus on the viewpager itself
-                        (viewpager.getChildAt(0) as RecyclerView).apply {
-                            tag = "tv_no_focus_tag"
-                            //isFocusable = false
-                        }
-
-                        // Using notifyItemRangeChanged keeps the animations when sorting
-                        /*viewpager.adapter?.notifyItemRangeChanged(
-                            0,
-                            viewpager.adapter?.itemCount ?: 0
-                        )*/
-
-                        libraryViewModel.currentPage.value?.let { page ->
-                            binding.viewpager.setCurrentItem(page, false)
-                            binding.searchBar.setExpanded(true)
-                        }
+                        libraryAdapter.submitList(pages)
 
                         // Set up random button click listener
                         if (toggleRandomButton) {
                             val randomClickListener = View.OnClickListener {
-                                val position = libraryViewModel.currentPage.value ?: 0
                                 val syncIdName = libraryViewModel.currentSyncApi?.syncIdName ?: return@OnClickListener
-                                pages[position].items.randomOrNull()?.let { item ->
+                                pages.flatMap { it.items }.randomOrNull()?.let { item ->
                                     loadLibraryItem(syncIdName, item.syncId, item)
                                 }
                             }
@@ -400,66 +328,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                         }
                         updateRandomVisibility(binding)
 
-                        // Only stop loading after 300ms to hide the fade effect the viewpager produces when updating
-                        // Without this there would be a flashing effect:
-                        // loading -> show old viewpager -> black screen -> show new viewpager
                         handler.postDelayed(stopLoading, 300)
-
-                        savedInstanceState?.getInt(VIEWPAGER_ITEM_KEY)?.let { currentPos ->
-                            if (currentPos < 0) return@let
-                            viewpager.setCurrentItem(currentPos, false)
-                            // Using remove() sets the key to 0 instead of removing it
-                            savedInstanceState.putInt(VIEWPAGER_ITEM_KEY, -1)
-                        }
-
-                        // Since the animation to scroll multiple items is so much its better to just hide
-                        // the viewpager a bit while the fastest animation is running
-                        fun hideViewpager(distance: Int) {
-                            if (distance < 3) return
-
-                            val hideAnimation = AlphaAnimation(1f, 0f).apply {
-                                duration = distance * 50L
-                                fillAfter = true
-                            }
-                            val showAnimation = AlphaAnimation(0f, 1f).apply {
-                                duration = distance * 50L
-                                startOffset = distance * 100L
-                                fillAfter = true
-                            }
-                            viewpager.startAnimation(hideAnimation)
-                            viewpager.startAnimation(showAnimation)
-                        }
-
-                        TabLayoutMediator(
-                            libraryTabLayout,
-                            viewpager,
-                        ) { tab, position ->
-                            tab.text = pages.getOrNull(position)?.title?.asStringNull(context)
-                            tab.view.tag = "tv_no_focus_tag"
-                            tab.view.nextFocusDownId = R.id.search_result_root
-
-                            tab.view.setOnClickListener {
-                                val currentItem = binding.viewpager.currentItem
-                                val distance = abs(position - currentItem)
-                                hideViewpager(distance)
-                            }
-                            //Expand the appBar on tab focus
-                            tab.view.setOnFocusChangeListener { _, _ ->
-                                binding.searchBar.setExpanded(true)
-                            }
-                        }.attach()
-
-                        binding.libraryTabLayout.addOnTabSelectedListener(object :
-                            TabLayout.OnTabSelectedListener {
-                            override fun onTabSelected(tab: TabLayout.Tab?) {
-                                binding.libraryTabLayout.selectedTabPosition.let { page ->
-                                    libraryViewModel.switchPage(page)
-                                }
-                            }
-
-                            override fun onTabUnselected(tab: TabLayout.Tab?) = Unit
-                            override fun onTabReselected(tab: TabLayout.Tab?) = Unit
-                        })
                     }
                 }
 
@@ -470,107 +339,36 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
                 is Resource.Failure -> {
                     stopLoading.run()
-                    // No user indication it failed :(
-                    // TODO
                 }
             }
         }
 
-        observe(libraryViewModel.currentPage) { position ->
-            updateRandomVisibility(binding)
-            val all = binding.viewpager.allViews.toList()
-                .filterIsInstance<AutofitRecyclerView>()
-
-            all.forEach { view ->
-                view.isVisible = view.tag == position
-                view.isFocusable = view.tag == position
-
-                if (view.tag == position)
-                    view.descendantFocusability = FOCUS_AFTER_DESCENDANTS
-                else
-                    view.descendantFocusability = FOCUS_BLOCK_DESCENDANTS
-            }
-        }
     }
 
     private fun loadLibraryItem(
-        syncName: SyncIdName,
-        syncId: String,
+        _syncName: SyncIdName,
+        _syncId: String,
         card: SearchResponse
     ) {
-        // This basically first selects the individual opener and if that is default then
-        // selects the whole list opener
-        val savedListSelection =
-            getKey<LibraryOpener>("$currentAccount/$LIBRARY_FOLDER", syncName.name)
-
-        val savedSelection = getKey<LibraryOpener>(
-            "$currentAccount/$LIBRARY_FOLDER",
-            syncId
-        ).takeIf {
-            it?.openType != LibraryOpenerType.Default
-        } ?: savedListSelection
-
-        when (savedSelection?.openType) {
-            null, LibraryOpenerType.Default -> {
-                // Prevents opening MAL/AniList as a provider
-                if (APIHolder.getApiFromNameNull(card.apiName) != null) {
-                    activity?.loadSearchResult(
-                        card
-                    )
-                } else {
-                    // Search when no provider can open
-                    QuickSearchFragment.pushSearch(
-                        activity,
-                        card.name
-                    )
-                }
-            }
-
-            LibraryOpenerType.None -> {}
-            LibraryOpenerType.Provider ->
-                savedSelection.providerData?.apiName?.let { apiName ->
-                    activity?.loadResult(
-                        card.url,
-                        apiName,
-                        card.name
-                    )
-                }
-
-            LibraryOpenerType.Browser ->
-                openBrowser(card.url)
-
-            LibraryOpenerType.Search -> {
-                QuickSearchFragment.pushSearch(
-                    activity,
-                    card.name
-                )
-            }
+        if (APIHolder.getApiFromNameNull(card.apiName) != null) {
+            activity?.loadSearchResult(
+                card
+            )
+        } else {
+            // Search when no provider can open
+            QuickSearchFragment.pushSearch(
+                activity,
+                card.name
+            )
         }
-
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val adapter = binding?.viewpager?.adapter ?: return
+        val adapter = binding?.librarySectionsRecycler?.adapter ?: return
         adapter.notifyItemRangeChanged(0, adapter.itemCount)
     }
 
-    private val sortChangeClickListener = View.OnClickListener { view ->
-        val methods = libraryViewModel.sortingMethods.map {
-            txt(it.stringRes).asString(view.context)
-        }
-
-        activity?.showBottomDialog(
-            methods,
-            libraryViewModel.sortingMethods.indexOf(libraryViewModel.currentSortingMethod),
-            txt(R.string.sort_by).asString(view.context),
-            false,
-            {},
-            {
-                val method = libraryViewModel.sortingMethods[it]
-                libraryViewModel.sort(method)
-            })
-    }
 }
 
 class MenuSearchView(context: Context) : SearchView(context)

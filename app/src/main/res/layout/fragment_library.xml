@@ -39,6 +39,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:contentDescription="@string/change_providers_img_des"
                 android:src="@drawable/ic_baseline_extension_24"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <ImageView
@@ -52,8 +53,7 @@
                 android:padding="5dp"
                 android:src="@drawable/ic_baseline_sort_24"
                 android:visibility="gone"
-                app:tint="?attr/textColor"
-                tools:visibility="visible" />
+                app:tint="?attr/textColor" />
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -99,6 +99,7 @@
                     android:nextFocusRight="@id/main_search"
                     android:padding="10dp"
                     android:src="@drawable/ic_baseline_filter_list_24"
+                    android:visibility="gone"
                     app:tint="?attr/textColor" />
 
             </FrameLayout>
@@ -113,13 +114,13 @@
         android:background="?attr/primaryBlackBackground"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/viewpager"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/library_sections_recycler"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingBottom="40dp"
-            tools:listitem="@layout/library_viewpager_page" />
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
         <LinearLayout
             android:id="@+id/library_loading_overlay"
@@ -184,29 +185,9 @@
             style="@style/ExtendedFloatingActionButton"
             android:text="@string/sort"
             android:textColor="?attr/textColor"
+            android:visibility="gone"
             app:icon="@drawable/ic_baseline_sort_24"
             tools:ignore="ContentDescription" />
     </FrameLayout>
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/library_tab_layout"
-        style="@style/Theme.Widget.Tabs"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_gravity="bottom"
-        android:background="?attr/primaryGrayBackground"
-        android:focusable="true"
-        android:paddingHorizontal="5dp"
-        app:layout_scrollFlags="noScroll"
-        app:tabGravity="center"
-        app:tabIndicator="@drawable/indicator_background"
-        app:tabIndicatorColor="?attr/white"
-        app:tabIndicatorGravity="center"
-        app:tabIndicatorHeight="30dp"
-        app:tabMode="scrollable"
-        app:tabRippleColor="?attr/textColor"
-        app:tabSelectedTextColor="?attr/primaryBlackBackground"
-        app:tabTextAppearance="@style/TabNoCaps"
-        app:tabTextColor="?attr/textColor" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -44,6 +44,7 @@
                 android:padding="2dp"
                 android:src="@drawable/ic_baseline_extension_24"
                 android:tag="@string/tv_no_focus_tag"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <ImageView
@@ -59,6 +60,7 @@
                 android:nextFocusRight="@id/list_selector"
                 android:src="@drawable/ic_baseline_sort_24"
                 android:tag="@string/tv_no_focus_tag"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <ImageView
@@ -75,6 +77,7 @@
                 android:padding="1dp"
                 android:src="@drawable/ic_baseline_filter_list_24"
                 android:tag="@string/tv_no_focus_tag"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <FrameLayout
@@ -138,6 +141,7 @@
             android:focusable="true"
             android:nextFocusDown="@id/search_result_root"
             android:paddingHorizontal="5dp"
+            android:visibility="gone"
             app:tabGravity="center"
             app:tabIndicator="@drawable/indicator_background"
             app:tabIndicatorColor="?attr/white"
@@ -156,15 +160,13 @@
         android:background="?attr/primaryBlackBackground"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/viewpager"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/library_sections_recycler"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:focusable="true"
             android:paddingBottom="40dp"
-            android:tag="@string/tv_no_focus_tag"
-            tools:listitem="@layout/library_viewpager_page" />
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
         <LinearLayout
             android:id="@+id/library_loading_overlay"
