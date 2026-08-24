@@ -39,6 +39,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:contentDescription="@string/change_providers_img_des"
                 android:src="@drawable/ic_baseline_extension_24"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <ImageView

@@ -1,7 +1,6 @@
 package com.lagradost.cloudstream3.ui.library
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -20,13 +19,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.lagradost.cloudstream3.APIHolder
 import com.lagradost.cloudstream3.APIHolder.allProviders
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
-import com.lagradost.cloudstream3.CloudStreamApp.Companion.openBrowser
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
@@ -58,28 +55,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.abs
-
-const val LIBRARY_FOLDER = "library_folder"
-
-enum class LibraryOpenerType(@StringRes val stringRes: Int) {
-    Default(R.string.action_default),
-    Provider(R.string.none),
-    Browser(R.string.browser),
-    Search(R.string.search),
-    None(R.string.none),
-}
-
-/** Used to store how the user wants to open said poster */
-@Serializable
-data class LibraryOpener(
-    @JsonProperty("openType") @SerialName("openType") val openType: LibraryOpenerType,
-    @JsonProperty("providerData") @SerialName("providerData") val providerData: ProviderLibraryData?,
-)
-
-@Serializable
-data class ProviderLibraryData(
-    @JsonProperty("apiName") @SerialName("apiName") val apiName: String,
-)
 
 class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     BaseFragment.BindingCreator.Bind(FragmentLibraryBinding::bind)
@@ -207,77 +182,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
             binding.libraryRandomButtonTv.visibility = View.GONE
         }
 
-        /**
-         * Shows a plugin selection dialogue and saves the response
-         **/
-        fun Activity.showPluginSelectionDialog(
-            key: String,
-            syncId: SyncIdName,
-            apiName: String? = null,
-        ) {
-            val availableProviders = allProviders.filter {
-                it.supportedSyncNames.contains(syncId)
-            }.map { it.name } +
-                // Add the api if it exists
-                (APIHolder.getApiFromNameNull(apiName)?.let { listOf(it.name) }
-                    ?: emptyList())
-
-            val baseOptions = listOf(
-                LibraryOpenerType.Default,
-                LibraryOpenerType.None,
-                LibraryOpenerType.Browser,
-                LibraryOpenerType.Search
-            )
-
-            val items = baseOptions.map { txt(it.stringRes).asString(this) } + availableProviders
-
-            val savedSelection = getKey<LibraryOpener>("$currentAccount/$LIBRARY_FOLDER", key)
-            val selectedIndex =
-                when {
-                    savedSelection == null -> 0
-                    // If provider
-                    savedSelection.openType == LibraryOpenerType.Provider
-                            && savedSelection.providerData?.apiName != null -> {
-                        availableProviders.indexOf(savedSelection.providerData.apiName)
-                            .takeIf { it != -1 }
-                            ?.plus(baseOptions.size) ?: 0
-                    }
-                    // Else base option
-                    else -> baseOptions.indexOf(savedSelection.openType)
-                }
-
-            this.showBottomDialog(
-                items,
-                selectedIndex,
-                txt(R.string.open_with).asString(this),
-                false,
-                {},
-            ) {
-                val savedData = if (it < baseOptions.size) {
-                    LibraryOpener(
-                        baseOptions[it],
-                        null
-                    )
-                } else {
-                    LibraryOpener(
-                        LibraryOpenerType.Provider,
-                        ProviderLibraryData(items[it])
-                    )
-                }
-
-                setKey(
-                    "$currentAccount/$LIBRARY_FOLDER",
-                    key,
-                    savedData,
-                )
-            }
-        }
-
-        binding.providerSelector.setOnClickListener {
-            val syncName = libraryViewModel.currentSyncApi?.syncIdName ?: return@setOnClickListener
-            activity?.showPluginSelectionDialog(syncName.name, syncName)
-        }
-
         binding.viewpager.setPageTransformer(LibraryScrollTransformer())
 
         binding.viewpager.adapter = ViewpagerAdapter(
@@ -297,25 +201,16 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 "searchClickCallback ${searchClickCallback.card} is not a LibraryItem"
             })
 
-            val syncId = (searchClickCallback.card as SyncAPI.LibraryItem).syncId
-            val syncName =
-                libraryViewModel.currentSyncApi?.syncIdName ?: return@callback
-
             when (searchClickCallback.action) {
                 SEARCH_ACTION_SHOW_METADATA -> {
                     (activity as? MainActivity)?.loadPopup(
                         searchClickCallback.card,
                         load = false
                     )
-                    /*activity?.showPluginSelectionDialog(
-                            syncId,
-                            syncName,
-                            searchClickCallback.card.apiName
-                        )*/
                 }
 
                 SEARCH_ACTION_LOAD -> {
-                    loadLibraryItem(syncName, syncId, searchClickCallback.card)
+                    loadLibraryItem(searchClickCallback.card)
                 }
             }
         }
@@ -390,9 +285,8 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                         if (toggleRandomButton) {
                             val randomClickListener = View.OnClickListener {
                                 val position = libraryViewModel.currentPage.value ?: 0
-                                val syncIdName = libraryViewModel.currentSyncApi?.syncIdName ?: return@OnClickListener
                                 pages[position].items.randomOrNull()?.let { item ->
-                                    loadLibraryItem(syncIdName, item.syncId, item)
+                                    loadLibraryItem(item)
                                 }
                             }
                             libraryRandom.setOnClickListener(randomClickListener)
@@ -494,59 +388,13 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     }
 
     private fun loadLibraryItem(
-        syncName: SyncIdName,
-        syncId: String,
         card: SearchResponse
     ) {
-        // This basically first selects the individual opener and if that is default then
-        // selects the whole list opener
-        val savedListSelection =
-            getKey<LibraryOpener>("$currentAccount/$LIBRARY_FOLDER", syncName.name)
-
-        val savedSelection = getKey<LibraryOpener>(
-            "$currentAccount/$LIBRARY_FOLDER",
-            syncId
-        ).takeIf {
-            it?.openType != LibraryOpenerType.Default
-        } ?: savedListSelection
-
-        when (savedSelection?.openType) {
-            null, LibraryOpenerType.Default -> {
-                // Prevents opening MAL/AniList as a provider
-                if (APIHolder.getApiFromNameNull(card.apiName) != null) {
-                    activity?.loadSearchResult(
-                        card
-                    )
-                } else {
-                    // Search when no provider can open
-                    QuickSearchFragment.pushSearch(
-                        activity,
-                        card.name
-                    )
-                }
-            }
-
-            LibraryOpenerType.None -> {}
-            LibraryOpenerType.Provider ->
-                savedSelection.providerData?.apiName?.let { apiName ->
-                    activity?.loadResult(
-                        card.url,
-                        apiName,
-                        card.name
-                    )
-                }
-
-            LibraryOpenerType.Browser ->
-                openBrowser(card.url)
-
-            LibraryOpenerType.Search -> {
-                QuickSearchFragment.pushSearch(
-                    activity,
-                    card.name
-                )
-            }
+        if (APIHolder.getApiFromNameNull(card.apiName) != null) {
+            activity?.loadSearchResult(card)
+        } else {
+            QuickSearchFragment.pushSearch(activity, card.name)
         }
-
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
