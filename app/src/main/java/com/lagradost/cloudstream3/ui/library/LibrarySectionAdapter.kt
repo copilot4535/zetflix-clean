@@ -31,8 +31,8 @@ class LibrarySectionAdapter(
             binding.sectionTitle.text = page.title.asString(binding.root.context)
             
             // Re-use PageAdapter logic
-            // Note: binding.sectionItemsRecycler is an AutofitRecyclerView
-            val adapter = PageAdapter(binding.sectionItemsRecycler, clickCallback)
+            // Note: binding.sectionItemsRecycler is a RecyclerView
+            val adapter = PageAdapter(binding.sectionItemsRecycler, clickCallback, true)
             binding.sectionItemsRecycler.adapter = adapter
             adapter.submitList(page.items)
         }

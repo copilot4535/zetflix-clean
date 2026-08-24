@@ -15,7 +15,7 @@
         android:textSize="18sp"
         android:textStyle="bold" />
 
-    <com.lagradost.cloudstream3.ui.AutofitRecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/section_items_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
