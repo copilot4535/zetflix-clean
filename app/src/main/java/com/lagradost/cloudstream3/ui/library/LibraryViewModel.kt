@@ -64,16 +64,16 @@ class LibraryViewModel : ViewModel() {
     fun sort(method: ListSorting, query: String? = null) = ioSafe {
         val value = _pages.value ?: return@ioSafe
         if (value is Resource.Success) {
-            sort(method, query, value.value)
+            sort(ListSorting.UpdatedNew, query, value.value)
         }
     }
 
     private fun sort(method: ListSorting, query: String? = null, items: List<SyncAPI.Page>) {
-        currentSortingMethod = method
-        DataStoreHelper.librarySortingMode = method.ordinal
+        currentSortingMethod = ListSorting.UpdatedNew
+        // DataStoreHelper.librarySortingMode = method.ordinal
 
         items.forEach { page ->
-            page.sort(method, query)
+            page.sort(ListSorting.UpdatedNew, query)
         }
         _pages.postValue(Resource.Success(items))
     }
@@ -110,17 +110,7 @@ class LibraryViewModel : ViewModel() {
                     )
                 }
 
-                val desiredSortingMethod =
-                    ListSorting.entries.getOrNull(DataStoreHelper.librarySortingMode)
-                if (desiredSortingMethod != null && library.supportedListSorting.contains(
-                        desiredSortingMethod
-                    )
-                ) {
-                    sort(desiredSortingMethod, null, pages)
-                } else {
-                    // null query = no sorting
-                    sort(ListSorting.Query, null, pages)
-                }
+                sort(ListSorting.UpdatedNew, null, pages)
             }
         }
     }

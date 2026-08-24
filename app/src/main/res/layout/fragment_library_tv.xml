@@ -57,9 +57,10 @@
                 android:contentDescription="@string/change_providers_img_des"
                 android:focusable="true"
                 android:nextFocusLeft="@id/navigation_library"
-                android:nextFocusRight="@id/list_selector"
+                android:nextFocusRight="@id/main_search"
                 android:src="@drawable/ic_baseline_sort_24"
                 android:tag="@string/tv_no_focus_tag"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <ImageView
@@ -76,6 +77,7 @@
                 android:padding="1dp"
                 android:src="@drawable/ic_baseline_filter_list_24"
                 android:tag="@string/tv_no_focus_tag"
+                android:visibility="gone"
                 app:tint="?attr/textColor" />
 
             <FrameLayout
@@ -97,7 +99,7 @@
                     android:iconifiedByDefault="false"
                     android:imeOptions="actionSearch"
                     android:inputType="text"
-                    android:nextFocusLeft="@id/list_selector"
+                    android:nextFocusLeft="@id/navigation_library"
                     android:nextFocusDown="@id/search_result_root"
                     android:paddingStart="-10dp"
                     android:tag="tv_no_focus_tag"
