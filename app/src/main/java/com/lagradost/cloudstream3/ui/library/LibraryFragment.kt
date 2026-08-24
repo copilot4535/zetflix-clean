@@ -1,6 +1,7 @@
 package com.lagradost.cloudstream3.ui.library
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -19,6 +20,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.lagradost.cloudstream3.APIHolder

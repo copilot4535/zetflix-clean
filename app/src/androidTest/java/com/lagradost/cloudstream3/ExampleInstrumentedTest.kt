@@ -13,11 +13,15 @@ import com.lagradost.cloudstream3.databinding.FragmentHomeTvBinding
 import com.lagradost.cloudstream3.databinding.FragmentLibraryBinding
 import com.lagradost.cloudstream3.databinding.FragmentLibraryTvBinding
 import com.lagradost.cloudstream3.databinding.FragmentPlayerBinding
+import com.lagradost.cloudstream3.databinding.FragmentPlayerTvBinding
 import com.lagradost.cloudstream3.databinding.FragmentResultBinding
+import com.lagradost.cloudstream3.databinding.FragmentResultTvBinding
 import com.lagradost.cloudstream3.databinding.FragmentSearchBinding
 import com.lagradost.cloudstream3.databinding.FragmentSearchTvBinding
 import com.lagradost.cloudstream3.databinding.HomeResultGridBinding
 import com.lagradost.cloudstream3.databinding.HomepageParentBinding
+import com.lagradost.cloudstream3.databinding.HomepageParentEmulatorBinding
+import com.lagradost.cloudstream3.databinding.HomepageParentTvBinding
 import com.lagradost.cloudstream3.databinding.PlayerCustomLayoutBinding
 import com.lagradost.cloudstream3.databinding.PlayerCustomLayoutTvBinding
 import com.lagradost.cloudstream3.databinding.RepositoryItemBinding
@@ -81,13 +85,18 @@ class ExampleInstrumentedTest {
 
                 testAllLayouts<BottomResultviewPreviewBinding>(activity, R.layout.bottom_resultview_preview,R.layout.bottom_resultview_preview_tv)
 
-                testAllLayouts<FragmentPlayerBinding>(activity, R.layout.fragment_player)
+                testAllLayouts<FragmentPlayerBinding>(activity, R.layout.fragment_player,R.layout.fragment_player_tv)
+                testAllLayouts<FragmentPlayerTvBinding>(activity, R.layout.fragment_player,R.layout.fragment_player_tv)
 
-                testAllLayouts<FragmentResultBinding>(activity, R.layout.fragment_result)
+               // testAllLayouts<FragmentResultBinding>(activity, R.layout.fragment_result,R.layout.fragment_result_tv)
+               // testAllLayouts<FragmentResultTvBinding>(activity, R.layout.fragment_result,R.layout.fragment_result_tv)
 
                 testAllLayouts<PlayerCustomLayoutBinding>(activity, R.layout.player_custom_layout,R.layout.player_custom_layout_tv, R.layout.trailer_custom_layout)
                 testAllLayouts<PlayerCustomLayoutTvBinding>(activity, R.layout.player_custom_layout,R.layout.player_custom_layout_tv, R.layout.trailer_custom_layout)
                 testAllLayouts<TrailerCustomLayoutBinding>(activity, R.layout.player_custom_layout,R.layout.player_custom_layout_tv, R.layout.trailer_custom_layout)
+
+                testAllLayouts<RepositoryItemBinding>(activity, R.layout.repository_item_tv, R.layout.repository_item)
+                testAllLayouts<RepositoryItemTvBinding>(activity, R.layout.repository_item_tv, R.layout.repository_item)
 
                 testAllLayouts<RepositoryItemBinding>(activity, R.layout.repository_item_tv, R.layout.repository_item)
                 testAllLayouts<RepositoryItemTvBinding>(activity, R.layout.repository_item_tv, R.layout.repository_item)
@@ -108,7 +117,9 @@ class ExampleInstrumentedTest {
                // testAllLayouts<HomeScrollViewBinding>(activity, R.layout.home_scroll_view, R.layout.home_scroll_view_tv)
                // testAllLayouts<HomeScrollViewTvBinding>(activity, R.layout.home_scroll_view, R.layout.home_scroll_view_tv)
 
-                testAllLayouts<HomepageParentBinding>(activity, R.layout.homepage_parent)
+                testAllLayouts<HomepageParentTvBinding>(activity, R.layout.homepage_parent_tv, R.layout.homepage_parent_emulator, R.layout.homepage_parent)
+                testAllLayouts<HomepageParentEmulatorBinding>(activity, R.layout.homepage_parent_tv, R.layout.homepage_parent_emulator, R.layout.homepage_parent)
+                testAllLayouts<HomepageParentBinding>(activity, R.layout.homepage_parent_tv, R.layout.homepage_parent_emulator, R.layout.homepage_parent)
 
                 testAllLayouts<FragmentLibraryTvBinding>(activity, R.layout.fragment_library_tv, R.layout.fragment_library)
                 testAllLayouts<FragmentLibraryBinding>(activity, R.layout.fragment_library_tv, R.layout.fragment_library)

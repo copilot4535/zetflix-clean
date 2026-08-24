@@ -36,16 +36,16 @@
                 android:layout_height="25dp"
                 android:layout_gravity="end|center_vertical"
                 android:layout_marginStart="10dp"
-                android:background="?selectableItemBackgroundBorderless"
+                android:background="@drawable/button_icon_background_red"
                 android:contentDescription="@string/change_providers_img_des"
                 android:focusable="true"
                 android:nextFocusLeft="@id/navigation_library"
-                android:nextFocusRight="@id/library_sort"
+                android:nextFocusRight="@id/main_search"
                 android:padding="2dp"
                 android:src="@drawable/ic_baseline_extension_24"
                 android:tag="@string/tv_no_focus_tag"
                 android:visibility="gone"
-                app:tint="?attr/textColor" />
+                app:tint="#ffffff" />
 
             <ImageView
                 android:id="@+id/library_sort"
@@ -53,15 +53,15 @@
                 android:layout_height="25dp"
                 android:layout_gravity="end|center_vertical"
                 android:layout_marginStart="10dp"
-                android:background="?selectableItemBackgroundBorderless"
+                android:background="@drawable/button_icon_background_red"
                 android:contentDescription="@string/change_providers_img_des"
                 android:focusable="true"
                 android:nextFocusLeft="@id/navigation_library"
-                android:nextFocusRight="@id/main_search"
+                android:nextFocusRight="@id/list_selector"
                 android:src="@drawable/ic_baseline_sort_24"
                 android:tag="@string/tv_no_focus_tag"
                 android:visibility="gone"
-                app:tint="?attr/textColor" />
+                app:tint="#ffffff" />
 
             <ImageView
                 android:id="@+id/list_selector"
@@ -69,16 +69,16 @@
                 android:layout_height="25dp"
                 android:layout_gravity="end|center_vertical"
                 android:layout_marginStart="10dp"
-                android:background="?selectableItemBackgroundBorderless"
+                android:background="@drawable/button_icon_background_red"
                 android:contentDescription="@string/change_providers_img_des"
                 android:focusable="true"
-                android:nextFocusLeft="@id/library_sort"
+                android:nextFocusLeft="@id/provider_selector"
                 android:nextFocusRight="@id/main_search"
                 android:padding="1dp"
                 android:src="@drawable/ic_baseline_filter_list_24"
                 android:tag="@string/tv_no_focus_tag"
                 android:visibility="gone"
-                app:tint="?attr/textColor" />
+                app:tint="#ffffff" />
 
             <FrameLayout
                 android:layout_width="0dp"
@@ -99,7 +99,7 @@
                     android:iconifiedByDefault="false"
                     android:imeOptions="actionSearch"
                     android:inputType="text"
-                    android:nextFocusLeft="@id/navigation_library"
+                    android:nextFocusLeft="@id/provider_selector"
                     android:nextFocusDown="@id/search_result_root"
                     android:paddingStart="-10dp"
                     android:tag="tv_no_focus_tag"
@@ -143,12 +143,12 @@
             android:paddingHorizontal="5dp"
             app:tabGravity="center"
             app:tabIndicator="@drawable/indicator_background"
-            app:tabIndicatorColor="?attr/white"
+            app:tabIndicatorColor="#e50914"
             app:tabIndicatorGravity="center"
             app:tabIndicatorHeight="30dp"
             app:tabMode="scrollable"
             app:tabRippleColor="?attr/textColor"
-            app:tabSelectedTextColor="?attr/primaryBlackBackground"
+            app:tabSelectedTextColor="#ffffff"
             app:tabTextAppearance="@style/TabNoCaps"
             app:tabTextColor="?attr/textColor" />
     </com.google.android.material.appbar.AppBarLayout>

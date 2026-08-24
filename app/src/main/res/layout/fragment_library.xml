@@ -36,11 +36,11 @@
                 android:layout_height="25dp"
                 android:layout_gravity="end|center_vertical"
                 android:layout_marginStart="10dp"
-                android:background="?selectableItemBackgroundBorderless"
+                android:background="@drawable/button_icon_background_red"
                 android:contentDescription="@string/change_providers_img_des"
                 android:src="@drawable/ic_baseline_extension_24"
                 android:visibility="gone"
-                app:tint="?attr/textColor" />
+                app:tint="#ffffff" />
 
             <ImageView
                 android:id="@+id/library_sort"
@@ -48,12 +48,12 @@
                 android:layout_height="45dp"
                 android:layout_gravity="end|center_vertical"
                 android:layout_marginStart="10dp"
-                android:background="?selectableItemBackgroundBorderless"
+                android:background="@drawable/button_icon_background_red"
                 android:contentDescription="@string/change_providers_img_des"
                 android:padding="5dp"
                 android:src="@drawable/ic_baseline_sort_24"
                 android:visibility="gone"
-                app:tint="?attr/textColor"
+                app:tint="#ffffff"
                 tools:visibility="visible" />
 
             <FrameLayout
@@ -94,14 +94,14 @@
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_gravity="end|center_vertical"
-                    android:background="?selectableItemBackgroundBorderless"
+                    android:background="@drawable/button_icon_background_red"
                     android:contentDescription="@string/change_providers_img_des"
                     android:nextFocusLeft="@id/main_search"
                     android:nextFocusRight="@id/main_search"
                     android:padding="10dp"
                     android:src="@drawable/ic_baseline_filter_list_24"
                     android:visibility="gone"
-                    app:tint="?attr/textColor" />
+                    app:tint="#ffffff" />
 
             </FrameLayout>
         </LinearLayout>
@@ -203,12 +203,12 @@
         app:layout_scrollFlags="noScroll"
         app:tabGravity="center"
         app:tabIndicator="@drawable/indicator_background"
-        app:tabIndicatorColor="?attr/white"
+        app:tabIndicatorColor="#e50914"
         app:tabIndicatorGravity="center"
         app:tabIndicatorHeight="30dp"
         app:tabMode="scrollable"
         app:tabRippleColor="?attr/textColor"
-        app:tabSelectedTextColor="?attr/primaryBlackBackground"
+        app:tabSelectedTextColor="#ffffff"
         app:tabTextAppearance="@style/TabNoCaps"
         app:tabTextColor="?attr/textColor" />
 
