@@ -27,17 +27,6 @@
             android:orientation="horizontal"
             app:layout_scrollFlags="scroll|enterAlways">
 
-            <ImageView
-                android:id="@+id/voice_search"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_gravity="end|center_vertical"
-                android:layout_marginStart="10dp"
-                android:background="?selectableItemBackgroundBorderless"
-                android:contentDescription="@string/change_providers_img_des"
-                android:src="@drawable/ic_mic"
-                app:tint="?attr/textColor" />
-
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
@@ -45,11 +34,23 @@
                 android:background="@drawable/search_background"
                 android:visibility="visible">
 
+                <ImageView
+                    android:id="@+id/voice_search"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/change_providers_img_des"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_mic"
+                    app:tint="#ffffff" />
+
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="30dp">
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="40dp">
 
                     <androidx.appcompat.widget.SearchView
                         android:id="@+id/main_search"
@@ -108,6 +109,7 @@
                     android:nextFocusUp="@id/nav_rail_view"
                     android:nextFocusDown="@id/search_autofit_results"
                     android:src="@drawable/ic_baseline_tune_24"
+                    android:visibility="gone"
                     app:tint="?attr/textColor" />
             </FrameLayout>
         </LinearLayout>

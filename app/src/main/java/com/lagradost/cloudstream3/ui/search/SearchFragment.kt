@@ -281,6 +281,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
 
         selectedApis = DataStoreHelper.searchPreferenceProviders.toMutableSet()
 
+        /*
         binding.searchFilter.setOnClickListener { searchView ->
             searchView?.context?.let { ctx ->
                 val validAPIs = ctx.filterProviderByPreferredMedia(hasHomePageIsRequired = false)
@@ -404,6 +405,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                 }
             }
         }
+        */
 
         val settingsManager = context?.let { PreferenceManager.getDefaultSharedPreferences(it) }
         val isAdvancedSearch = settingsManager?.getBoolean("advanced_search", true) ?: true

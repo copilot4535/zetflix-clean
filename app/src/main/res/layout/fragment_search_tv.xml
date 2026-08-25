@@ -28,17 +28,6 @@
             android:orientation="horizontal"
             app:layout_scrollFlags="scroll|enterAlways">
 
-            <ImageView
-                android:id="@+id/voice_search"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_gravity="end|center_vertical"
-                android:layout_marginStart="10dp"
-                android:background="?selectableItemBackgroundBorderless"
-                android:contentDescription="@string/change_providers_img_des"
-                android:src="@drawable/ic_mic"
-                app:tint="?attr/textColor" />
-
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
@@ -46,11 +35,26 @@
                 android:background="@drawable/search_background"
                 android:visibility="visible">
 
+                <ImageView
+                    android:id="@+id/voice_search"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/change_providers_img_des"
+                    android:focusable="true"
+                    android:nextFocusLeft="@id/main_search"
+                    android:nextFocusRight="@id/navigation_search"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_mic"
+                    app:tint="#ffffff" />
+
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="30dp">
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="40dp">
 
                     <androidx.appcompat.widget.SearchView
                         android:id="@+id/main_search"
@@ -58,13 +62,14 @@
                         android:layout_height="match_parent"
                         android:layout_gravity="center_vertical"
 
+                        android:focusable="true"
                         android:iconifiedByDefault="false"
                         android:imeOptions="actionSearch"
 
                         android:inputType="text"
                         android:nextFocusLeft="@id/navigation_search"
 
-                        android:nextFocusRight="@id/search_filter"
+                        android:nextFocusRight="@id/voice_search"
                         android:nextFocusUp="@id/navigation_search"
                         android:nextFocusDown="@id/search_autofit_results"
                         android:paddingStart="-10dp"
@@ -110,6 +115,7 @@
                     android:nextFocusDown="@id/tvtypes_chips_scroll"
                     android:tag = "@string/tv_no_focus_tag"
                     android:src="@drawable/ic_baseline_tune_24"
+                    android:visibility="gone"
                     app:tint="?attr/textColor" />
             </FrameLayout>
         </LinearLayout>
