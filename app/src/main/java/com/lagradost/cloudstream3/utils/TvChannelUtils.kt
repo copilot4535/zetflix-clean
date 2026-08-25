@@ -137,7 +137,7 @@ object TvChannelUtils {
 
     fun createTvChannel(context: Context) {
         val componentName = ComponentName(context, MainActivity::class.java)
-        val iconUri = "android.resource://${context.packageName}/mipmap/ic_launcher".toUri()
+        val iconUri = "android.resource://${context.packageName}/drawable/ic_zetflix_launcher".toUri()
         val inputId = TvContractCompat.buildInputId(componentName)
         val channel = Channel.Builder()
             .setType(TvContractCompat.Channels.TYPE_PREVIEW)
