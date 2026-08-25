@@ -20,12 +20,8 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.BottomInputDialogBinding
 import com.lagradost.cloudstream3.databinding.BottomSelectionDialogBinding
 import com.lagradost.cloudstream3.databinding.BottomTextDialogBinding
-import com.lagradost.cloudstream3.databinding.OptionsPopupTvBinding
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
-import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
 import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
 
@@ -57,33 +53,6 @@ object SingleSelectionHelper {
     ) {
         if (this == null) return
 
-        // This was temporarily removed until better UI is made
-        /*if (isLayout(TV or EMULATOR)) {
-            val binding = OptionsPopupTvBinding.inflate(layoutInflater)
-            val dialog = AlertDialog.Builder(this, R.style.AlertDialogCustom)
-                .setView(binding.root)
-                .create()
-
-            dialog.show()
-
-            binding.listview1.let { listView ->
-                listView.choiceMode = AbsListView.CHOICE_MODE_SINGLE
-                listView.adapter =
-                    ArrayAdapter<String>(this, R.layout.sort_bottom_single_choice_color).apply {
-                        addAll(tvOptions)
-                    }
-
-                listView.setOnItemClickListener { _, _, i, _ ->
-                    callback.invoke(Pair(true, i))
-                    dialog.dismissSafe(this)
-                }
-            }
-
-            binding.imageView.apply {
-                isGone = poster.isNullOrEmpty()
-                loadImage(poster)
-            }
-        } else {*/
         view?.popupMenuNoIconsAndNoStringRes(options.mapIndexed { index, s ->
             Pair(
                 index,
@@ -92,7 +61,6 @@ object SingleSelectionHelper {
         }) {
             callback(Pair(false, this.itemId))
         }
-        //}
     }
 
     fun Activity?.showDialog(
@@ -116,7 +84,7 @@ object SingleSelectionHelper {
         val cancelButton = binding.cancelBtt
         val applyHolder = binding.applyBttHolder
 
-        if (isLayout(PHONE or EMULATOR) && dialog is BottomSheetDialog) {
+        if (dialog is BottomSheetDialog) {
             binding.dragHandle.isVisible = true
             listView.isNestedScrollingEnabled = true
         }
@@ -149,14 +117,11 @@ object SingleSelectionHelper {
             listView.setSelection(it)
         }
 
-        //  var lastSelectedIndex = if(selectedIndex.isNotEmpty()) selectedIndex.first() else -1
-
         dialog.setOnDismissListener {
             dismissCallback.invoke()
         }
 
         listView.setOnItemClickListener { _, _, which, _ ->
-            //  lastSelectedIndex = which
             if (realShowApply) {
                 if (!isMultiSelect) {
                     listView.setItemChecked(which, true)
@@ -203,17 +168,17 @@ object SingleSelectionHelper {
         textView.text = name
 
         if (textInputType != null) {
-            inputView.inputType = textInputType // 16 for website url input type
+            inputView.inputType = textInputType
         }
         inputView.setText(value, TextView.BufferType.EDITABLE)
 
 
         applyButton.setOnClickListener {
-            callback.invoke(inputView.text.toString())  // try to save the setting, using callback
+            callback.invoke(inputView.text.toString())
             dialog.dismissSafe(this)
         }
 
-        cancelButton.setOnClickListener {  // just dismiss
+        cancelButton.setOnClickListener {
             dialog.dismissSafe(this)
         }
 
@@ -288,7 +253,6 @@ object SingleSelectionHelper {
         )
     }
 
-    /** Only for a low amount of items */
     fun Activity?.showBottomDialog(
         items: List<String>,
         selectedIndex: Int,
@@ -334,7 +298,6 @@ object SingleSelectionHelper {
             LayoutInflater.from(this)
         )
 
-        //builder.setContentView(R.layout.bottom_selection_dialog_direct)
         builder.setContentView(binding.root)
         builder.show()
         showDialog(
@@ -373,7 +336,7 @@ object SingleSelectionHelper {
             builder,
             value,
             name,
-            textInputType,  // type is a uri
+            textInputType,
             callback,
             dismissCallback
         )

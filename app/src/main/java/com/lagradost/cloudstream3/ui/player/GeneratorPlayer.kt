@@ -80,7 +80,6 @@ import com.lagradost.cloudstream3.ui.player.CS3IPlayer.Companion.preferredAudioT
 import com.lagradost.cloudstream3.ui.player.CustomDecoder.Companion.updateForcedEncoding
 import com.lagradost.cloudstream3.ui.player.PlayerSubtitleHelper.Companion.toSubtitleMimeType
 import com.lagradost.cloudstream3.ui.player.source_priority.LinkSource
-import com.lagradost.cloudstream3.ui.player.source_priority.ProfileSettings
 import com.lagradost.cloudstream3.ui.player.source_priority.QualityDataHelper
 import com.lagradost.cloudstream3.ui.player.source_priority.QualityDataHelper.getLinkPriority
 import com.lagradost.cloudstream3.ui.player.source_priority.QualityProfileDialog
@@ -94,9 +93,6 @@ import com.lagradost.cloudstream3.ui.result.ResultViewModel2
 import com.lagradost.cloudstream3.ui.result.SyncViewModel
 import com.lagradost.cloudstream3.ui.result.setLinearListLayout
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.ui.subtitles.SUBTITLE_AUTO_SELECT_KEY
 import com.lagradost.cloudstream3.ui.subtitles.SubtitlesFragment
@@ -134,8 +130,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.Serializable
-import java.lang.ref.WeakReference
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -267,7 +266,7 @@ class GeneratorPlayer : FullScreenPlayer() {
         }
     }
 
-    // https://github.com/androidx/media/blob/main/libraries/ui/src/main/java/androidx/media3/ui/PlayerNotificationManager.java#L1517
+    // https://github.com/androidx/media/blob/main/libraries/ui/src/main/libraries/ui/src/main/java/androidx/media3/ui/PlayerNotificationManager.java#L1517
     private fun createBroadcastIntent(
         action: String,
         context: Context,
@@ -506,9 +505,6 @@ class GeneratorPlayer : FullScreenPlayer() {
 
         playerBinding?.downloadHeader?.isVisible = false
         playerBinding?.downloadHeaderToggle?.isVisible = isTorrent
-        if (!isLayout(PHONE)) {
-            playerBinding?.downloadBothHeader?.isVisible = isTorrent
-        }
 
         showDownloadProgress(DownloadEvent(0, 0, 0, null))
 
@@ -1257,17 +1253,7 @@ class GeneratorPlayer : FullScreenPlayer() {
                 updateSubtitleOptionList()
 
                 subtitleList.setOnItemClickListener { _, _, which, _ ->
-                    if (which > subtitlesGrouped.size) {
-                        // Since android TV is funky the setOnItemClickListener will be triggered
-                        // instead of setOnClickListener when selecting. To override this we programmatically
-                        // click the view when selecting an item outside the list.
-
-                        // Cheeky way of getting the view at that position to click it
-                        // to avoid keeping track of the various footers.
-                        // getChildAt() gives null :(
-                        val child = subtitleList.adapter.getView(which, null, subtitleList)
-                        child?.performClick()
-                    } else {
+                    if (which <= subtitlesGrouped.size) {
                         if (subtitleGroupIndex != which) {
                             subtitleGroupIndex = which
                             subtitleOptionIndex =
@@ -1283,12 +1269,9 @@ class GeneratorPlayer : FullScreenPlayer() {
                 }
 
                 subtitleOptionList.setOnItemClickListener { _, _, which, _ ->
-                    if (which >= (subtitlesGroupedList.getOrNull(subtitleGroupIndex - 1)?.value?.size
+                    if (which < (subtitlesGroupedList.getOrNull(subtitleGroupIndex - 1)?.value?.size
                             ?: -1)
                     ) {
-                        val child = subtitleOptionList.adapter.getView(which, null, subtitleList)
-                        child?.performClick()
-                    } else {
                         subtitleOptionIndex = which
                         subtitleOptionList.setItemChecked(which, true)
                     }
@@ -1776,18 +1759,8 @@ class GeneratorPlayer : FullScreenPlayer() {
 
         playerBinding?.playerSkipOp?.isVisible = isOpVisible
 
-        when {
-            isLayout(PHONE) ->
-                playerBinding?.playerSkipEpisode?.isVisible =
-                    !isOpVisible && viewModel.hasNextEpisode() == true
-
-            else -> {
-                val hasNextEpisode = viewModel.hasNextEpisode() == true
-                playerBinding?.playerGoForward?.isVisible = hasNextEpisode
-                playerBinding?.playerGoForwardRoot?.isVisible = hasNextEpisode
-            }
-
-        }
+        playerBinding?.playerSkipEpisode?.isVisible =
+            !isOpVisible && viewModel.hasNextEpisode() == true
 
         if (percentage >= PRELOAD_NEXT_EPISODE_PERCENTAGE) {
             viewModel.preLoadNextLinks()
@@ -2078,12 +2051,6 @@ class GeneratorPlayer : FullScreenPlayer() {
             skipAnimator?.cancel()
             isVisible = true
 
-            /** Focus instantly to make the focus color appear instantly */
-            if (show && !isShowing) {
-                // Automatically request focus if the menu is not opened
-                playerBinding?.skipChapterButton?.requestFocus()
-            }
-
             // just in case
             val lay = layoutParams
             lay.width = from
@@ -2094,10 +2061,6 @@ class GeneratorPlayer : FullScreenPlayer() {
                 addListener(onEnd = {
                     if (!show) {
                         playerBinding?.skipChapterButton?.isVisible = false
-                        if (!isShowing) {
-                            // Automatically return focus to play pause
-                            playerBinding?.playerPausePlay?.requestFocus()
-                        }
                     }
                 })
                 addUpdateListener { valueAnimator ->

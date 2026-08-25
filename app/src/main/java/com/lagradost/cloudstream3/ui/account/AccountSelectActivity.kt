@@ -20,9 +20,6 @@ import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
 import android.content.Intent
 import com.lagradost.cloudstream3.ui.account.AccountAdapter.Companion.VIEW_TYPE_EDIT_ACCOUNT
 import com.lagradost.cloudstream3.ui.account.AccountAdapter.Companion.VIEW_TYPE_SELECT_ACCOUNT
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.BiometricCallback
@@ -57,15 +54,11 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
             return
         }
 
-        // Are we editing and coming from MainActivity?
         val isEditingFromMainActivity = intent.getBooleanExtra(
             "isEditingFromMainActivity",
             false
         )
 
-        // Sometimes we start this activity when we have already logged in
-        // For example when using cloudstreamsearch://
-        // In those cases we want to just go to the main activity instantly
         if (hasLoggedIn && !isEditingFromMainActivity) {
             navigateToMainActivity()
             return
@@ -83,7 +76,7 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
 
         fun askBiometricAuth() {
 
-            if (isLayout(PHONE) && isAuthEnabled(this)) {
+            if (isAuthEnabled(this)) {
                 if (deviceHasPasswordPinLock(this)) {
                     startBiometricAuthentication(
                         this,
@@ -100,13 +93,10 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
 
         observe(accountViewModel.isAllowedLogin) { isAllowedLogin ->
             if (isAllowedLogin) {
-                // We are allowed to continue to MainActivity
                 navigateToMainActivity()
             }
         }
 
-        // Don't show account selection if there is only
-        // one account that exists
         if (!isEditingFromMainActivity && skipStartup) {
             val currentAccount = accounts.firstOrNull { it.keyIndex == selectedKeyIndex }
             if (currentAccount?.lockPin != null) {
@@ -138,15 +128,12 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
 
         observe(accountViewModel.accounts) { liveAccounts ->
             val adapter = AccountAdapter(
-                // Handle the selected account
                 accountSelectCallback = {
                     accountViewModel.handleAccountSelect(it, this)
                 },
                 accountCreateCallback = { accountViewModel.handleAccountUpdate(it, this) },
                 accountEditCallback = {
                     accountViewModel.handleAccountUpdate(it, this)
-                    // We came from MainActivity, return there
-                    // and switch to the edited account
                     if (isEditingFromMainActivity) {
                         setAccount(it)
                         navigateToMainActivity()
@@ -159,14 +146,7 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
 
             recyclerView.adapter = adapter
 
-            if (isLayout(TV or EMULATOR)) {
-                binding.editAccountButton.setBackgroundResource(
-                    R.drawable.player_button_tv_attr_no_bg
-                )
-            }
-
             observe(accountViewModel.selectedKeyIndex) { selectedKeyIndex ->
-                // Scroll to current account (which is focused by default)
                 val layoutManager = recyclerView.layoutManager as GridLayoutManager
                 layoutManager.scrollToPositionWithOffset(selectedKeyIndex, 0)
             }
@@ -190,20 +170,12 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
             }
 
             binding.editAccountButton.setOnClickListener {
-                // We came from MainActivity, return there
-                // and resume its state
                 if (isEditingFromMainActivity) {
                     navigateToMainActivity()
                     return@setOnClickListener
                 }
 
                 accountViewModel.toggleIsEditing()
-            }
-
-            if (isLayout(TV or EMULATOR)) {
-                recyclerView.spanCount = if (liveAccounts.count() + 1 <= 6) {
-                    liveAccounts.count() + 1
-                } else 6
             }
         }
 
@@ -213,9 +185,8 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
     @SuppressLint("UnsafeIntentLaunch")
     private fun navigateToMainActivity() {
         hasLoggedIn = true
-        // We want to propagate any intent we get here to MainActivity since this is just an intermediary
         openActivity(MainActivity::class.java, baseIntent = intent)
-        finish() // Finish the account selection activity
+        finish()
     }
 
     override fun onAuthenticationSuccess() {

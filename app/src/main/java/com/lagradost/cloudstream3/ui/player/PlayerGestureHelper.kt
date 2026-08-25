@@ -37,8 +37,6 @@ import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.safe
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.utils.UIHelper.getStatusBarHeight
@@ -101,7 +99,7 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
     private val context: Context get() = playerView.context
 
     /** Set true by the host when the player occupies the full screen.
-     *  Controls whether hardware volume-key overrides are active (phones/emulators only). */
+     *  Controls whether hardware volume-key overrides are active. */
     var isFullScreen: Boolean = false
 
     /** Volume state */
@@ -226,8 +224,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         } catch (_: Exception) {
         }
 
-        // Inject the brightness overlay into the ExoPlayer content frame so it sits
-        // directly on top of the video surface.  Alpha is set by handleBrightnessAdjustment.
         safe {
             val pkg = context.packageName
             @SuppressLint("DiscouragedApi")
@@ -263,10 +259,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
     /** Key-event listener */
 
-    /**
-     * Registers the basic volume-key listener on [keyEventListener].
-     * Called from [PlayerView.initialize] and from the host fragment's onResume.
-     */
     fun setupKeyEventListener() {
         keyEventListener = { (event, _) ->
             if (event != null && event.action == KeyEvent.ACTION_DOWN)
@@ -275,7 +267,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         }
     }
 
-    /** Nulls [keyEventListener]. Called from the host fragment's onPause. */
     fun releaseKeyEventListener() {
         keyEventListener = null
     }
@@ -297,13 +288,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
     /** Volume helpers */
 
-    /**
-     * Syncs [currentRequestedVolume] with the current system stream volume.
-     *
-     * This is here to make returning to the player less jarring, if we change the volume outside
-     * the app. Note that this will make it a bit wierd when using loudness in PiP, then returning
-     * however that is the cost of correctness.
-     */
     fun verifyVolume() {
         ((context as? Activity)?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager)?.let { am ->
             val cur = am.getStreamVolume(AudioManager.STREAM_MUSIC)
@@ -318,23 +302,15 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
     /**
      * Handles a hardware volume key press.
-     * Only active on phones/emulators when [isFullScreen] is true.
      *
      * @return true if the key was consumed (suppresses the system volume UI).
      */
     fun handleVolumeKey(keyCode: Int): Boolean {
-        /**
-         * Some TVs do not support volume boosting, and overriding
-         * the volume buttons can be inconvenient for TV users.
-         * Since boosting volume is mainly useful on phones and emulators,
-         * we limit this feature to those devices.
-         */
-        if (!isLayout(PHONE or EMULATOR) || !isFullScreen) return false
+        if (!isFullScreen) return false
         if (keyCode != KeyEvent.KEYCODE_VOLUME_UP && keyCode != KeyEvent.KEYCODE_VOLUME_DOWN) return false
         verifyVolume()
         if (currentRequestedVolume <= 1.0f) hasShownVolumeToast = false
         isVolumeLocked = currentRequestedVolume < 1.0f
-        // +- 5%
         handleVolumeAdjustment(if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) 0.05f else -0.05f, fromButton = true)
         return true
     }
@@ -349,27 +325,22 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         val next = (cur + delta).coerceIn(0.0f, if (locked) 1.0f else 2.0f)
         val nextStep = (next * maxStep.toFloat()).roundToInt().coerceIn(0, maxStep)
 
-        // Show toast
         if (fromButton) {
-            // For button related request we only show a toast when we exceeded the volume.
             if (cur <= 1.0f && next > 1.0f && !hasShownVolumeToast) {
                 showToast(R.string.volume_exceeded_100)
                 hasShownVolumeToast = true
             }
         } else {
             val raw = cur + delta
-            // For swipes, we show toast that we need to swipe again.
             if (raw > 1.0 && locked && !hasShownVolumeToast) {
                 showToast(R.string.slide_up_again_to_exceed_100)
                 hasShownVolumeToast = true
             }
         }
 
-        // Set the current volume step.
         if (nextStep != curStep) am.setStreamVolume(AudioManager.STREAM_MUSIC, nextStep, 0)
 
         var hasBoostError = false
-        // Apply loudness enhancer for volumes > 100%, removes it if less.
         if (next > 1.0f) {
             val boost = ((next - 1.0f) * 1000).toInt()
             val existing = loudnessEnhancer
@@ -397,19 +368,15 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         val icon = playerView.playerProgressbarLeftIcon    ?: return
 
         if (next > 1.0f) {
-            // Change color to show that LoudnessEnhancer broke
-            // this is not a real fix, but solves the crash issue.
             level2.progressTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(context, if (hasBoostError) R.color.colorPrimaryRed else R.color.colorPrimaryOrange)
             )
         }
-        // Max is set high to make it smooth.
         level1.max = 100_000
         level1.progress = (next * 100_000f).toInt().coerceIn(2_000, 100_000)
         level2.max = 100_000
         level2.progress = if (next > 1.0f) ((next - 1.0) * 100_000f).toInt().coerceIn(2_000, 100_000) else 0
         level2.isVisible = next > 1.0f
-        // Calculate the clamped index for the volume icon based on the requested volume.
         val iconIdx = (next * volumeIcons.lastIndex).roundToInt().coerceIn(0, volumeIcons.lastIndex)
         icon.setImageResource(volumeIcons[iconIdx])
 
@@ -421,16 +388,11 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
             leftHolder.animate().cancel()
             leftHolder.animate().alpha(0f).setDuration(300).withEndAction { leftHolder.isVisible = false }.start()
         }
-        // Show the progress bar for 1.5 seconds.
         leftHolder.postDelayed(progressBarLeftHideRunnable, 1500)
     }
 
     /** Brightness helpers */
 
-    /**
-     * Reads from [Settings.System.SCREEN_BRIGHTNESS], falling back to the window
-     * attribute if the permission is absent.
-     */
     fun getBrightness(): Float? {
         return if (useTrueSystemBrightness) {
             try {
@@ -439,9 +401,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                     Settings.System.SCREEN_BRIGHTNESS
                 ) / 255f
             } catch (_: Exception) {
-                // Because true system brightness requires
-                // permission, this is a lazy way to check
-                // as it will throw an error if we do not have it.
                 useTrueSystemBrightness = false
                 getBrightness()
             }
@@ -455,10 +414,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         }
     }
 
-    /**
-     * Sets [Settings.System.SCREEN_BRIGHTNESS], falling back to the window
-     * attribute if the permission is absent.
-     */
     fun setBrightness(brightness: Float) {
         if (useTrueSystemBrightness) {
             try {
@@ -479,8 +434,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         } else {
             try {
                 val lp = (context as? Activity)?.window?.attributes ?: return
-                // Use 0.004f instead of 0: on some devices a value too close to 0 causes the
-                // system to override with its own brightness, making fine-tuning impossible.
                 lp.screenBrightness = brightness.coerceIn(0.004f, 1.0f)
                 (context as? Activity)?.window?.attributes = lp
             } catch (e: Exception) {
@@ -521,7 +474,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         }
 
         icon.setImageResource(
-            // Clamp the value in case of extra brightness.
             brightnessIcons[min(brightnessIcons.lastIndex, max(0, round(next * brightnessIcons.lastIndex).toInt()))]
         )
 
@@ -538,16 +490,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
     /** Zoom helpers */
 
-    /**
-     * Returns the current zoom matrix, accounting for RESIZE_MODE_ZOOM which already has
-     * an implicit zoom applied.
-     *
-     * This is different from `zoomMatrix ?: Matrix()`
-     * because it allows used to start zooming at different resizeModes.
-     *
-     * The main issue is that RESIZE_MODE_FIT = 100% zoom, but if you are in RESIZE_MODE_ZOOM
-     * 100% will make the zoom snap to less zoomed in then you already are.
-     */
     fun currentZoomMatrix(): Matrix {
         val current = zoomMatrix
         if (current != null) return current
@@ -574,12 +516,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         return Matrix().apply { postScale(aspect, aspect) }
     }
 
-    /**
-     * Applies [newMatrix] (scale + translation only) to the video surface view.
-     *
-     * @param newMatrix The new zoom matrix
-     * @param animation If this zoom is part of an animation, as then it will not auto zoom after we are done.
-     */
     fun applyZoomMatrix(newMatrix: Matrix, animation: Boolean) {
         val exoView = playerView.exoPlayerView ?: return
         if (!animation) {
@@ -598,24 +534,18 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         val playerWidth = screenWidthWithOrientation.toFloat()
         val playerHeight = screenHeightWithOrientation.toFloat()
 
-        // Sanity check
         if (videoWidth <= 1f || videoHeight <= 1f || playerWidth <= 1f || playerHeight <= 1f || scale <= 0.01f) return
 
-        // Calculate the scaled aspect ratio as the view height is not real, check the debugger
-        // and you will see videoView.height > screen.height.
         val initAspect = (playerHeight * videoWidth) / (playerWidth * videoHeight)
         val aspect = min(initAspect, 1f / initAspect)
         val scaledAspect = scale * aspect
 
-        // Calculate clamp, this is very weird because we need to use aspect here as videoHeight > playerHeight.
         val maxTransX = max(0f, videoWidth  * scaledAspect - playerWidth)  * 0.5f
         val maxTransY = max(0f, videoHeight * scaledAspect - playerHeight) * 0.5f
 
-        // Correct the translation to clamp within the viewing area.
         val expectedTranslationX = translationX.coerceIn(-maxTransX, maxTransX)
         val expectedTranslationY = translationY.coerceIn(-maxTransY, maxTransY)
 
-        // Set the transform to the correct x and y.
         newMatrix.postTranslate(
             expectedTranslationX - translationX,
             expectedTranslationY - translationY
@@ -623,25 +553,20 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         zoomMatrix = newMatrix
 
         if (!animation) {
-            // If we are not in an animation, set up the values for the animation.
             if ((scaledAspect - 1f).absoluteValue < ZOOM_SNAP_SENSITIVITY) {
-                // We are within the correct scaling, so center and fit it.
                 videoOutline?.isVisible = true
                 val desired = Matrix()
                 desired.setScale(1f / aspect, 1f / aspect)
                 desiredMatrix = desired
             } else if (scale < 1f) {
-                // We have zoomed too far, zoom to 100%.
                 videoOutline?.isVisible = false
                 desiredMatrix = Matrix()
             } else {
-                // Keep the same scaling after zoom.
                 videoOutline?.isVisible = false
                 desiredMatrix = null
             }
         }
 
-        // Finally set the actual scale + translation.
         videoView.scaleX = scaledAspect
         videoView.scaleY = scaledAspect
         videoView.translationX = expectedTranslationX
@@ -649,10 +574,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         updateBrightnessOverlayBounds()
     }
 
-    /**
-     * Clears all zoom state and resets the video surface view to 1:1 scale.
-     * Does NOT change the ExoPlayer resize mode - call [PlayerView.resize] separately.
-     */
     fun clearZoomState() {
         matrixAnimation?.cancel()
         matrixAnimation = null
@@ -668,10 +589,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         }
     }
 
-    /**
-     * Resets zoom to fit mode if any zoom is currently active.
-     * Calls [PlayerView.resize] to update the ExoPlayer resize mode.
-     */
     fun resetZoomToDefault() {
         if (zoomMatrix != null) {
             clearZoomState()
@@ -686,11 +603,8 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                 override fun onScale(detector: ScaleGestureDetector): Boolean {
                     val matrix = currentZoomMatrix()
                     val (_, _, scale) = matrixToTranslationAndScale(matrix)
-                    // Clamp scale of the zoom, do it here as it is easier than doing it within applyZoomMatrix.
                     val newScale = (scale * detector.scaleFactor).coerceIn(MINIMUM_ZOOM, MAXIMUM_ZOOM)
-                    // This is how much we should scale it with to prevent infinite scaling.
                     val actualScaleFactor = newScale / scale
-                    // Scale around the focus point, this is more natural than just zoom.
                     val pivotX = detector.focusX - screenWidthWithOrientation.toFloat() * 0.5f
                     val pivotY = detector.focusY - screenHeightWithOrientation.toFloat() * 0.5f
                     matrix.postScale(actualScaleFactor, actualScaleFactor, pivotX, pivotY)
@@ -701,16 +615,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         )
     }
 
-    /**
-     * Processes a two-finger zoom/pan gesture event.
-     * Handles scale detection, panning, and the snap-back animation after finger lift.
-     *
-     * @param event              The motion event (should have pointerCount >= 2 or [lastPan] != null).
-     * @param ctx                Context used to create the [ScaleGestureDetector] on first call.
-     * @param onFirstPointerDown Called on [MotionEvent.ACTION_POINTER_DOWN] (e.g. hide player UI).
-     * @param onGestureEnd       Called when the gesture ends (e.g. reset caller touch state).
-     * @return Always true (event consumed).
-     */
     fun handleZoomPanGesture(
         event: MotionEvent,
         ctx: Context,
@@ -749,7 +653,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                 matrixAnimation?.cancel()
                 matrixAnimation = null
 
-                // Snap to desired matrix after zoom gesture ends
                 matrixAnimation = ValueAnimator.ofFloat(0f, 1f).apply {
                     startDelay = 0
                     duration = 200
@@ -774,30 +677,22 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         return true
     }
 
-    /**
-     * Resizes and repositions [brightnessOverlay] to exactly match the visible video surface,
-     * accounting for zoom scale and translation.
-     */
     fun updateBrightnessOverlayBounds() {
         val overlay = brightnessOverlay ?: return
         val pv = playerView.exoPlayerView ?: return
         val video = pv.videoSurfaceView ?: return
 
-        // Compute accurate transformed bounding box of the video view after scale+translation.
         val vw = video.width.toFloat()
         val vh = video.height.toFloat()
         val sx = video.scaleX
         val sy = video.scaleY
         if (vw <= 0f || vh <= 0f) return
 
-        // Pivot defaults to center if not set.
         val pivotX = if (video.pivotX != 0f) video.pivotX else vw * 0.5f
         val pivotY = if (video.pivotY != 0f) video.pivotY else vh * 0.5f
-        // Use view position (includes translation) as base; avoid double-counting translation.
         val tx = video.x
         val ty = video.y
 
-        // Transform function for a local point (lx,ly).
         fun transform(lx: Float, ly: Float): Pair<Float, Float> {
             val gx = tx + pivotX + (lx - pivotX) * sx
             val gy = ty + pivotY + (ly - pivotY) * sy
@@ -827,11 +722,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         overlay.x = minX;    overlay.y = minY
     }
 
-    /**
-     * Attaches a persistent layout-change listener to the ExoPlayer view so
-     * [updateBrightnessOverlayBounds] is called on every layout pass (orientation change,
-     * aspect-ratio change, zoom, PiP transition, etc.).
-     */
     fun requestUpdateBrightnessOverlayOnNextLayout() {
         val exoView = playerView.exoPlayerView ?: return
         overlayLayoutListener?.let { exoView.removeOnLayoutChangeListener(it) }
@@ -842,7 +732,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         exoView.addOnLayoutChangeListener(listener)
     }
 
-    /** Removes the overlay layout listener registered by [requestUpdateBrightnessOverlayOnNextLayout]. */
     fun releaseOverlayLayoutListener() {
         overlayLayoutListener?.let { playerView.exoPlayerView?.removeOnLayoutChangeListener(it) }
         overlayLayoutListener = null
@@ -850,35 +739,24 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
     /** Rewind / fast-forward animations */
 
-    /** Resets the rewind button label to the standard "–Xs" format. */
     fun resetRewindText() {
         playerView.exoRewText?.text = context.getString(R.string.rew_text_regular_format)
             .format(fastForwardTime / 1000)
     }
 
-    /** Resets the fast-forward button label to the standard "+Xs" format. */
     fun resetFastForwardText() {
         playerView.exoFfwdText?.text = context.getString(R.string.ffw_text_regular_format)
             .format(fastForwardTime / 1000)
     }
 
-    /**
-     * Fades playerRewHolder, playerFfwdHolder, and playerPausePlay to [fadeTo] (0f or 1f).
-     * Always resets the holder alphas to 1f first so any stale fillAfter state is cleared.
-     * Called from host fragments' show/hide control animations so both GeneratorPlayer and trailer share
-     * the same fade logic.
-     */
     fun animateCenterControls(fadeTo: Float) {
         val from = if (fadeTo > 0.5f) 0f else 1f
         fun makeAnim() = AlphaAnimation(from, fadeTo).apply { duration = 100; fillAfter = true }
-        // Each view needs its own Animation instance; sharing one causes fillAfter to
-        // not hold reliably across all views once any of them restarts the animation.
         playerView.playerRewHolder?.let  { it.alpha = 1f; it.startAnimation(makeAnim()) }
         playerView.playerFfwdHolder?.let { it.alpha = 1f; it.startAnimation(makeAnim()) }
         playerView.playerPausePlay?.startAnimation(makeAnim())
     }
 
-    /** Plays the rewind animation and seeks back by [fastForwardTime]. */
     fun rewind() {
         try {
             val rewHolder = playerView.playerRewHolder ?: return
@@ -886,14 +764,12 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
             val rewText = playerView.exoRewText
             val wasShowing = playerView.callbacks?.isUIShowing() ?: false
 
-            // Only expose the parent chain when controls are currently hidden.
             val prevCenterMenuGone = playerView.playerCenterMenu?.isGone ?: false
             val prevVideoHolderVisible = playerView.playerVideoHolder?.isVisible ?: true
             if (!wasShowing) {
                 playerView.playerCenterMenu?.isGone = false
                 playerView.playerVideoHolder?.isVisible = true
             }
-            // Always clear any stale fillAfter alpha so the button is visible during animation.
             rewHolder.alpha = 1f
 
             rew?.startAnimation(AnimationUtils.loadAnimation(context, R.anim.rotate_left))
@@ -904,7 +780,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                 override fun onAnimationEnd(animation: Animation?) {
                     rewText?.post {
                         resetRewindText()
-                        // Restore parent chain only if we changed it and controls are still hidden.
                         if (!wasShowing && !(playerView.callbacks?.isUIShowing() ?: false)) {
                             playerView.playerCenterMenu?.isGone = prevCenterMenuGone
                             playerView.playerVideoHolder?.isVisible = prevVideoHolderVisible
@@ -919,7 +794,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         } catch (e: Exception) { logError(e) }
     }
 
-    /** Plays the fast-forward animation and seeks forward by [fastForwardTime]. */
     fun fastForward() {
         try {
             val ffwdHolder = playerView.playerFfwdHolder ?: return
@@ -933,7 +807,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                 playerView.playerCenterMenu?.isGone = false
                 playerView.playerVideoHolder?.isVisible = true
             }
-            // Always clear any stale fillAfter alpha so the button is visible during animation.
             ffwdHolder.alpha = 1f
 
             ffwd?.startAnimation(AnimationUtils.loadAnimation(context, R.anim.rotate_right))
@@ -960,18 +833,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
     /** Double-tap detection */
 
-    /**
-     * Call when a valid tap is detected (short hold, minimal movement, valid touch area).
-     * Routes to double-tap seeking/pausing or schedules a delayed single-tap callback.
-     *
-     * Updates [lastTouchEndTime] when a confirmed tap (single or double) is recorded.
-     *
-     * @param x           X coordinate of the tap in the view's coordinate space.
-     * @param viewWidth   Width of the view (used to compute left/center/right zones).
-     * @param isLocked    Whether player controls are locked (suppresses double-tap seek).
-     * @param onSingleTap Invoked when it is determined to be a single tap; may be deferred.
-     * @return true if a double-tap action was performed.
-     */
     fun onTapDetected(x: Float, viewWidth: Int, isLocked: Boolean, onSingleTap: () -> Unit): Boolean {
         val anyDoubleTap = doubleTapEnabled || doubleTapPauseEnabled
         if (!anyDoubleTap) {
@@ -981,9 +842,8 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
         val timeSinceLast = System.currentTimeMillis() - lastTouchEndTime
         return if (!isLocked && timeSinceLast < DOUBLE_TAP_MINIMUM_TIME_BETWEEN) {
-            /** Double-tap */
             tapCount++
-            doubleTapToken++ // cancel any pending single-tap runnable
+            doubleTapToken++
             if (doubleTapPauseEnabled) {
                 when {
                     x < viewWidth / 2f - (DOUBLE_TAP_PAUSE_PERCENTAGE * viewWidth) -> {
@@ -1001,7 +861,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
             }
             true
         } else {
-            /** Single tap (first tap, or too slow for double-tap) */
             tapCount = 0
             val token = ++doubleTapToken
             playerView.playerHolder?.postDelayed({
@@ -1032,7 +891,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         val min = ceil((sec - rsec) / 60.0).toInt()
         val rmin = min % 60L
         val h = ceil((min - rmin) / 60.0).toLong()
-        // int rh = h;// h % 24;
         return (if (h > 0) forceLetters(h) + ":" else "") +
                (if (rmin >= 0 || h >= 0) forceLetters(rmin) + ":" else "") +
                forceLetters(rsec)
@@ -1062,11 +920,10 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
         val currentTouch = Vector2(event.x, event.y)
         val startTouch = currentTouchStart
 
-        /** Two-finger zoom/pan (fullscreen, unlocked) */
         if ((event.pointerCount >= 2 || lastPan != null) && isFullScreen && !isLocked
                 && !hasTriggeredSpeedUp && currentTouchAction == null) {
-            holdHandler.removeCallbacks(holdRunnable) // Remove 2x speed.
-            isCurrentTouchValid = false // Prevent other touches
+            holdHandler.removeCallbacks(holdRunnable)
+            isCurrentTouchValid = false
             return handleZoomPanGesture(
                 event = event,
                 ctx = view.context,
@@ -1137,8 +994,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                     val verticalAddition = diffFromLast.y * VERTICAL_MULTIPLIER / view.height.toFloat()
                     when (currentTouchAction) {
                         TouchAction.Time -> {
-                            // This simply updates UI as the seek logic happens on release
-                            // startTime is rounded to make the UI sync in a nice way.
                             val startTime = currentTouchStartPlayerTime?.div(1000L)?.times(1000L)
                             if (startTime != null) {
                                 calculateNewTime(startTime, startTouch, currentTouch)?.let { newMs ->
@@ -1173,7 +1028,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                 }
 
                 if (isCurrentTouchValid) {
-                    // Horizontal seek on release
                     if (swipeHorizontalEnabled && currentTouchAction == TouchAction.Time && !isLocked) {
                         val startTime = currentTouchStartPlayerTime
                         if (startTime != null) {
@@ -1184,7 +1038,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                             }
                         }
                     }
-                    // Tap detection: only fire if the finger was held briefly (not a long-press).
                     val holdTime = currentTouchStartTime?.let { System.currentTimeMillis() - it }
                     if (currentTouchAction == null && currentLastTouchAction == null
                         && !hasTriggeredSpeedUp
@@ -1202,7 +1055,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                 val hadSwipe = currentTouchAction != null || currentLastTouchAction != null
                 playerView.callbacks?.onGestureEnd(hadSwipe, uiShowingBeforeGesture)
 
-                // Reset touch
                 lastTouchEndTime = System.currentTimeMillis()
                 isCurrentTouchValid = false
                 currentTouchStart = null

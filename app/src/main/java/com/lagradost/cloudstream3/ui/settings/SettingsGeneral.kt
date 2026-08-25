@@ -27,8 +27,7 @@ import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.network.initClient
 import com.lagradost.cloudstream3.ui.BasePreferenceFragmentCompat
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
+import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.beneneCount
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.getPref
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.hideOn
@@ -64,12 +63,12 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
         setToolBarScrollFlags()
     }
 
-    @OptIn(ExperimentalSerializationApi::class) // JsonNames is an experimental annotation for now
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     data class CustomSite(
         @JsonProperty("parentClassName") @JsonAlias("parentJavaClass")
         @SerialName("parentClassName") @JsonNames("parentJavaClass")
-        val parentClassName: String, // ::class.simpleName
+        val parentClassName: String,
         @JsonProperty("name") @SerialName("name") val name: String,
         @JsonProperty("url") @SerialName("url") val url: String,
         @JsonProperty("lang") @SerialName("lang") val lang: String,
@@ -103,7 +102,7 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
         }
 
 
-        getPref(R.string.battery_optimisation_key)?.hideOn(TV or EMULATOR)?.setOnPreferenceClickListener {
+        getPref(R.string.battery_optimisation_key)?.setOnPreferenceClickListener {
             val ctx = context ?: return@setOnPreferenceClickListener false
 
             if (isAppRestricted(ctx)) {
@@ -150,7 +149,6 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
                     val newSite = CustomSite(simpleName, name, url, realLang)
                     current.add(newSite)
                     setKey(USER_PROVIDER_API, current.toTypedArray())
-                    // reload apis
                     MainActivity.afterPluginsLoadedEvent.invoke(false)
 
                     dialog.dismissSafe(activity)
@@ -250,7 +248,6 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
         }
 
         getPref(R.string.download_parallel_key)?.setOnPreferenceChangeListener { _, _ ->
-            // Notify that the queue logic has been changed
             DownloadQueueManager.forceRefreshQueue()
             return@setOnPreferenceChangeListener true
         }
@@ -268,7 +265,6 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
                 getString(R.string.download_path_pref),
                 true,
                 {}) {
-                // Last = custom
                 if (it == dirs.size) {
                     try {
                         pathPicker.launch(Uri.EMPTY)
@@ -276,9 +272,6 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
                         logError(e)
                     }
                 } else {
-                    // Sets both visual and actual paths.
-                    // key = used path
-                    // visual = visual path
                     settingsManager.edit {
                         putString(getString(R.string.download_path_key), dirs[it])
                         putString(getString(R.string.download_path_key_visual), dirs[it])

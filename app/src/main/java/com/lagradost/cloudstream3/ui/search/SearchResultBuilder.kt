@@ -19,7 +19,7 @@ import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.isMovieType
 import com.lagradost.cloudstream3.syncproviders.SyncAPI
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
+import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.getNameFull
 import com.lagradost.cloudstream3.utils.AppContextUtils.getShortSeasonText
@@ -68,8 +68,6 @@ object SearchResultBuilder {
         val bar: ProgressBar? = itemView.findViewById(R.id.watchProgress)
         val playImg: ImageView? = itemView.findViewById(R.id.search_item_download_play)
         val episodeText: TextView? = itemView.findViewById(R.id.episode_text)
-
-        // Do logic
 
         bar?.isVisible = false
         playImg?.isVisible = false
@@ -175,18 +173,13 @@ object SearchResultBuilder {
 
         bg.isFocusable = false
         bg.isFocusableInTouchMode = false
-        if (!isLayout(TV)) {
-            bg.setOnClickListener {
-                click(it)
-            }
-            bg.setOnLongClickListener {
-                longClick(it)
-                return@setOnLongClickListener true
-            }
+        bg.setOnClickListener {
+            click(it)
         }
-        //
-        //
-        //
+        bg.setOnLongClickListener {
+            longClick(it)
+            return@setOnLongClickListener true
+        }
 
         itemView.setOnClickListener {
             click(it)
@@ -199,43 +192,10 @@ object SearchResultBuilder {
             itemView.nextFocusDownId = nextFocusDown
         }
 
-        /*when (nextFocusBehavior) {
-            true -> itemView.nextFocusLeftId = bg.id
-            false -> itemView.nextFocusRightId = bg.id
-            null -> {
-                bg.nextFocusRightId = -1
-                bg.nextFocusLeftId = -1
-            }
-        }*/
-
-        /*if (nextFocusUp != null) {
-            bg.nextFocusUpId = nextFocusUp
-        }
-
-        if (nextFocusDown != null) {
-            bg.nextFocusDownId = nextFocusDown
-        }
-
-        */
-
-        if (isLayout(TV)) {
-            // bg.isFocusable = true
-            // bg.isFocusableInTouchMode = true
-            // bg.touchscreenBlocksFocus = false
-            itemView.isFocusableInTouchMode = true
-            itemView.isFocusable = true
-        }
-
-        /**/
-
         itemView.setOnLongClickListener {
             longClick(it)
             return@setOnLongClickListener true
         }
-
-        /*bg.setOnFocusChangeListener { view, b ->
-            focus(view, b)
-        }*/
 
         itemView.setOnFocusChangeListener { view, b ->
             focus(view, b)
@@ -303,11 +263,6 @@ object SearchResultBuilder {
             }
         }
 
-        // This is the logic for making the rounded corners more round on the top and bottom element
-        // a bit dirty to do memory allocation, but it makes it more extensible and is easier to reason about
-        // then a large if statement
-
-        // Requires that the ordering here is the same as in the xml
         val boxes = arrayListOf<TextView>()
         for (view in arrayOf(textIsDub, textIsSub, rating)) {
             if (view?.isVisible == true) {

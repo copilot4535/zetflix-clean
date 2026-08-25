@@ -16,9 +16,6 @@ import com.lagradost.cloudstream3.ui.home.HomeFragment.Companion.bindChips
 import com.lagradost.cloudstream3.ui.result.FOCUS_SELF
 import com.lagradost.cloudstream3.ui.result.setLinearListLayout
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setSystemBarsPadding
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setToolBarScrollFlags
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setUpToolbar
@@ -27,7 +24,6 @@ import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showMultiDialog
 import com.lagradost.cloudstream3.utils.SubtitleHelper.getNameNextToFlagEmoji
-import com.lagradost.cloudstream3.utils.UIHelper.toPx
 
 const val PLUGINS_BUNDLE_DATA = "data"
 const val PLUGINS_BUNDLE_LOCAL = "isLocal"
@@ -38,7 +34,7 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
     private lateinit var pluginViewModel: PluginsViewModel
 
     override fun onDestroyView() {
-        pluginViewModel.clear() // clear for the next observe
+        pluginViewModel.clear()
         super.onDestroyView()
     }
 
@@ -49,12 +45,10 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
     override fun onBindingCreated(binding: FragmentPluginsBinding) {
         pluginViewModel = ViewModelProvider(this)[PluginsViewModel::class.java]
 
-        // Since the ViewModel is getting reused the tvTypes must be cleared between uses
         pluginViewModel.tvTypes.clear()
         pluginViewModel.selectedLanguages = listOf()
         pluginViewModel.clear()
 
-        // Filter by language set on preferred media
         activity?.let {
             val providerLangs = it.getApiProviderLangSettings().toList()
             if (!providerLangs.contains(AllLanguagesName)) {
@@ -66,7 +60,6 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
             tryParseJson<RepositoryData>(data)
         }
         val isLocal = arguments?.getBoolean(PLUGINS_BUNDLE_LOCAL) == true
-        // download all extensions button
         val downloadAllButton = binding.settingsToolbar.menu?.findItem(R.id.download_all)
 
         if (repositoryData == null) {
@@ -93,10 +86,9 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
                             }
                             .sortedBy {
                                 it.second.substringAfter("\u00a0").lowercase()
-                            } // name ignoring flag emoji
+                            }
                             .toMutableList()
 
-                        // Move "none" to 1st position as it's special code to indicate unknown/missing language
                         if (languagesTagName.remove(Pair("none", "none"))) {
                             languagesTagName.add(0, Pair("none", getString(R.string.no_data)))
                         }
@@ -125,7 +117,6 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
             val searchView =
                 menu?.findItem(R.id.search_button)?.actionView as? SearchView
 
-            // Don't go back if active query
             setNavigationOnClickListener {
                 if (searchView?.isIconified == false) {
                     searchView.isIconified = true
@@ -146,11 +137,6 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
                 }
             })
         }
-//        searchView?.onActionViewCollapsed = {
-//            pluginViewModel.search(null)
-//        }
-
-        // Because onActionViewCollapsed doesn't wanna work we need this workaround :(
 
         binding.pluginRecyclerView.apply {
             setLinearListLayout(
@@ -165,11 +151,6 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
                 }
         }
 
-        if (isLayout(TV or EMULATOR)) {
-            // Scrolling down does not reveal the whole RecyclerView on TV, add to bypass that.
-            binding.pluginRecyclerView.setPadding(0, 0, 0, 200.toPx)
-        }
-
         observe(pluginViewModel.filteredPlugins) { (scrollToTop, list) ->
             (binding.pluginRecyclerView.adapter as? PluginAdapter)?.submitList(list)
             if (scrollToTop) {
@@ -178,7 +159,6 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
         }
 
         if (isLocal) {
-            // No download button and no categories on local
             downloadAllButton?.isVisible = false
             binding.settingsToolbar.menu?.findItem(R.id.lang_filter)?.isVisible = false
             pluginViewModel.updatePluginListLocal()
@@ -187,7 +167,6 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
         } else {
             pluginViewModel.updatePluginList(context, listOf(repositoryData))
             binding.tvtypesChipsScroll.root.isVisible = true
-            // not needed for users but may be useful for devs
             downloadAllButton?.isVisible = BuildConfig.DEBUG
 
             bindChips(

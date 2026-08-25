@@ -16,7 +16,6 @@ import androidx.viewbinding.ViewBinding
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import com.google.android.material.navigation.NavigationBarItemView
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.getActivity
 import com.lagradost.cloudstream3.CommonActivity.activity
 import com.lagradost.cloudstream3.HomePageList
@@ -26,7 +25,6 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.databinding.FragmentHomeHeadBinding
 import com.lagradost.cloudstream3.mvvm.Resource
-import com.lagradost.cloudstream3.mvvm.debugException
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.ViewHolderState
@@ -35,7 +33,6 @@ import com.lagradost.cloudstream3.ui.account.AccountHelper.showAccountEditDialog
 import com.lagradost.cloudstream3.ui.account.AccountHelper.showAccountSelectLinear
 import com.lagradost.cloudstream3.ui.account.AccountViewModel
 import com.lagradost.cloudstream3.ui.result.FOCUS_SELF
-import com.lagradost.cloudstream3.ui.result.ResultFragment.bindLogo
 import com.lagradost.cloudstream3.ui.result.ResultViewModel2
 import com.lagradost.cloudstream3.ui.result.START_ACTION_RESUME_LATEST
 import com.lagradost.cloudstream3.ui.result.getId
@@ -43,8 +40,7 @@ import com.lagradost.cloudstream3.ui.result.setLinearListLayout
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_LOAD
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_SHOW_METADATA
 import com.lagradost.cloudstream3.ui.search.SearchClickCallback
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
+import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.html
 import com.lagradost.cloudstream3.utils.AppContextUtils.setDefaultFocus
@@ -54,8 +50,6 @@ import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showBottomDialog
 import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showOptionSelectStringRes
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarMargin
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarView
-import com.lagradost.cloudstream3.utils.UIHelper.populateChips
-import androidx.core.graphics.toColorInt
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
 
 class HomeParentItemAdapterPreview(
@@ -115,7 +109,6 @@ class HomeParentItemAdapterPreview(
                     "bookmarkRecyclerView",
                     bookmarkRecyclerView.layoutManager?.onSaveInstanceState()
                 )
-                //putInt("previewViewpager", previewViewpager.currentItem)
             }
 
         override fun restore(state: Bundle) {
@@ -141,7 +134,6 @@ class HomeParentItemAdapterPreview(
                     val context = v.context ?: return@ResumeItemAdapter
                     val builder: AlertDialog.Builder =
                         AlertDialog.Builder(context)
-                    // Copy pasted from https://github.com/recloudstream/cloudstream/pull/1658/files
                     builder.apply {
                         setTitle(R.string.clear_history)
                         setMessage(
@@ -151,7 +143,7 @@ class HomeParentItemAdapterPreview(
                                 )
                             )
                         )
-                        setNegativeButton(R.string.cancel) { _, _ -> /*NO-OP*/ }
+                        setNegativeButton(R.string.cancel) { _, _ -> }
                         setPositiveButton(R.string.delete) { _, _ ->
                             DataStoreHelper.deleteAllResumeStateIds()
                             viewModel.reloadStored()
@@ -159,7 +151,6 @@ class HomeParentItemAdapterPreview(
                         show().setDefaultFocus()
                     }
                 } catch (t: Throwable) {
-                    // This may throw a formatting error
                     logError(t)
                 }
             },
@@ -182,7 +173,6 @@ class HomeParentItemAdapterPreview(
                     )
                 ) { (isTv, actionId) ->
                     when (actionId + if (isTv) 0 else 1) {
-                        // play
                         0 -> {
                             viewModel.click(
                                 SearchClickCallback(
@@ -193,7 +183,6 @@ class HomeParentItemAdapterPreview(
                                 )
                             )
                         }
-                        //info
                         1 -> {
                             viewModel.click(
                                 SearchClickCallback(
@@ -204,7 +193,6 @@ class HomeParentItemAdapterPreview(
                                 )
                             )
                         }
-                        // remove
                         2 -> {
                             val card = callback.card
                             if (card is DataStoreHelper.ResumeWatchingResult) {
@@ -229,53 +217,6 @@ class HomeParentItemAdapterPreview(
                 callback.card,
                 load = false
             )
-            /*
-            callback.view.context?.getActivity()?.showOptionSelectStringRes(
-                callback.view,
-                callback.card.posterUrl,
-                listOf(
-                    R.string.action_open_watching,
-                    R.string.action_remove_from_bookmarks,
-                ),
-                listOf(
-                    R.string.action_open_play,
-                    R.string.action_open_watching,
-                    R.string.action_remove_from_bookmarks
-                )
-            ) { (isTv, actionId) ->
-                when (actionId + if (isTv) 0 else 1) { // play
-                    0 -> {
-                        viewModel.click(
-                            SearchClickCallback(
-                                START_ACTION_RESUME_LATEST,
-                                callback.view,
-                                -1,
-                                callback.card
-                            )
-                        )
-                    }
-
-                    1 -> { // info
-                        viewModel.click(
-                            SearchClickCallback(
-                                SEARCH_ACTION_LOAD,
-                                callback.view,
-                                -1,
-                                callback.card
-                            )
-                        )
-                    }
-
-                    2 -> { // remove
-                        DataStoreHelper.setResultWatchState(
-                            callback.card.id,
-                            WatchType.NONE.internalId
-                        )
-                        viewModel.reloadStored()
-                    }
-                }
-            }
-            */
         }
 
         private val previewViewpager: ViewPager2 =
@@ -284,7 +225,6 @@ class HomeParentItemAdapterPreview(
         private val previewViewpagerText: ViewGroup =
             itemView.findViewById(R.id.home_preview_viewpager_text)
 
-        // private val previewHeader: FrameLayout = itemView.findViewById(R.id.home_preview)
         private val resumeHolder: View = itemView.findViewById(R.id.home_watch_holder)
         private val resumeRecyclerView: RecyclerView =
             itemView.findViewById(R.id.home_watch_child_recyclerview)
@@ -310,7 +250,6 @@ class HomeParentItemAdapterPreview(
 
         fun onSelect(item: LoadResponse, position: Int) {
             (binding as? FragmentHomeHeadBinding)?.apply {
-                //homePreviewImage.setImage(item.posterUrl, item.posterHeaders)
 
                 homePreviewPlay.setOnClickListener { view ->
                     viewModel.click(
@@ -329,7 +268,6 @@ class HomeParentItemAdapterPreview(
                     )
                 }
 
-                // very ugly code, but I don't care
                 val id = item.getId()
                 val watchType =
                     DataStoreHelper.getResultWatchState(id)
@@ -383,7 +321,7 @@ class HomeParentItemAdapterPreview(
                 override fun onPageSelected(position: Int) {
                     previewAdapter.apply {
                         if (position >= itemCount - 1 && hasMoreItems) {
-                            hasMoreItems = false // don't make two requests
+                            hasMoreItems = false
                             viewModel.loadMoreHomeScrollResponses()
                         }
                     }
@@ -434,7 +372,6 @@ class HomeParentItemAdapterPreview(
                     if (isChecked) {
                         viewModel.loadStoredData(setOf(watch))
                     }
-                    // Else if all are unchecked -> Do not load data
                     else if (toggleList.all { !it.first.isChecked }) {
                         viewModel.loadStoredData(emptySet())
                     }
@@ -499,25 +436,10 @@ class HomeParentItemAdapterPreview(
                 is Resource.Success -> {
                     previewAdapter.submitList(preview.value.second)
                     previewAdapter.hasMoreItems = preview.value.first
-                    /*if (!.setItems(
-                            preview.value.second,
-                            preview.value.first
-                        )
-                    ) {
-                        // this might seam weird and useless, however this prevents a very weird andrid bug were the viewpager is not rendered properly
-                        // I have no idea why that happens, but this is my ducktape solution
-                        previewViewpager.setCurrentItem(0, false)
-                        previewViewpager.beginFakeDrag()
-                        previewViewpager.fakeDragBy(1f)
-                        previewViewpager.endFakeDrag()
-                        previewCallback.onPageSelected(0)
-                        //previewHeader.isVisible = true
-                    }*/
 
                     previewViewpager.isVisible = true
                     previewViewpagerText.isVisible = true
                     alternativeAccountPadding?.isVisible = false
-                    // Explicitly bind the current item to ensure instant loading
                     val currentPos = previewViewpager.currentItem
                     val item = preview.value.second.getOrNull(currentPos)
                     if (item != null) {
@@ -531,7 +453,6 @@ class HomeParentItemAdapterPreview(
                     previewViewpager.isVisible = false
                     previewViewpagerText.isVisible = false
                     alternativeAccountPadding?.isVisible = true
-                    //previewHeader.isVisible = false
                 }
             }
         }
@@ -570,7 +491,7 @@ class HomeParentItemAdapterPreview(
 
                 title?.setOnClickListener {
                     val items = toggleList.map { it.first }.filter { it.isChecked }
-                    if (items.isEmpty()) return@setOnClickListener // we don't want to show an empty dialog
+                    if (items.isEmpty()) return@setOnClickListener
                     val textSum = items
                         .mapNotNull { it.text }.joinToString()
 

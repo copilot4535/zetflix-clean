@@ -1,9 +1,7 @@
 package com.lagradost.cloudstream3.ui.account
 
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import coil3.transform.RoundedCornersTransformation
 import com.lagradost.cloudstream3.R
@@ -13,8 +11,7 @@ import com.lagradost.cloudstream3.databinding.AccountListItemEditBinding
 import com.lagradost.cloudstream3.ui.NoStateAdapter
 import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.account.AccountHelper.showAccountEditDialog
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
+import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
@@ -46,7 +43,7 @@ class AccountAdapter(
     ) {
         when (val binding = holder.view) {
             is AccountListItemBinding -> binding.apply {
-                val isTv = isLayout(TV or EMULATOR) || !root.isInTouchMode
+                val isTv = false
 
                 val isLastUsedAccount = item.keyIndex == DataStoreHelper.selectedKeyIndex
 
@@ -55,39 +52,24 @@ class AccountAdapter(
                 lockIcon.isVisible = item.lockPin != null
                 outline.isVisible = !isTv && isLastUsedAccount
 
-                if (isTv) {
-                    // For emulator but this is fine on TV also
-                    root.isFocusableInTouchMode = true
-                    if (isLastUsedAccount) {
-                        root.requestFocus()
-                    }
+                root.setOnLongClickListener {
+                    showAccountEditDialog(
+                        context = root.context,
+                        account = item,
+                        isNewAccount = false,
+                        accountEditCallback = { account ->
+                            accountEditCallback.invoke(
+                                account
+                            )
+                        },
+                        accountDeleteCallback = { account ->
+                            accountDeleteCallback.invoke(
+                                account
+                            )
+                        }
+                    )
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        root.foreground = ContextCompat.getDrawable(
-                            root.context,
-                            R.drawable.outline_drawable
-                        )
-                    }
-                } else {
-                    root.setOnLongClickListener {
-                        showAccountEditDialog(
-                            context = root.context,
-                            account = item,
-                            isNewAccount = false,
-                            accountEditCallback = { account ->
-                                accountEditCallback.invoke(
-                                    account
-                                )
-                            },
-                            accountDeleteCallback = { account ->
-                                accountDeleteCallback.invoke(
-                                    account
-                                )
-                            }
-                        )
-
-                        true
-                    }
+                    true
                 }
 
                 root.setOnClickListener {
@@ -96,7 +78,7 @@ class AccountAdapter(
             }
 
             is AccountListItemEditBinding -> binding.apply {
-                val isTv = isLayout(TV or EMULATOR) || !root.isInTouchMode
+                val isTv = false
 
                 val isLastUsedAccount = item.keyIndex == DataStoreHelper.selectedKeyIndex
 
@@ -106,21 +88,6 @@ class AccountAdapter(
                 }
                 lockIcon.isVisible = item.lockPin != null
                 outline.isVisible = !isTv && isLastUsedAccount
-
-                if (isTv) {
-                    // For emulator but this is fine on TV also
-                    root.isFocusableInTouchMode = true
-                    if (isLastUsedAccount) {
-                        root.requestFocus()
-                    }
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        root.foreground = ContextCompat.getDrawable(
-                            root.context,
-                            R.drawable.outline_drawable
-                        )
-                    }
-                }
 
                 root.setOnClickListener {
                     showAccountEditDialog(

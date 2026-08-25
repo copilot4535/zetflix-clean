@@ -6,7 +6,6 @@ import android.view.View
 import android.widget.ImageView
 import androidx.annotation.StringRes
 import androidx.core.view.children
-import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -21,9 +20,7 @@ import com.lagradost.cloudstream3.syncproviders.AccountManager
 import com.lagradost.cloudstream3.syncproviders.AuthRepo
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.ui.home.HomeFragment.Companion.errorProfilePic
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.DataStoreHelper
@@ -56,9 +53,6 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
             }
         }
 
-        /**
-         * Hide many Preferences on selected layouts.
-         **/
         fun PreferenceFragmentCompat?.hidePrefs(ids: List<Int>, layoutFlags: Int) {
             if (this == null) return
 
@@ -71,46 +65,16 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
             }
         }
 
-        /**
-         * Hide the [Preference] on selected layouts.
-         * @return [Preference] if visible otherwise null.
-         *
-         * [hideOn] is usually followed by some actions on the preference which are mostly
-         * unnecessary when the preference is disabled for the said layout thus returning null.
-         **/
         fun Preference?.hideOn(layoutFlags: Int): Preference? {
             if (this == null) return null
             this.isVisible = !isLayout(layoutFlags)
             return if(this.isVisible) this else null
         }
 
-        /**
-         * On TV you cannot properly scroll to the bottom of settings, this fixes that.
-         * */
-        fun PreferenceFragmentCompat.setPaddingBottom() {
-            if (isLayout(TV or EMULATOR)) {
-                listView?.setPadding(0, 0, 0, 100.toPx)
-            }
+        fun setPaddingBottom() {
         }
 
-        fun PreferenceFragmentCompat.setToolBarScrollFlags() {
-            if (isLayout(TV or EMULATOR)) {
-                val settingsAppbar = view?.findViewById<MaterialToolbar>(R.id.settings_toolbar)
-
-                settingsAppbar?.updateLayoutParams<AppBarLayout.LayoutParams> {
-                    scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL
-                }
-            }
-        }
-
-        fun Fragment?.setToolBarScrollFlags() {
-            if (isLayout(TV or EMULATOR)) {
-                val settingsAppbar = this?.view?.findViewById<MaterialToolbar>(R.id.settings_toolbar)
-
-                settingsAppbar?.updateLayoutParams<AppBarLayout.LayoutParams> {
-                    scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL
-                }
-            }
+        fun setToolBarScrollFlags() {
         }
 
         fun Fragment?.setUpToolbar(title: String) {
@@ -119,11 +83,9 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
 
             settingsToolbar.apply {
                 setTitle(title)
-                if (isLayout(PHONE or EMULATOR)) {
-                    setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
-                    setNavigationOnClickListener {
-                        activity?.onBackPressedDispatcher?.onBackPressed()
-                    }
+                setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
+                setNavigationOnClickListener {
+                    activity?.onBackPressedDispatcher?.onBackPressed()
                 }
             }
         }
@@ -134,12 +96,9 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
 
             settingsToolbar.apply {
                 setTitle(title)
-                if (isLayout(PHONE or EMULATOR)) {
-                    setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
-                    children.firstOrNull { it is ImageView }?.tag = getString(R.string.tv_no_focus_tag)
-                    setNavigationOnClickListener {
-                        safe { activity?.onBackPressedDispatcher?.onBackPressed() }
-                    }
+                setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
+                setNavigationOnClickListener {
+                    safe { activity?.onBackPressedDispatcher?.onBackPressed() }
                 }
             }
         }
@@ -148,7 +107,7 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
             view?.let {
                 fixSystemBarsPadding(
                     it,
-                    padLeft = isLayout(TV or EMULATOR),
+                    padLeft = isLayout(PHONE),
                     padBottom = isLandscape()
                 )
             }
@@ -159,7 +118,6 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
             dir.listFiles()?.let {
                 for (file in it) {
                     size += if (file.isFile) {
-                        // System.out.println(file.getName() + " " + file.length());
                         file.length()
                     } else getFolderSize(file)
                 }
@@ -173,7 +131,7 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
         fixSystemBarsPadding(
             view,
             padBottom = isLandscape(),
-            padLeft = isLayout(TV or EMULATOR)
+            padLeft = isLayout(PHONE)
         )
     }
 
@@ -182,10 +140,6 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
             activity?.navigate(id, Bundle())
         }
 
-        /** used to debug leaks
-        showToast(activity,"${VideoDownloadManager.downloadStatusEvent.size} :
-        ${VideoDownloadManager.downloadProgressEvent.size}") **/
-
         fun hasProfilePictureFromAccountManagers(accountManagers: Array<AuthRepo>): Boolean {
             for (syncApi in accountManagers) {
                 val login = syncApi.authUser()
@@ -193,17 +147,15 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
 
                 binding.settingsProfilePic.let { imageView ->
                     imageView.loadImage(pic) {
-                        // Fallback to random error drawable
                         error { getImageFromDrawable(context ?: return@error null, errorProfilePic) }
                     }
                 }
                 binding.settingsProfileText.text = login.name
-                return true // sync profile exists
+                return true
             }
-            return false // not syncing
+            return false
         }
 
-        // display local account information if not syncing
         if (!hasProfilePictureFromAccountManagers(AccountManager.allApis)) {
             val activity = activity ?: return
             val currentAccount = try {
@@ -234,16 +186,7 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
                     setOnClickListener {
                         navigate(navigationId)
                     }
-                    if (isLayout(TV)) {
-                        isFocusable = true
-                        isFocusableInTouchMode = true
-                    }
                 }
-            }
-
-            // Default focus on TV
-            if (isLayout(TV)) {
-                settingsGeneral.requestFocus()
             }
         }
 

@@ -22,14 +22,9 @@ import com.lagradost.cloudstream3.ui.download.DOWNLOAD_ACTION_DOWNLOAD
 import com.lagradost.cloudstream3.ui.download.DOWNLOAD_ACTION_LONG_CLICK
 import com.lagradost.cloudstream3.ui.download.DownloadClickEvent
 import com.lagradost.cloudstream3.ui.newSharedPool
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.html
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
-import com.lagradost.cloudstream3.utils.UIHelper.toPx
 import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
 import com.lagradost.cloudstream3.utils.downloader.VideoDownloadManager
 import com.lagradost.cloudstream3.utils.setText
@@ -63,7 +58,6 @@ const val ACTION_DOWNLOAD_EPISODE_SUBTITLE_MIRROR = 14
 
 const val ACTION_MARK_AS_WATCHED = 18
 
-const val TV_EP_SIZE = 400
 const val ACTION_MARK_WATCHED_UP_TO_THIS_EPISODE = 19
 
 data class EpisodeClickEvent(val position: Int?, val action: Int, val data: ResultEpisode) {
@@ -143,15 +137,14 @@ class EpisodeAdapter(
         val itemView = holder.itemView
         when (val binding = holder.view) {
             is ResultEpisodeLargeBinding -> {
-                val setWidth =
-                    if (isLayout(TV or EMULATOR)) TV_EP_SIZE.toPx else ViewGroup.LayoutParams.MATCH_PARENT
+                val setWidth = ViewGroup.LayoutParams.MATCH_PARENT
 
                 binding.apply {
                     episodeLinHolder.layoutParams.width = setWidth
                     episodeHolderLarge.layoutParams.width = setWidth
                     episodeHolder.layoutParams.width = setWidth
 
-                    if (isLayout(PHONE or EMULATOR) && CommonActivity.appliedTheme == R.style.AmoledMode) {
+                    if (CommonActivity.appliedTheme == R.style.AmoledMode) {
                         episodeHolderLarge.radius = 0.0f
                         episodeHolder.setPadding(0)
                     }
@@ -273,20 +266,10 @@ class EpisodeAdapter(
 
                         var isExpanded = false
                         setOnClickListener {
-                            if (isLayout(TV)) {
-                                clickCallback.invoke(
-                                    EpisodeClickEvent(
-                                        position,
-                                        ACTION_SHOW_DESCRIPTION,
-                                        item
-                                    )
-                                )
-                            } else {
-                                isExpanded = !isExpanded
-                                maxLines = if (isExpanded) {
-                                    Integer.MAX_VALUE
-                                } else 4
-                            }
+                            isExpanded = !isExpanded
+                            maxLines = if (isExpanded) {
+                                Integer.MAX_VALUE
+                            } else 4
                         }
                     }
 
@@ -330,38 +313,30 @@ class EpisodeAdapter(
                         )
                     )
 
-                    if (isLayout(EMULATOR or PHONE)) {
-                        episodePoster.setOnClickListener {
-                            clickCallback.invoke(
-                                EpisodeClickEvent(
-                                    position,
-                                    ACTION_CLICK_DEFAULT,
-                                    item
-                                )
+                    episodePoster.setOnClickListener {
+                        clickCallback.invoke(
+                            EpisodeClickEvent(
+                                position,
+                                ACTION_CLICK_DEFAULT,
+                                item
                             )
-                        }
+                        )
+                    }
 
-                        episodePoster.setOnLongClickListener {
-                            clickCallback.invoke(
-                                EpisodeClickEvent(
-                                    position,
-                                    ACTION_SHOW_TOAST,
-                                    item
-                                )
+                    episodePoster.setOnLongClickListener {
+                        clickCallback.invoke(
+                            EpisodeClickEvent(
+                                position,
+                                ACTION_SHOW_TOAST,
+                                item
                             )
-                            return@setOnLongClickListener true
-                        }
+                        )
+                        return@setOnLongClickListener true
                     }
                 }
 
                 itemView.setOnClickListener {
                     clickCallback.invoke(EpisodeClickEvent(position, ACTION_CLICK_DEFAULT, item))
-                }
-
-                if (isLayout(TV)) {
-                    itemView.isFocusable = true
-                    itemView.isFocusableInTouchMode = true
-                    //itemView.touchscreenBlocksFocus = false
                 }
 
                 itemView.setOnLongClickListener {
@@ -372,8 +347,7 @@ class EpisodeAdapter(
 
             is ResultEpisodeBinding -> {
                 binding.episodeHolder.layoutParams.apply {
-                    width =
-                        if (isLayout(TV or EMULATOR)) TV_EP_SIZE.toPx else ViewGroup.LayoutParams.MATCH_PARENT
+                    width = ViewGroup.LayoutParams.MATCH_PARENT
                 }
 
                 binding.apply {
@@ -459,12 +433,6 @@ class EpisodeAdapter(
                                 item
                             )
                         )
-                    }
-
-                    if (isLayout(TV)) {
-                        itemView.isFocusable = true
-                        itemView.isFocusableInTouchMode = true
-                        //itemView.touchscreenBlocksFocus = false
                     }
 
                     itemView.setOnLongClickListener {

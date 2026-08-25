@@ -8,13 +8,10 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentDownloadQueueBinding
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.BaseFragment
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
-import com.lagradost.cloudstream3.utils.UIHelper.setAppBarNoScrollFlagsOnTV
 import com.lagradost.cloudstream3.utils.downloader.DownloadQueueManager
 import com.lagradost.cloudstream3.utils.txt
 
@@ -40,13 +37,10 @@ class DownloadQueueFragment :
         binding.apply {
             downloadQueueToolbar.apply {
                 title = txt(R.string.download_queue).asString(context)
-                if (isLayout(PHONE or EMULATOR)) {
-                    setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
-                    setNavigationOnClickListener {
-                        dispatchBackPressed()
-                    }
+                setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
+                setNavigationOnClickListener {
+                    dispatchBackPressed()
                 }
-                setAppBarNoScrollFlagsOnTV()
                 clearQueueItem?.setOnMenuItemClickListener {
                         AlertDialog.Builder(context, R.style.AlertDialogCustom)
                             .setTitle(R.string.cancel_all)
@@ -73,7 +67,7 @@ class DownloadQueueFragment :
         fixSystemBarsPadding(
             view,
             padBottom = isLandscape(),
-            padLeft = isLayout(TV or EMULATOR)
+            padLeft = isLayout(PHONE)
         )
     }
 }

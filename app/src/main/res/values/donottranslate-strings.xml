@@ -34,8 +34,6 @@
     <string name="double_tap_enabled_key">double_tap_enabled_key</string>
     <string name="double_tap_pause_enabled_key">double_tap_pause_enabled_key</string>
     <string name="double_tap_seek_time_key">double_tap_seek_time_key2</string>
-    <string name="android_tv_interface_off_seek_key">android_tv_interface_off_seek_key</string>
-    <string name="android_tv_interface_on_seek_key">android_tv_interface_on_seek_key</string>
     <string name="swipe_vertical_enabled_key">swipe_vertical_enabled_key</string>
     <string name="autoplay_next_key">autoplay_next_key</string>
     <string name="display_sub_key">display_sub_key</string>
@@ -95,13 +93,14 @@
     <string name="opensubtitles_key">opensubtitles_key</string>
     <string name="subdl_key">subdl_key</string>
     <string name="animeskip_key">animeskip_key</string>
-    <string name="tv_layout_clock_key">tv_layout_clock_key</string>
+    <string name="android_tv_interface_off_seek_key" translatable="false">android_tv_interface_off_seek_key</string>
+    <string name="android_tv_interface_on_seek_key" translatable="false">android_tv_interface_on_seek_key</string>
+    <string name="tv_layout_clock_key" translatable="false">tv_layout_clock_key</string>
+    <string name="pref_category_android_tv_key" translatable="false">pref_category_android_tv_key</string>
+    <string name="tv_no_focus_tag" translatable="false">tv_no_focus_tag</string>
 
     <string name="pref_category_security_key">pref_category_security_key</string>
     <string name="pref_category_gestures_key">pref_category_gestures_key</string>
-    <string name="pref_category_android_tv_key">pref_category_android_tv_key</string>
-
-    <string name="tv_no_focus_tag">tv_no_focus_tag</string>
 
     <!-- FORMAT WILL CAUSE CRASH IF APPLIED WRONG -->
     <string name="extra_info_format" formatted="true">%1$d %2$s | %3$s</string>

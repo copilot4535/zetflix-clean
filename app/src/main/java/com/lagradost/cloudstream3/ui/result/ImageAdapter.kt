@@ -7,8 +7,6 @@ import com.lagradost.cloudstream3.ui.BaseDiffCallback
 import com.lagradost.cloudstream3.ui.NoStateAdapter
 import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.newSharedPool
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 
 const val IMAGE_CLICK = 0
@@ -53,12 +51,6 @@ class ImageAdapter(
                 this.nextFocusUpId = nextFocusUp
             }
             if (clickCallback != null) {
-                if (isLayout(TV)) {
-                    isClickable = true
-                    isLongClickable = true
-                    isFocusable = true
-                    isFocusableInTouchMode = true
-                }
                 setOnClickListener {
                     clickCallback.invoke(IMAGE_CLICK)
                 }

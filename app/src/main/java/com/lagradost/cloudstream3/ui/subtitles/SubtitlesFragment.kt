@@ -40,8 +40,6 @@ import com.lagradost.cloudstream3.ui.player.CustomDecoder
 import com.lagradost.cloudstream3.ui.player.CustomDecoder.Companion.setSubtitleAlignment
 import com.lagradost.cloudstream3.ui.player.OutlineSpan
 import com.lagradost.cloudstream3.ui.player.RoundedBackgroundColorSpan
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.DataStore.setKey
@@ -72,20 +70,15 @@ data class SaveCaptionStyle(
     @JsonProperty("edgeColor") @SerialName("edgeColor") var edgeColor: Int,
     @FontRes @JsonProperty("typeface") @SerialName("typeface") var typeface: Int?,
     @JsonProperty("typefaceFilePath") @SerialName("typefaceFilePath") var typefaceFilePath: String?,
-    @JsonProperty("elevation") @SerialName("elevation") var elevation: Int, // in dp
-    @JsonProperty("fixedTextSize") @SerialName("fixedTextSize") var fixedTextSize: Float?, // in sp
+    @JsonProperty("elevation") @SerialName("elevation") var elevation: Int,
+    @JsonProperty("fixedTextSize") @SerialName("fixedTextSize") var fixedTextSize: Float?,
     @Px @JsonProperty("edgeSize") @SerialName("edgeSize") var edgeSize: Float? = null,
     @JsonProperty("removeCaptions") @SerialName("removeCaptions") var removeCaptions: Boolean = false,
     @JsonProperty("removeBloat") @SerialName("removeBloat") var removeBloat: Boolean = true,
-    /** Apply caps lock to the text */
     @JsonProperty("upperCase") @SerialName("upperCase") var upperCase: Boolean = false,
-    /** Apply bold to the text */
     @JsonProperty("bold") @SerialName("bold") var bold: Boolean = false,
-    /** Apply italic to the text */
     @JsonProperty("italic") @SerialName("italic") var italic: Boolean = false,
-    /** in px, background radius, aka how round the background (backgroundColor) on each row is */
     @JsonProperty("backgroundRadius") @SerialName("backgroundRadius") var backgroundRadius: Float? = null,
-    /** The SSA_ALIGNMENT */
     @JsonProperty("alignment") @SerialName("alignment") var alignment: Int? = null,
 )
 
@@ -118,37 +111,16 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
             view.clipToPadding = false
             view.clipChildren = false
 
-            // we default to 25sp, this is needed as RoundedBackgroundColorSpan breaks on override sizes
             val size = data.fixedTextSize ?: 25.0f
             view.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, size)
             view.setBottomPaddingFraction(0.0f)
-            /*if (size != null) {
-                view.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, size)
-            } else {
-                view.setUserDefaultTextSize()
-            }*/
         }
 
         fun Cue.Builder.applyStyle(style: SaveCaptionStyle): Cue.Builder {
             val edgeSize = style.edgeSize
 
-            /*
-            This is old code for only applying on non null
-
-            val fixedFontSize = style.fixedTextSize
-            val absoluteFontSize =
-                fixedFontSize?.let { getPixels(TypedValue.COMPLEX_UNIT_SP, it).toFloat() }
-
-            // 1. apply override size
-            if (absoluteFontSize != null) {
-                setTextSize(absoluteFontSize, Cue.TEXT_SIZE_TYPE_ABSOLUTE)
-            }*/
-
-            // 1. remove any subtitle size set by the subtitle file (like ass)
-            // instead we use the inherit size of the subtitle view
             setTextSize(Cue.DIMEN_UNSET, Cue.TYPE_UNSET)
 
-            // 2. apply edge
             text?.let { text ->
                 val customSpan = SpannableString.valueOf(text)
                 if (edgeSize != null) {
@@ -160,7 +132,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 setText(customSpan)
             }
 
-            // 3. apply bold + italic
             text?.let { text ->
                 val customSpan = SpannableString.valueOf(text)
 
@@ -183,7 +154,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 setText(customSpan)
             }
 
-            // 4. apply radius
             text?.let { text ->
                 val customSpan = SpannableString.valueOf(text)
                 val radius = style.backgroundRadius
@@ -203,28 +173,24 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 setText(customSpan)
             }
 
-            // 5. remove captions
             text?.let { text ->
                 if (style.removeCaptions) {
                     setText(text.replace(captionRegex, ""))
                 }
             }
 
-            // 6. set alignment
             return this.setSubtitleAlignment(style.alignment)
         }
 
         private fun Context.fromSaveToStyle(data: SaveCaptionStyle): CaptionStyleCompat {
             return CaptionStyleCompat(
                 data.foregroundColor,
-                // we actually override with a custom span when backgroundRadius != null
                 if (data.backgroundRadius == null) data.backgroundColor else Color.TRANSPARENT,
                 data.windowColor,
                 data.edgeType,
                 data.edgeColor,
                 data.typefaceFilePath?.let {
                     try {
-                        // RuntimeException: Font asset not found
                         Typeface.createFromFile(File(it))
                     } catch (e: Exception) {
                         null
@@ -283,7 +249,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 it.mkdir()
             }
             return fontDir.list()?.mapNotNull {
-                // No idea which formats are supported, but these should be.
                 if (it.endsWith(".ttf") || it.endsWith(".otf")) {
                     File(fontDir.absolutePath + "/" + it)
                 } else null
@@ -373,7 +338,7 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
         return R.style.DialogFullscreenPlayer
     }
 
-    var systemBarsAddPadding = isLayout(TV or EMULATOR)
+    var systemBarsAddPadding = false
     override fun fixLayout(view: View) {
         fixSystemBarsPadding(
             view,
@@ -394,14 +359,7 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
         state = getCurrentSavedStyle()
         context?.updateState()
 
-        val isTvTrueSettings = isLayout(TV)
-        fun View.setFocusableInTv() {
-            this.isFocusableInTouchMode = isTvTrueSettings
-        }
-
         fun View.setup(id: Int) {
-            setFocusableInTv()
-
             this.setOnClickListener {
                 activity?.let {
                     ColorPickerDialog.newBuilder()
@@ -429,9 +387,7 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                     activity?.hideSystemUI()
             }
 
-            subsSubtitleElevation.setFocusableInTv()
             subsSubtitleElevation.setOnClickListener { textView ->
-                // tbh this should not be a dialog if it has so many values
                 val elevationTypes = listOf(
                     0 to textView.context.getString(R.string.none)
                 ) + (1..40).map { x ->
@@ -439,7 +395,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                     i to "${i}dp"
                 }
 
-                //showBottomDialog
                 activity?.showDialog(
                     elevationTypes.map { it.second },
                     elevationTypes.map { it.first }.indexOf(state.elevation),
@@ -461,9 +416,7 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 return@setOnLongClickListener true
             }
 
-            subsBackgroundRadius.setFocusableInTv()
             subsBackgroundRadius.setOnClickListener { textView ->
-                // tbh this should not be a dialog if it has so many values
                 val radiusTypes = listOf(
                     null to textView.context.getString(R.string.none)
                 ) + (1..10).map { x ->
@@ -490,7 +443,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 return@setOnLongClickListener true
             }
 
-            subsSubtitleAlignment.setFocusableInTv()
             subsSubtitleAlignment.setOnClickListener { textView ->
                 val alignmentTypes = listOf(
                     null to R.string.automatic,
@@ -517,7 +469,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 }
             }
 
-            subsEdgeType.setFocusableInTv()
             subsEdgeType.setOnClickListener { textView ->
                 val edgeTypes = listOf(
                     CaptionStyleCompat.EDGE_TYPE_NONE to
@@ -532,7 +483,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                             textView.context.getString(R.string.subtitles_raised),
                 )
 
-                //showBottomDialog
                 activity?.showDialog(
                     edgeTypes.map { it.second },
                     edgeTypes.map { it.first }.indexOf(state.edgeType),
@@ -552,13 +502,11 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 return@setOnLongClickListener true
             }
 
-            subsFontSize.setFocusableInTv()
             subsFontSize.setOnClickListener { textView ->
                 val fontSizes = listOf(
                     null to textView.context.getString(R.string.normal),
                 ) + (6..60).map { i -> i.toFloat() to "${i}sp" }
 
-                //showBottomDialog
                 activity?.showDialog(
                     fontSizes.map { it.second },
                     fontSizes.map { it.first }.indexOf(state.fixedTextSize),
@@ -571,13 +519,11 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 }
             }
 
-            subsEdgeSize.setFocusableInTv()
             subsEdgeSize.setOnClickListener { textView ->
                 val fontSizes = listOf(
                     null to textView.context.getString(R.string.normal),
                 ) + (1..60).map { i -> i.toFloat() to "${i}px" }
 
-                //showBottomDialog
                 activity?.showDialog(
                     fontSizes.map { it.second },
                     fontSizes.map { it.first }.indexOf(state.edgeSize),
@@ -631,7 +577,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 return@setOnLongClickListener true
             }
 
-            //Fetch current value from preference
             context?.let { ctx ->
                 subtitlesFilterSubLang.isChecked =
                     PreferenceManager.getDefaultSharedPreferences(ctx)
@@ -646,7 +591,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 }
             }
 
-            subsFont.setFocusableInTv()
             subsFont.setOnClickListener { textView ->
                 val fontTypes = listOf(
                     null to textView.context.getString(R.string.normal),
@@ -675,7 +619,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                             else index + fontTypes.size
                         }
 
-                //showBottomDialog
                 activity?.showDialog(
                     fontTypes.map { it.second } + savedFontTypes.map { it.name },
                     currentIndex,
@@ -702,7 +645,6 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 return@setOnLongClickListener true
             }
 
-            subsAutoSelectLanguage.setFocusableInTv()
             subsAutoSelectLanguage.setOnClickListener { textView ->
                 val languagesTagName =
                     listOf(
@@ -715,7 +657,7 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                                 .map { Pair(it.IETF_tag, it.nameNextToFlagEmoji()) }
                                 .sortedBy {
                                     it.second.substringAfter("\u00a0").lowercase()
-                                } // name ignoring flag emoji
+                                }
 
                 val (langTagsIETF, langNames) = languagesTagName.unzip()
 
@@ -736,14 +678,13 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
                 return@setOnLongClickListener true
             }
 
-            subsDownloadLanguages.setFocusableInTv()
             subsDownloadLanguages.setOnClickListener { textView ->
                 val languagesTagName =
                     languages
                         .map { Pair(it.IETF_tag, it.nameNextToFlagEmoji()) }
                         .sortedBy {
                             it.second.substringAfter("\u00a0").lowercase()
-                        } // name ignoring flag emoji
+                        }
 
                 val (langTagsIETF, langNames) = languagesTagName.unzip()
 

@@ -17,8 +17,7 @@ import com.lagradost.cloudstream3.BuildConfig
 import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.mvvm.safeAsync
 import com.lagradost.cloudstream3.plugins.PluginManager
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
+import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.openBrowser
 import com.lagradost.cloudstream3.utils.AppDebug
@@ -71,9 +70,6 @@ class CloudStreamApp : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
-        // If we want to initialize Coil as early as possible, maybe when
-        // loading an image or GIF in a splash screen activity.
-        // buildImageLoader(applicationContext)
 
         ExceptionHandler(filesDir.resolve("last_error")) {
             val intent = context!!.packageManager.getLaunchIntentForPackage(context!!.packageName)
@@ -92,14 +88,12 @@ class CloudStreamApp : Application(), SingletonImageLoader.Factory {
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
-        // Coil module will be initialized globally when first loadImage() is invoked.
         return buildImageLoader(applicationContext)
     }
 
     companion object {
         var exceptionHandler: ExceptionHandler? = null
 
-        /** Use to get Activity from Context. */
         tailrec fun Context.getActivity(): Activity? {
             return when (this) {
                 is Activity -> this
@@ -164,16 +158,14 @@ class CloudStreamApp : Application(), SingletonImageLoader.Factory {
             context?.removeKey(path)
         }
 
-        /** If fallbackWebView is true and a fragment is supplied then it will open a WebView with the URL if the browser fails. */
         fun openBrowser(url: String, fallbackWebView: Boolean = false, fragment: Fragment? = null) {
             context?.openBrowser(url, fallbackWebView, fragment)
         }
 
-        /** Will fall back to WebView if in TV or emulator layout. */
         fun openBrowser(url: String, activity: FragmentActivity?) {
             openBrowser(
                 url,
-                isLayout(TV or EMULATOR),
+                false,
                 activity?.supportFragmentManager?.fragments?.lastOrNull()
             )
         }

@@ -319,8 +319,7 @@
                             android:nextFocusDown="@id/player_pause_play"
                             android:padding="20dp"
                             android:src="@drawable/ic_baseline_arrow_back_24"
-                            android:tag="@string/tv_no_focus_tag"
-                            app:tint="@android:color/white" />
+                                    app:tint="@android:color/white" />
 
                         <TextView
                             android:id="@+id/player_go_back_text"
@@ -353,8 +352,7 @@
                             android:nextFocusUp="@id/player_restart"
                             android:nextFocusDown="@id/player_pause_play"
                             android:src="@drawable/ic_baseline_replay_24"
-                            android:tag="@string/tv_no_focus_tag"
-                            app:tint="@android:color/white" />
+                                    app:tint="@android:color/white" />
 
                         <TextView
                             android:id="@+id/player_restart_text"
@@ -386,8 +384,7 @@
                             android:nextFocusUp="@id/player_go_forward"
                             android:nextFocusDown="@id/player_pause_play"
                             android:src="@drawable/ic_baseline_skip_next_rounded_24"
-                            android:tag="@string/tv_no_focus_tag"
-                            app:tint="@android:color/white" />
+                                    app:tint="@android:color/white" />
 
                         <TextView
                             android:id="@+id/player_go_forward_text"

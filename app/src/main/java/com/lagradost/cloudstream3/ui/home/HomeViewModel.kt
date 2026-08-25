@@ -32,9 +32,8 @@ import com.lagradost.cloudstream3.ui.quicksearch.QuickSearchFragment
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_FOCUSED
 import com.lagradost.cloudstream3.ui.search.SearchClickCallback
 import com.lagradost.cloudstream3.ui.search.SearchHelper
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
+import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
-import com.lagradost.cloudstream3.utils.AppContextUtils.addProgramsToContinueWatching
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterHomePageListByFilmQuality
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterSearchResultByFilmQuality
@@ -61,7 +60,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class HomeViewModel : ViewModel() {
     companion object {
-        private const val CACHE_TTL_HOURS = 4L
         private const val STAGE1_PLUGIN_COUNT = 3
         private const val STAGE1_TOTAL_TIMEOUT_MS = 8_000L
         private const val STAGE2_TOTAL_TIMEOUT_MS = 15_000L
@@ -83,15 +81,11 @@ class HomeViewModel : ViewModel() {
                     )
 
                     val data = if (headerCache == null) {
-                        // We store resume watching data in download header cache
-                        // Because downloads automatically pruned outdated download headers we
-                        // removed resume watching data. We should restore the data for affected users.
                         val oldData = getKey<DownloadObjects.DownloadHeaderCached>(
                             DOWNLOAD_HEADER_CACHE_BACKUP,
                             resume.parentId.toString()
                         ) ?: return@mapNotNull null
 
-                        // Restore data
                         setKey(DOWNLOAD_HEADER_CACHE, resume.parentId.toString(), oldData)
                         oldData
                     } else {
@@ -142,10 +136,6 @@ class HomeViewModel : ViewModel() {
 
     private var currentShuffledList: List<SearchResponse> = listOf()
 
-    private fun autoloadRepo(): APIRepository {
-        return APIRepository(apis.withLock { apis.first { it.hasMainPage } })
-    }
-
     private val _availableWatchStatusTypes =
         MutableLiveData<Pair<Set<WatchType>, Set<WatchType>>>()
     val availableWatchStatusTypes: LiveData<Pair<Set<WatchType>, Set<WatchType>>> =
@@ -163,12 +153,6 @@ class HomeViewModel : ViewModel() {
 
     private fun loadResumeWatching() = viewModelScope.launchSafe {
         val resumeWatchingResult = getResumeWatching()
-        if (isLayout(TV) && resumeWatchingResult != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            ioSafe {
-                // this WILL crash on non tvs, so keep this inside a try catch
-                activity?.addProgramsToContinueWatching(resumeWatchingResult)
-            }
-        }
         resumeWatchingResult?.let {
             _resumeWatching.postValue(it)
         }
@@ -201,7 +185,6 @@ class HomeViewModel : ViewModel() {
         }
 
         val watchPrefNotNull = preferredWatchStatus ?: EnumSet.of(currentWatchTypes.first())
-        //if (currentWatchTypes.any { watchPrefNotNull.contains(it) }) watchPrefNotNull else listOf(currentWatchTypes.first())
 
         DataStoreHelper.homeBookmarkedList = watchPrefNotNull.map { it.internalId }.toIntArray()
         _availableWatchStatusTypes.postValue(
@@ -261,7 +244,7 @@ class HomeViewModel : ViewModel() {
                                 }
 
                                 this.list.list += newList.list
-                                this.list.list.distinctBy { it.url } // just to be sure we are not adding the same shit for some reason
+                                this.list.list.distinctBy { it.url }
                             } ?: debugWarning {
                                 "Expanded an item not in main load named $key, current list is ${expandable.keys}"
                             }
@@ -279,12 +262,10 @@ class HomeViewModel : ViewModel() {
         return expandable[name]
     }
 
-    // this is soo over engineered, but idk how I can make it clean without making the main api harder to use :pensive:
     fun expand(name: String) = viewModelScope.launchSafe {
         expandAndReturn(name)
     }
 
-    // returns the amount of items added and modifies current
     private suspend fun updatePreviewResponses(
         current: MutableList<LoadResponse>,
         alreadyAdded: MutableSet<String>,
@@ -352,13 +333,11 @@ class HomeViewModel : ViewModel() {
         _apiName.postValue("Home")
         _randomItems.postValue(listOf())
 
-        // cancel the current preview expand as that is no longer relevant
         addJob?.cancel()
 
         val startTime = System.currentTimeMillis()
         var cachedShown = false
 
-        // a. Try cache first
         val cached = DataStoreHelper.getCachedHomeData()
         if (cached != null) {
             expandable.clear()
@@ -367,13 +346,11 @@ class HomeViewModel : ViewModel() {
             cachedShown = true
         }
 
-        // b. Set _page to Loading if no cache was shown
         if (!cachedShown) {
             _page.postValue(Resource.Loading())
             _preview.postValue(Resource.Loading())
         }
 
-        // c. Get all valid plugins
         val validAPIs = (context?.filterProviderByPreferredMedia() ?: emptyList()).shuffled()
         if (validAPIs.isEmpty()) {
             if (!cachedShown) {
@@ -383,7 +360,6 @@ class HomeViewModel : ViewModel() {
             return@ioSafe
         }
 
-        // d. Stage 1: Pick 3 random plugins
         val stage1Plugins = validAPIs.take(STAGE1_PLUGIN_COUNT)
         val stage2Plugins = validAPIs.drop(STAGE1_PLUGIN_COUNT)
 
@@ -402,24 +378,18 @@ class HomeViewModel : ViewModel() {
                     }
                 }
                 
-                // Post intermediate result
                 _page.postValue(Resource.Success(expandable))
             }
         }
 
-        // Load Stage 1
         loadPlugins(stage1Plugins, STAGE1_TOTAL_TIMEOUT_MS)
 
-        // Post Stage 1 result to Preview
         updatePreviewFromExpandable()
 
-        // Load Stage 2
         loadPlugins(stage2Plugins, STAGE2_TOTAL_TIMEOUT_MS)
 
-        // Final Preview Update
         updatePreviewFromExpandable()
 
-        // g. Cache update
         DataStoreHelper.cacheHomeData(expandable)
     }
 
@@ -514,7 +484,6 @@ class HomeViewModel : ViewModel() {
     }
 
     fun queryTextChange(newText: String) {
-        // do nothing
     }
 
     fun loadStoredData() {
@@ -534,7 +503,6 @@ class HomeViewModel : ViewModel() {
         loadResult(load.response.url, load.response.apiName, load.response.name, load.action)
     }
 
-    // only save the key if it is from UI, as we don't want internal functions changing the setting
     fun loadAndCancel(
         preferredApiName: String?,
         forceReload: Boolean = true,
@@ -543,7 +511,6 @@ class HomeViewModel : ViewModel() {
         ioSafe {
             val currentPage = page.value
 
-            // if we don't need to reload and we have a valid homepage then return
             if (!forceReload && (currentPage is Resource.Success && currentPage.value.isNotEmpty())) {
                 return@ioSafe
             }

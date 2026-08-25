@@ -34,7 +34,6 @@
             @style/CustomCastExpandedController
         </item>
         <item name="castMiniControllerStyle">@style/CustomCastMiniController</item>
-        <!--<item name="mediaRouteButtonTint">?attr/colorPrimary</item>-->
 
         <!-- Preference -->
         <item name="android:textColor">?attr/textColor</item>
@@ -47,7 +46,6 @@
 
         <item name="android:windowAllowReturnTransitionOverlap">true</item>
         <item name="android:windowAllowEnterTransitionOverlap">true</item>
-        <!--<item name="preferenceTheme">@style/PreferencesTheme</item>-->
 
         <!-- DEF STYLE -->
         <item name="colorPrimary">@color/zetflix_accent</item>
@@ -75,10 +73,6 @@
         <item name="cpv_focusBorderColor">?attr/white</item>
     </style>
 
-    <style name="AppThemeTvOverlay">
-        <item name="focusBackground">@drawable/outline_drawable_less</item>
-    </style>
-
     <style name="ListViewStyle" parent="Widget.AppCompat.ListView">
         <item name="android:divider">@null</item>
         <item name="android:listSelector">@drawable/outline_drawable_forced</item>
@@ -93,7 +87,6 @@
     <style name="ChipFilled" parent="@style/Widget.Material3.Chip.Filter">
         <item name="chipBackgroundColor">@color/chip_color</item>
         <item name="chipStrokeColor">@color/white_transparent_toggle</item>
-        <!--        <item name="chipStrokeColor">@color/transparent</item>-->
         <item name="chipStrokeWidth">2dp</item>
         <item name="textColor">@color/chip_color_text</item>
         <item name="android:textColor">@color/chip_color_text</item>
@@ -101,7 +94,6 @@
         <item name="fontFamily">@font/google_sans</item>
         <item name="chipIconTint">@color/chip_color_text</item>
         <item name="android:fontFamily">@font/google_sans</item>
-        <item name="android:tag">@string/tv_no_focus_tag</item>
         <item name="chipMinTouchTargetSize">0dp</item>
         <item name="checkedIconVisible">false</item>
     </style>
@@ -140,7 +132,6 @@
 
     <style name="DubButton" parent="@style/SearchBox">
         <item name="android:text">@string/app_dubbed_text</item>
-        <!-- Background is set programmatically -->
         <item name="textColor">?attr/primaryGrayBackground</item>
         <item name="android:textColor">?attr/primaryGrayBackground</item>
     </style>
@@ -152,16 +143,10 @@
         <item name="android:text">@string/episode_text</item>
     </style>
 
-    <!--<style name="RatingButton" parent="@style/SearchBox">
-        <item name="android:background">@drawable/rating_bg_color</item>
-        <item name="android:textColor">@color/ratingColor</item>
-    </style>-->
-
     <style name="RatingButton" parent="@style/SearchBox">
         <item name="android:minWidth">40dp</item>
         <item name="drawableTint">?attr/textColor</item>
         <item name="drawableSize">10sp</item>
-
         <item name="drawableEndCompat">@drawable/kid_star_24px</item>
     </style>
 
@@ -241,7 +226,6 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!-- Needed for leanback fuckery -->
         <item name="android:colorAccent">@color/colorAccent</item>
     </style>
 
@@ -251,7 +235,6 @@
         <item name="colorPrimaryDark">@color/material_dynamic_primary30</item>
         <item name="colorAccent">@color/material_dynamic_primary80</item>
         <item name="colorOnPrimary">@color/material_dynamic_primary20</item>
-        <!-- Needed for leanback fuckery -->
         <item name="android:colorAccent">@color/material_dynamic_primary80</item>
     </style>
 
@@ -261,7 +244,6 @@
         <item name="colorPrimaryDark">@color/material_dynamic_secondary30</item>
         <item name="colorAccent">@color/material_dynamic_secondary80</item>
         <item name="colorOnPrimary">@color/material_dynamic_secondary20</item>
-        <!-- Needed for leanback fuckery -->
         <item name="android:colorAccent">@color/material_dynamic_secondary80</item>
     </style>
 
@@ -271,7 +253,6 @@
         <item name="colorPrimaryDark">#4855A2</item>
         <item name="colorAccent">#5A6BCB</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!-- Needed for leanback fuckery -->
         <item name="android:colorAccent">@color/colorPrimaryBlue</item>
     </style>
 
@@ -306,9 +287,8 @@
         <item name="colorPrimary">@color/colorPrimaryRed</item>
         <item name="android:colorPrimary">@color/colorPrimaryRed</item>
         <item name="colorPrimaryDark">#B62B2B</item>
-        <item name="colorAccent">@color/colorPrimaryRed</item> <!--#F53B3B-->
-        <item name="colorOnPrimary">@color/whiteText</item> <!--#EC3838-->
-        <!-- Needed for leanback fuckery -->
+        <item name="colorAccent">@color/colorPrimaryRed</item>
+        <item name="colorOnPrimary">@color/whiteText</item>
         <item name="android:colorAccent">@color/colorPrimaryRed</item>
     </style>
 
@@ -345,7 +325,6 @@
         <item name="colorPrimaryDark">#83366f</item>
         <item name="colorAccent">#BD5DA5</item>
         <item name="colorOnPrimary">@color/blackText</item>
-        <!--   Needed for leanback fuckery   -->
         <item name="android:colorAccent">@color/colorPrimaryCarnationPink</item>
     </style>
 
@@ -355,7 +334,6 @@
         <item name="colorPrimaryDark">#370C0C</item>
         <item name="colorAccent">#451010</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--   Needed for leanback fuckery   -->
         <item name="android:colorAccent">@color/colorPrimaryMaroon</item>
     </style>
 
@@ -365,7 +343,6 @@
         <item name="colorPrimaryDark">#003d00</item>
         <item name="colorAccent">#004500</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--   Needed for leanback fuckery   -->
         <item name="android:colorAccent">@color/colorPrimaryDarkGreen</item>
     </style>
 
@@ -375,7 +352,6 @@
         <item name="colorPrimaryDark">#000073</item>
         <item name="colorAccent">#000080</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--   Needed for leanback fuckery   -->
         <item name="android:colorAccent">@color/colorPrimaryNavyBlue</item>
     </style>
 
@@ -385,7 +361,6 @@
         <item name="colorPrimaryDark">#484848</item>
         <item name="colorAccent">#515151</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--   Needed for leanback fuckery   -->
         <item name="android:colorAccent">@color/colorPrimaryGrey</item>
     </style>
 
@@ -395,7 +370,6 @@
         <item name="colorPrimaryDark">#CCCCCC</item>
         <item name="colorAccent">#FFFFFF</item>
         <item name="colorOnPrimary">@color/blackText</item>
-        <!--   Needed for leanback fuckery   -->
         <item name="android:colorAccent">@color/colorPrimaryWhite</item>
     </style>
 
@@ -405,7 +379,6 @@
         <item name="colorPrimaryDark">#582700</item>
         <item name="colorAccent">#622C00</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--   Needed for leanback fuckery   -->
         <item name="android:colorAccent">@color/colorPrimaryBrown</item>
     </style>
 
@@ -415,7 +388,6 @@
         <item name="colorPrimaryDark">#A66B00</item>
         <item name="colorAccent">#CE8500</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--    Needed for leanback fuckery    -->
         <item name="android:colorAccent">@color/colorPrimaryOrange</item>
     </style>
 
@@ -425,7 +397,6 @@
         <item name="colorPrimaryDark">#C49600</item>
         <item name="colorAccent">#F5BB00</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--    Needed for leanback fuckery    -->
         <item name="android:colorAccent">@color/colorPrimaryDandelionYellow</item>
     </style>
 
@@ -435,7 +406,6 @@
         <item name="colorPrimaryDark">#306981</item>
         <item name="colorAccent">#51b0d7</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--    Needed for leanback fuckery    -->
         <item name="android:colorAccent">@color/colorPrimaryCoolBlue</item>
     </style>
 
@@ -445,7 +415,6 @@
         <item name="colorPrimaryDark">#6B51AB</item>
         <item name="colorAccent">#7961B4</item>
         <item name="colorOnPrimary">@color/whiteText</item>
-        <!--    Needed for leanback fuckery    -->
         <item name="android:colorAccent">@color/colorPrimaryLavender</item>
     </style>
 
@@ -474,8 +443,6 @@
 
     <style name="AppBottomSheetDialogTheme">
         <item name="android:windowIsFloating">true</item>
-        <!-- To remove the background dim of bottom sheets use android:backgroundDimEnabled -->
-        <!-- <item name="android:backgroundDimEnabled">false</item> -->
         <item name="android:navigationBarColor">?attr/boxItemBackground</item>
         <item name="android:windowCloseOnTouchOutside">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
@@ -534,8 +501,6 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:minHeight">24dp</item>
         <item name="android:minWidth">0dp</item>
-        <!--   <item name="android:paddingStart">5dp</item>
-           <item name="android:paddingEnd">5dp</item>-->
     </style>
 
     <style name="AppMaterialButtonStyle" parent="Widget.MaterialComponents.Button">
@@ -543,16 +508,6 @@
     </style>
 
     <style name="Theme.Widget.Tabs" parent="Widget.MaterialComponents.TabLayout.Colored">
-        <!--<item name="tabGravity">center</item>
-        <item name="backgroundTint">@color/transparent</item>
-        <item name="tabIndicator">@drawable/tab_selector</item>
-        <item name="tabIndicatorColor">?attr/colorPrimary</item>
-        <item name="tabTextColor">?attr/colorPrimary</item>
-        <item name="tabIndicatorFullWidth">false</item>
-        <item name="tabIndicatorHeight">3dp</item>
-        <item name="tabInlineLabel">true</item>
-        <item name="tabMinWidth">75dp</item>
-        <item name="tabMode">scrollable</item>-->
     </style>
 
     <style name="DarkFragment" parent="AppTheme">
@@ -563,12 +518,9 @@
         <item name="android:windowFullscreen">true</item>
         <item name="android:textColor">?attr/textColor</item>
         <item name="android:textColorPrimary">?attr/textColor</item>
-        <!--<item name="android:background">@color/darkBackground</item>-->
         <item name="android:textAllCaps">false</item>
-        <!--<item name="android:colorBackground">@color/darkBackground</item>-->
         <item name="textColorAlertDialogListItem">?attr/textColor</item>
         <item name="colorControlNormal">?attr/textColor</item>
-        <!-- colorPrimarySecond used because colorPrimary fails for no reason -->
         <item name="colorControlActivated">?attr/colorPrimary</item>
 
         <item name="android:windowMinWidthMajor">@dimen/abc_dialog_min_width_major</item>
@@ -604,8 +556,8 @@
         <item name="android:windowEnterAnimation">@anim/enter_anim</item>
         <item name="android:windowExitAnimation">@anim/exit_anim</item>
 
-        <item name="android:windowMinWidthMajor">45%</item> <!-- 65% -->
-        <item name="android:windowMinWidthMinor">95%</item> <!-- 95% -->
+        <item name="android:windowMinWidthMajor">45%</item>
+        <item name="android:windowMinWidthMinor">95%</item>
     </style>
 
     <style name="AlertDialogCustomBlack" parent="Theme.AppCompat.Dialog.Alert">
@@ -613,7 +565,6 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
 
-        <!-- No backgrounds, titles or window float -->
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">false</item>
         <item name="android:navigationBarColor">?attr/primaryBlackBackground</item>
@@ -629,11 +580,6 @@
         <item name="switchPreferenceStyle">@style/CustomSwitchPreferenceStyle</item>
         <item name="seekBarPreferenceStyle">@style/CustomSeekBarPreferenceStyle</item>
     </style>
-
-    <!--
-    <style name="CustomPreferenceCategoryStyle" parent="@style/Preference.Category.Material">
-        <item name="android:layout">@layout/custom_preference_category_material</item>
-    </style>-->
 
     <style name="CustomSwitchPreferenceStyle" parent="@style/Preference.SwitchPreference.Material">
         <item name="android:layout">@layout/custom_preference_material</item>
@@ -690,7 +636,6 @@
     </style>
 
     <style name="NiceButton">
-        <!--removes shadow-->
         <item name="android:stateListAnimator">@null</item>
 
         <item name="android:padding">5dp</item>
@@ -707,7 +652,6 @@
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:foreground">@drawable/outline_drawable_less</item>
-        <item name="android:tag">@string/tv_no_focus_tag</item>
     </style>
 
     <style name="WhiteButton" parent="NiceButton">
@@ -717,10 +661,7 @@
         <item name="android:textColor">?attr/iconGrayBackground</item>
         <item name="rippleColor">?attr/primaryBlackBackground</item>
     </style>
-    <!-- This is so shit, because android has no native way to either changing the layout (android:layout) or changing the layout_height for no reason.
-    So the only way to shrink the buttons is by using insetTop+insetBottom along with the drawable.
-    https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/layout/alert_dialog.xml <- old xml for reference, but new use m3_alert_dialog
-    -->
+
     <style name="BlackButton.Dialog" parent="BlackButton">
         <item name="android:foreground">@drawable/outline_drawable_less_inset</item>
         <item name="android:insetTop">@dimen/dialog_buttons_inset</item>
@@ -739,9 +680,6 @@
     </style>
 
     <style name="CheckLabel" parent="@style/NoCheckLabel">
-
-        <!--        <item name="drawableTint">@color/check_selection_color</item>-->
-        <!--        Set color in the drawable instead of tint to allow multiple drawables-->
         <item name="android:checkMark">?android:attr/listChoiceIndicatorSingle</item>
         <item name="drawableStartCompat">@drawable/ic_baseline_check_24_listview</item>
     </style>
@@ -762,8 +700,6 @@
         <item name="android:drawablePadding">20dp</item>
     </style>
 
-    <!-- https://github.com/material-components/material-components-android/blob/4e4e8f3388beb7e82a87cb67142aa34444a79740/lib/java/com/google/android/material/navigation/res/values/attrs.xml#L129 -->
-    <!-- https://developer.android.com/design/ui/tv/guides/components/navigation-drawer -->
     <style name="CustomIndicator" parent="Widget.Material3Expressive.NavigationRailView.ActiveIndicator">
         <item name="expandedHeight">48dp</item>
         <item name="expandedWidth">180dp</item>
@@ -814,7 +750,6 @@
         <item name="iconGravity">textStart</item>
         <item name="iconPadding">0dp</item>
         <item name="android:layout_width">35dp</item>
-        <!--<item name="android:layout_height">35dp</item>-->
     </style>
 
     <style name="ExtendedFloatingActionButton">
@@ -845,7 +780,6 @@
         <item name="android:paddingBottom">0dp</item>
         <item name="android:paddingStart">10dp</item>
         <item name="android:paddingEnd">10dp</item>
-        <!--<item name="android:layout_marginStart">10dp</item>-->
         <item name="android:layout_marginEnd">5dp</item>
         <item name="textAllCaps">false</item>
         <item name="android:textSize">13sp</item>
@@ -912,67 +846,6 @@
         <item name="strokeColor">@color/tag_stroke_color</item>
     </style>
 
-    <style name="ResultButtonTV" parent="@style/RegularButtonTV">
-        <item name="android:tag">@string/tv_no_focus_tag</item>
-        <item name="iconGravity">start</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:layout_width">250dp</item>
-        <item name="android:layout_marginBottom">5dp</item>
-        <item name="android:layout_marginStart">0dp</item>
-        <item name="android:layout_marginEnd">0dp</item>
-    </style>
-
-    <style name="SelectableButtonTV" parent="RegularButtonTV">
-        <item name="icon">@drawable/ic_baseline_check_24_listview</item>
-        <item name="iconTint">@color/button_selector_color</item>
-    </style>
-
-    <style name="RegularButtonTV">
-        <item name="android:tag">@string/tv_no_focus_tag</item>
-        <item name="android:stateListAnimator">@null</item>
-        <item name="strokeColor">@color/transparent</item>
-        <item name="backgroundTint">@null</item>
-        <item name="android:background">@drawable/player_button_tv_attr</item>
-        <item name="rippleColor">@color/white</item>
-        <item name="android:shadowColor">@color/transparent</item>
-
-        <item name="iconTint">@color/player_on_button_tv_attr</item>
-        <item name="textColor">@color/player_on_button_tv_attr</item>
-        <item name="android:textColor">@color/player_on_button_tv_attr</item>
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">40dp</item>
-        <item name="iconSize">16dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_gravity">center</item>
-        <item name="android:baselineAligned">false</item>
-        <item name="textAllCaps">false</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:layout_marginStart">4dp</item>
-        <item name="android:layout_marginEnd">4dp</item>
-        <item name="android:insetBottom">0dp</item>
-        <item name="android:insetTop">0dp</item>
-    </style>
-
-    <style name="ResultSmallButtonTV">
-        <item name="android:tag">@string/tv_no_focus_tag</item>
-        <item name="android:stateListAnimator">@null</item>
-        <item name="strokeColor">@color/transparent</item>
-        <item name="backgroundTint">@null</item>
-        <item name="android:background">@drawable/player_button_tv_attr</item>
-        <item name="rippleColor">@color/white</item>
-        <item name="android:shadowColor">@color/transparent</item>
-        <item name="iconTint">@color/player_on_button_tv_attr</item>
-        <item name="iconGravity">textStart</item>
-        <item name="android:layout_width">60dp</item>
-        <item name="android:layout_height">40dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_gravity">center</item>
-        <item name="android:layout_marginStart">4dp</item>
-        <item name="android:layout_marginEnd">4dp</item>
-        <item name="android:layout_marginBottom">4dp</item>
-    </style>
-
     <style name="ResultMarqueeButtonText">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -983,45 +856,10 @@
         <item name="android:ellipsize">marquee</item>
     </style>
 
-    <style name="VideoButtonTV">
-        <item name="android:tag">@string/tv_no_focus_tag</item>
-        <item name="android:stateListAnimator">@null</item>
-        <item name="strokeColor">@color/transparent</item>
-        <item name="backgroundTint">@null</item>
-        <item name="android:background">@drawable/player_button_tv</item>
-        <item name="rippleColor">@color/white</item>
-        <item name="android:shadowColor">@color/transparent</item>
-
-        <item name="iconTint">@color/player_on_button_tv</item>
-        <item name="textColor">@color/player_on_button_tv</item>
-        <item name="android:textColor">@color/player_on_button_tv</item>
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">25dp</item>
-        <item name="iconSize">16dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_gravity">center</item>
-        <item name="android:baselineAligned">false</item>
-        <item name="textAllCaps">false</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">10sp</item>
-        <item name="android:layout_marginStart">4dp</item>
-        <item name="android:layout_marginEnd">4dp</item>
-        <item name="android:insetBottom">0dp</item>
-        <item name="android:insetTop">0dp</item>
-    </style>
-
-    <!--@color/white ?attr/colorPrimary-->
-    <!--CHECK ?attr/darkBackground ?attr/colorPrimary-->
-    <!-- CHROMECAST -->
     <style name="CustomCastExpandedController" parent="CastExpandedController">
         <item name="castControlButtons">
             @array/cast_expanded_controller_control_buttons
         </item>
-        <!-- <item name="castButtonColor">@null</item>
-
-         <item name="castSeekBarSecondaryProgressColor">@color/darkBar
-         </item>
-         -->
         <item name="castSeekBarProgressAndThumbColor">?attr/colorPrimary</item>
         <item name="castBackground">?attr/colorPrimary</item>
         <item name="castProgressBarColor">?attr/colorPrimary</item>
@@ -1044,7 +882,7 @@
         <item name="castTitleTextAppearance">@style/TextAppearance.AppCompat.Subhead</item>
         <item name="castSubtitleTextAppearance">@style/TextAppearance.AppCompat.Caption</item>
         <item name="castBackground">@color/transparent
-        </item> <!--CHECK bitDarkerGrayBackground darkBackground-->
+        </item>
         <item name="castProgressBarColor">?attr/colorPrimary</item>
         <item name="castStopButtonDrawable">@drawable/cast_ic_mini_controller_stop</item>'
         <item name="castLargeStopButtonDrawable">@drawable/cast_ic_mini_controller_stop_large</item>

@@ -12,8 +12,6 @@ import androidx.preference.PreferenceManager
 import com.lagradost.cloudstream3.CloudStreamApp
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.mvvm.logError
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
@@ -70,8 +68,7 @@ interface IPreviewGenerator {
                     ctx.getString(R.string.preview_seekbar_key), true
                 ) == false
             } ?: false
-            /** because TV has low ram + not show we disable this for now */
-            return if (isLayout(TV) || userDisabled) {
+            return if (userDisabled) {
                 empty()
             } else {
                 PreviewGenerator()
@@ -87,26 +84,13 @@ interface IPreviewGenerator {
 private fun rescale(image: Bitmap, params: ImageParams): Bitmap {
     if (image.width <= params.width && image.height <= params.height) return image
     val new = image.scale(params.width, params.height)
-    // throw away the old image
     if (new != image) {
         image.recycle()
     }
     return new
 }
 
-/** rescale to not take up as much memory */
 private fun MediaMetadataRetriever.image(timeUs: Long, params: ImageParams): Bitmap? {
-    /*if (timeUs <= 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        try {
-            val primary = this.primaryImage
-            if (primary != null) {
-                return rescale(primary, params)
-            }
-        } catch (t: Throwable) {
-            logError(t)
-        }
-    }*/
-
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
         this.getScaledFrameAtTime(
             timeUs,
@@ -119,23 +103,17 @@ private fun MediaMetadataRetriever.image(timeUs: Long, params: ImageParams): Bit
     }
 }
 
-/** PreviewGenerator that hides the implementation details of the sub generators that is used, used for source switch cache */
 class PreviewGenerator : IPreviewGenerator {
 
-    /** the most up to date generator, will always mirror the actual source in the player */
     private var currentGenerator: IPreviewGenerator = NoPreviewGenerator()
 
-    /** the longest generated preview of the same episode */
     private var lastGenerator: IPreviewGenerator = NoPreviewGenerator()
 
-    /** always NoPreviewGenerator, used as a cache for nothing */
     private val dummy: IPreviewGenerator = NoPreviewGenerator()
 
-    /** if the current generator is the same as the last by checking time */
     private fun isSameLength(): Boolean =
         currentGenerator.durationMs.minus(lastGenerator.durationMs).absoluteValue < 10_000L
 
-    /** use the backup if the current generator is init or if they have the same length */
     private val backupGenerator: IPreviewGenerator
         get() {
             if (currentGenerator.durationMs == 0L || isSameLength()) {
@@ -182,22 +160,15 @@ class PreviewGenerator : IPreviewGenerator {
     fun clear(keepCache: Boolean) {
         if (keepCache) {
             if (!isSameLength() || currentGenerator.loadedImages >= lastGenerator.loadedImages || lastGenerator.durationMs == 0L) {
-                // the current generator is better than the last generator, therefore keep the current
-                // or the lengths are not the same, therefore favoring the more recent selection
-
-                // if they are the same we favor the current generator
                 lastGenerator.release()
                 lastGenerator = currentGenerator
             } else {
-                // otherwise just keep the last generator and throw away the current generator
                 currentGenerator.release()
             }
         } else {
-            // we switched the episode, therefore keep nothing
             lastGenerator.release()
             lastGenerator = NoPreviewGenerator()
             currentGenerator.release()
-            // we assume that we set currentGenerator right after this, so currentGenerator != NoPreviewGenerator
         }
     }
 
@@ -244,7 +215,6 @@ private class NoPreviewGenerator : IPreviewGenerator {
 }
 
 private class M3u8PreviewGenerator(override var params: ImageParams) : IPreviewGenerator {
-    // generated images 1:1 to idx of hsl
     private var images: Array<Bitmap?> = arrayOf()
 
     companion object {
@@ -252,14 +222,10 @@ private class M3u8PreviewGenerator(override var params: ImageParams) : IPreviewG
     }
 
 
-    // prefixSum[i] = sum(hsl.ts[0..i].time)
-    // where [0] = 0, [1] = hsl.ts[0].time aka time at start of segment, do [b] - [a] for range a,b
     private var prefixSum: Array<Double> = arrayOf()
 
-    // how many images has been generated
     override var loadedImages: Int = 0
 
-    // how many images we can generate in total, == hsl.size ?: 0
     private var totalImages: Int = 0
 
     override fun hasPreview(): Boolean {
@@ -270,7 +236,6 @@ private class M3u8PreviewGenerator(override var params: ImageParams) : IPreviewG
         var bestIdx = -1
         var bestDiff = Double.MAX_VALUE
         synchronized(images) {
-            // just find the best one in a for loop, we don't care about bin searching rn
             for (i in images.indices) {
                 val diff = prefixSum[i].minus(fraction).absoluteValue
                 if (diff > bestDiff) {
@@ -283,23 +248,11 @@ private class M3u8PreviewGenerator(override var params: ImageParams) : IPreviewG
             }
             return images.getOrNull(bestIdx)
         }
-        /*
-        val targetIndex = prefixSum.binarySearch(target)
-        var ret = images[targetIndex]
-        if (ret != null) {
-            return ret
-        }
-        for (i in 0..images.size) {
-            ret = images.getOrNull(i+targetIndex) ?:
-        }*/
     }
 
     private fun clear() {
         synchronized(images) {
             currentJob?.cancel()
-            // for (i in images.indices) {
-            //     images[i]?.recycle()
-            // }
             images = arrayOf()
             prefixSum = arrayOf()
             loadedImages = 0
@@ -321,10 +274,6 @@ private class M3u8PreviewGenerator(override var params: ImageParams) : IPreviewG
         currentJob = ioSafe {
             withContext(Dispatchers.IO) {
                 Log.i(TAG, "Loading with url = $url headers = $headers")
-                //tmpFile =
-                //    File.createTempFile("video", ".ts", context.cacheDir).apply {
-                //        deleteOnExit()
-                //    }
                 val retriever = MediaMetadataRetriever()
                 val hsl = M3u8Helper2.hslLazy(
                     M3u8Helper.M3u8Stream(
@@ -335,20 +284,16 @@ private class M3u8PreviewGenerator(override var params: ImageParams) : IPreviewG
                     requireAudio = false,
                 )
 
-                // no support for encryption atm
                 if (hsl.isEncrypted) {
                     Log.i(TAG, "m3u8 is encrypted")
                     totalImages = 0
                     return@withContext
                 }
 
-                // total duration of the entire m3u8 in seconds
                 val duration = hsl.allTsLinks.sumOf { it.time ?: 0.0 }
                 durationMs = (duration * 1000.0).toLong()
                 val durationInv = 1.0 / duration
 
-                // if the total duration is less then 10s then something is very wrong or
-                // too short playback to matter
                 if (duration <= 10.0) {
                     totalImages = 0
                     return@withContext
@@ -356,7 +301,6 @@ private class M3u8PreviewGenerator(override var params: ImageParams) : IPreviewG
 
                 totalImages = hsl.allTsLinks.size
 
-                // we cant init directly as it is no guarantee of in order
                 prefixSum = Array(hsl.allTsLinks.size + 1) { 0.0 }
                 var runningSum = 0.0
                 for (i in hsl.allTsLinks.indices) {
@@ -407,8 +351,6 @@ private class M3u8PreviewGenerator(override var params: ImageParams) : IPreviewG
 }
 
 private class Mp4PreviewGenerator(override var params: ImageParams) : IPreviewGenerator {
-    // lod = level of detail where the number indicates how many ones there is
-    // 2^(lod-1) = images
     private var loadedLod = 0
     override var loadedImages = 0
     private var images = Array<Bitmap?>((1 shl MAX_LOD) - 1) {
@@ -436,7 +378,6 @@ private class Mp4PreviewGenerator(override var params: ImageParams) : IPreviewGe
             var bestIdx = 0
             var bestDiff = 0.5f.minus(fraction).absoluteValue
 
-            // this should be done mathematically, but for now we just loop all images
             for (l in 1..loadedLod + 1) {
                 val items = (1 shl (l - 1))
                 for (i in 0 until items) {
@@ -461,7 +402,6 @@ private class Mp4PreviewGenerator(override var params: ImageParams) : IPreviewGe
         }
     }
 
-    // also check out https://github.com/wseemann/FFmpegMediaMetadataRetriever
     private val retriever: MediaMetadataRetriever = MediaMetadataRetriever()
 
     private fun clear(keepCache: Boolean) {
@@ -469,10 +409,6 @@ private class Mp4PreviewGenerator(override var params: ImageParams) : IPreviewGe
         synchronized(images) {
             loadedLod = 0
             loadedImages = 0
-            // for (i in images.indices) {
-            //    images[i]?.recycle()
-            //     images[i] = null
-            //}
             images.fill(null)
         }
     }
@@ -515,17 +451,13 @@ private class Mp4PreviewGenerator(override var params: ImageParams) : IPreviewGe
                 ?: throw IllegalArgumentException("Bad video duration")
         this.durationMs = durationMs
         val durationUs = (durationMs * 1000L).toFloat()
-        //val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toInt() ?: throw IllegalArgumentException("Bad video width")
-        //val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toInt() ?: throw IllegalArgumentException("Bad video height")
 
-        // log2 # 10s durations in the video ~= how many segments we have
         val maxLod = ceil(log2((durationMs / 10_000).toFloat())).toInt().coerceIn(MIN_LOD, MAX_LOD)
 
         for (l in 1..maxLod) {
             val items = (1 shl (l - 1))
             for (i in 0 until items) {
-                val idx = items - 1 + i // as sum(prev) = cur-1
-                // frame = 100 / 2^lod + i * 100 / 2^(lod-1) = duration % where lod is one indexed
+                val idx = items - 1 + i
                 val fraction = (1.0f.div((1 shl l).toFloat()) + i * 1.0f.div(items.toFloat()))
                 Log.i(TAG, "Generating preview for ${fraction * 100}%")
                 val frame = durationUs * fraction

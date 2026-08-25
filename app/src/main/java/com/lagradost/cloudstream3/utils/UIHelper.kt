@@ -3,7 +3,6 @@ package com.lagradost.cloudstream3.utils
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AppOpsManager
 import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -64,7 +63,6 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.palette.graphics.Palette
 import androidx.preference.PreferenceManager
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipDrawable
@@ -76,10 +74,6 @@ import com.lagradost.cloudstream3.CommonActivity.activity
 import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.mvvm.logError
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.isRtl
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import kotlinx.coroutines.delay
@@ -222,14 +216,6 @@ object UIHelper {
         activity?.window?.decorView?.clearFocus()
         view?.let {
             hideKeyboard(it)
-        }
-    }
-
-    fun View?.setAppBarNoScrollFlagsOnTV() {
-        if (isLayout(TV or EMULATOR)) {
-            this?.updateLayoutParams<AppBarLayout.LayoutParams> {
-                scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL
-            }
         }
     }
 
@@ -384,10 +370,6 @@ object UIHelper {
     }
 
     fun Context.getStatusBarHeight(): Int {
-        if (isLayout(TV or EMULATOR)) {
-            return 0
-        }
-
         var result = 0
         val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
         if (resourceId > 0) {
@@ -473,7 +455,7 @@ object UIHelper {
                 }
             }
 
-            if (overlayCutout && isLayout(PHONE)) {
+            if (overlayCutout) {
                 // Draw a black overlay over the cutout. We do this so that
                 // it doesn't use the fragment background. We want it to
                 // appear as if the screen actually ends at cutout.
@@ -545,10 +527,7 @@ object UIHelper {
     fun Activity.showSystemUI() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val controller = WindowCompat.getInsetsController(window, window.decorView)
-            if (isLayout(EMULATOR)) {
-                controller.show(WindowInsetsCompat.Type.navigationBars())
-                controller.hide(WindowInsetsCompat.Type.statusBars())
-            } else controller.show(WindowInsetsCompat.Type.systemBars())
+            controller.show(WindowInsetsCompat.Type.systemBars())
             return
         }
 
@@ -556,7 +535,7 @@ object UIHelper {
         window.decorView.systemUiVisibility =
             (View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
 
-        changeStatusBarState(isLayout(EMULATOR))
+        changeStatusBarState(false)
     }
 
     fun hideKeyboard(view: View?) {

@@ -8,7 +8,6 @@ import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.CommonActivity.activity
 import com.lagradost.cloudstream3.FocusDirection
 import com.lagradost.cloudstream3.mvvm.logError
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 
 const val FOCUS_SELF = View.NO_ID - 1
@@ -74,17 +73,8 @@ open class LinearListLayout(context: Context?) :
             }
         }
         return null
-        //return recyclerView.children.firstOrNull { child -> (child.layoutParams as? RecyclerView.LayoutParams?)?.absoluteAdapterPosition == pos) }
     }
 
-    /*
-    private fun scrollTo(position: Int) {
-        val linearSmoothScroller = LinearSmoothScroller(recyclerView.context)
-        linearSmoothScroller.targetPosition = position
-        startSmoothScroll(linearSmoothScroller)
-    }*/
-
-    /** from the current focus go to a direction */
     private fun getNextDirection(focused: View?, direction: FocusDirection): View? {
         val id = when (direction) {
             FocusDirection.Start -> if (isLayoutRTL) nextFocusRight else nextFocusLeft
@@ -135,16 +125,10 @@ open class LinearListLayout(context: Context?) :
             }
 
             if (direction == View.FOCUS_DOWN || direction == View.FOCUS_UP) {
-                // This scrolls the recyclerview before doing focus search, which
-                // allows the focus search to work better.
-
-                // Without this the recyclerview focus location on the screen
-                // would change when scrolling between recyclerviews.
                 (focused.parent as? RecyclerView)?.focusSearch(direction)
                 return null
             }
             var ret = if (direction == View.FOCUS_RIGHT) 1 else -1
-            // only flip on horizontal layout
             if (isLayoutRTL) {
                 ret = -ret
             }
@@ -168,7 +152,6 @@ open class LinearListLayout(context: Context?) :
                 return null
             }
 
-            //if (direction == View.FOCUS_RIGHT || direction == View.FOCUS_LEFT) return null
             if (direction == View.FOCUS_DOWN) 1 else -1
         }
 
@@ -176,7 +159,6 @@ open class LinearListLayout(context: Context?) :
             val position = getPosition(getCorrectParent(focused)) ?: return null
             val lookFor = dir + position
 
-            // if out of bounds then refocus as specified
             return if (lookFor >= itemCount) {
                 getNextDirection(
                     focused,
@@ -206,76 +188,12 @@ open class LinearListLayout(context: Context?) :
         immediate: Boolean,
         focusedChildVisible: Boolean
     ): Boolean {
-        if (isLayout(TV) && orientation == HORIZONTAL) {
-            val dx = when {
-                isLayoutRTL -> getDecoratedRight(child) - (parent.width - parent.paddingRight)
-                else -> getDecoratedLeft(child) - parent.paddingLeft
-            }
-            return if (dx != 0) {
-                when {
-                    immediate -> parent.scrollBy(dx, 0)
-                    else -> parent.smoothScrollBy(dx, 0)
-                }
-                true
-            } else {
-                false
-            }
-        } else {
-            return super.requestChildRectangleOnScreen(
-                parent,
-                child,
-                rect,
-                immediate,
-                focusedChildVisible
-            )
-        }
+        return super.requestChildRectangleOnScreen(
+            parent,
+            child,
+            rect,
+            immediate,
+            focusedChildVisible
+        )
     }
-
-    /*override fun onRequestChildFocus(
-        parent: RecyclerView,
-        state: RecyclerView.State,
-        child: View,
-        focused: View?
-    ): Boolean {
-        return super.onRequestChildFocus(parent, state, child, focused)
-        getPosition(getCorrectParent(focused ?: return true))?.let {
-            val startView = findFirstVisibleChildClosestToStart(true,true)
-            val endView = findFirstVisibleChildClosestToEnd(true,true)
-            val start = getPosition(startView)
-            val end = getPosition(endView)
-            fill(parent,LayoutState())
-
-            val helper = mOrientationHelper ?: return false
-            val laidOutArea: Int = abs(
-                helper.getDecoratedEnd(startView)
-                        - helper.getDecoratedStart(endView)
-            )
-            val itemRange: Int = abs(
-                (start
-                        - end)
-            ) + 1
-
-            val avgSizePerRow = laidOutArea.toFloat() / itemRange
-
-            return Math.round(
-                itemsBefore * avgSizePerRow + ((orientation.getStartAfterPadding()
-                        - orientation.getDecoratedStart(startChild)))
-            )
-            recyclerView.scrollToPosition(it)
-        }
-        return true*/
-
-    //return super.onRequestChildFocus(parent, state, child, focused)
-    /* if (focused == null || focused == child) {
-         return super.onRequestChildFocus(parent, state, child, focused)
-     }
-
-     try {
-         val pos = getPosition(getCorrectParent(focused) ?: return true)
-         scrollToPosition(pos)
-     } catch (e: Exception) {
-         logError(e)
-     }
-     return true
-}*/
 }

@@ -6,14 +6,10 @@ import android.view.ViewGroup
 import androidx.core.view.isGone
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.databinding.HomeScrollViewBinding
-import com.lagradost.cloudstream3.databinding.HomeScrollViewTvBinding
 import com.lagradost.cloudstream3.ui.BaseDiffCallback
 import com.lagradost.cloudstream3.ui.NoStateAdapter
 import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.result.ResultFragment.bindLogo
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.html
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 
@@ -26,11 +22,7 @@ class HomeScrollAdapter(
 
     override fun onCreateContent(parent: ViewGroup): ViewHolderState<Any> {
         val inflater = LayoutInflater.from(parent.context)
-        val binding = if (isLayout(TV or EMULATOR)) {
-            HomeScrollViewTvBinding.inflate(inflater, parent, false)
-        } else {
-            HomeScrollViewBinding.inflate(inflater, parent, false)
-        }
+        val binding = HomeScrollViewBinding.inflate(inflater, parent, false)
 
         return ViewHolderState(binding)
     }
@@ -38,10 +30,6 @@ class HomeScrollAdapter(
     override fun onClearView(holder: ViewHolderState<Any>) {
         when (val binding = holder.view) {
             is HomeScrollViewBinding -> {
-                clearImage(binding.homeScrollPreview)
-            }
-
-            is HomeScrollViewTvBinding -> {
                 clearImage(binding.homeScrollPreview)
             }
         }
@@ -72,14 +60,6 @@ class HomeScrollAdapter(
                     titleView = binding.homeScrollPreviewTitle,
                     logoView = binding.homePreviewLogo
                 )
-            }
-
-            is HomeScrollViewTvBinding -> {
-                binding.homeScrollPreview.isFocusable = false
-                binding.homeScrollPreview.setOnClickListener { view ->
-                    callback.invoke(view ?: return@setOnClickListener, position, item)
-                }
-                binding.homeScrollPreview.loadImage(posterUrl, item.posterHeaders)
             }
         }
     }

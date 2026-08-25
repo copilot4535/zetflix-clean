@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--https://newbedev.com/concatenate-multiple-strings-in-xml--><resources>
-    <!-- FORMAT MIGHT TRANSLATE, WILL CAUSE CRASH IF APPLIED WRONG -->
+<resources>
     <string name="app_dub_sub_episode_text_format" formatted="true">%1$s Ep %2$d</string>
     <string name="cast_format" formatted="true">Cast: %s</string>
     <string name="next_episode_format" formatted="true">Episode %d will be released in</string>
@@ -11,7 +10,6 @@
     <string name="download_time_left_hour_min_sec_format" formatted="true">%1$dh %2$dm %3$ds</string>
     <string name="download_time_left_min_sec_format" formatted="true">%1$dm %2$ds</string>
     <string name="download_time_left_sec_format" formatted="true">%1$ds</string>
-    <!-- IS NOT NEEDED TO TRANSLATE AS THEY ARE ONLY USED FOR SCREEN READERS AND WONT SHOW UP TO NORMAL USERS -->
     <string name="result_poster_img_des">Poster</string>
     <string name="search_poster_img_des">Poster</string>
     <string name="episode_poster_img_des">Episode Poster</string>
@@ -21,7 +19,6 @@
     <string name="play_from_beginning_img_des">Play from the Beginning</string>
     <string name="home_change_provider_img_des">Change Provider</string>
     <string name="preview_background_img_des">Preview Background</string>
-    <!-- TRANSLATE, BUT DON'T FORGET FORMAT -->
     <string name="player_speed_text_format" formatted="true">Speed (%.2fx)</string>
     <string name="rated_format" formatted="true">Rated: %.1f</string>
     <string name="new_update_format" formatted="true">New update found!\n%1$s -&gt; %2$s</string>
@@ -45,6 +42,7 @@
     <string name="result_share">Share</string>
     <string name="result_open_in_browser">Open In Browser</string>
     <string name="browser">Browser</string>
+    <string name="stream" translatable="false">Stream</string>
     <string name="skip_loading">Skip Loading</string>
     <string name="loading">Loading…</string>
     <string name="type_watching">Watching</string>
@@ -64,7 +62,6 @@
     <string name="reload_error">Retry connection…</string>
     <string name="go_back">Go Back</string>
     <string name="play_episode">Play Episode</string>
-    <!--<string name="need_storage">Allow to download episodes</string>-->
     <string name="download">Download</string>
     <string name="downloaded">Downloaded</string>
     <string name="downloading">Downloading</string>
@@ -263,7 +260,6 @@
     <string name="free_storage">Free</string>
     <string name="used_storage">Used</string>
     <string name="app_storage">App</string>
-    <!--plural-->
     <string name="movies">Movies</string>
     <string name="tv_series">TV Series</string>
     <string name="cartoons">Cartoons</string>
@@ -275,7 +271,6 @@
     <string name="livestreams">Livestreams</string>
     <string name="nsfw">NSFW</string>
     <string name="others">Others</string>
-    <!--singular-->
     <string name="movies_singular">Movie</string>
     <string name="tv_series_singular">Series</string>
     <string name="cartoons_singular">Cartoon</string>
@@ -304,7 +299,7 @@
     <string name="episode_action_chromecast_mirror">Chromecast mirror</string>
     <string name="episode_action_cast_mirror">Cast mirror</string>
     <string name="episode_action_play_in_app">Play in app</string>
-    <string name="episode_action_play_mirror">Play mirror</string>"
+    <string name="episode_action_play_mirror">Play mirror</string>
     <string name="episode_action_play_in_format">Play in %s</string>
     <string name="episode_action_auto_download">Auto download</string>
     <string name="episode_action_download_mirror">Download mirror</string>
@@ -334,12 +329,8 @@
     <string name="video_buffer_length_settings">Video buffer length</string>
     <string name="video_buffer_disk_settings">Video cache on disk</string>
     <string name="video_buffer_clear_settings">Clear video and image cache</string>
-    <string name="android_tv_interface_on_seek_settings">Player Shown - Seek Amount</string>
-    <string name="android_tv_interface_on_seek_settings_summary">The seek amount used when the player is visible</string>
-    <string name="android_tv_interface_off_seek_settings">Player Hidden - Seek Amount</string>
-    <string name="android_tv_interface_off_seek_settings_summary">The seek amount used when the player is hidden</string>
-    <string name="video_ram_description">Causes crashes if set too high on devices with low memory, such as Android TV.</string>
-    <string name="video_disk_description">Causes problems if set too high on devices with low storage space, such as Android TV.</string>
+    <string name="video_ram_description">Causes crashes if set too high on devices with low memory.</string>
+    <string name="video_disk_description">Causes problems if set too high on devices with low storage space.</string>
     <string name="dns_pref">DNS over HTTPS</string>
     <string name="dns_pref_summary">Useful for bypassing ISP blocks</string>
     <string name="jsdelivr_proxy">GitHub Proxy</string>
@@ -361,7 +352,6 @@
     <string name="pref_category_extensions">Extensions</string>
     <string name="pref_category_actions">Actions</string>
     <string name="pref_category_cache">Cache</string>
-    <string name="pref_category_android_tv">Android TV</string>
     <string name="pref_category_gestures">Gestures</string>
     <string name="pref_category_security">Security</string>
     <string name="pref_category_accounts">Accounts</string>
@@ -372,8 +362,6 @@
     <string name="pref_category_looks">Looks</string>
     <string name="pref_category_ui_features">Features</string>
     <string name="category_general">General</string>
-    <string name="tv_layout_clock_settings">Show real time clock</string>
-    <string name="tv_layout_clock_settings_des">Show a real time clock at the top of the screen. Applies to the homepage and player</string>
     <string name="random_button_settings">Random Button</string>
     <string name="random_button_settings_desc">Show random button on Homepage and Library</string>
     <string name="provider_lang_settings">Extension languages</string>
@@ -387,14 +375,20 @@
     <string name="test_extensions_summary">This Test is meant for developers only and does not verifies or denies working of any extension.</string>
     <string name="category_ui">Layout</string>
     <string name="automatic">Auto</string>
-    <string name="tv_layout">TV layout</string>
     <string name="phone_layout">Phone layout</string>
-    <string name="emulator_layout">Emulator layout</string>
+    <string name="tv_layout" translatable="false">TV layout</string>
+    <string name="emulator_layout" translatable="false">Emulator layout</string>
+    <string name="android_tv_interface_on_seek_settings" translatable="false">Player Shown - Seek Amount</string>
+    <string name="android_tv_interface_on_seek_settings_summary" translatable="false">The seek amount used when the player is visible</string>
+    <string name="android_tv_interface_off_seek_settings" translatable="false">Player Hidden - Seek Amount</string>
+    <string name="android_tv_interface_off_seek_settings_summary" translatable="false">The seek amount used when the player is hidden</string>
+    <string name="pref_category_android_tv" translatable="false">Android TV</string>
+    <string name="tv_layout_clock_settings" translatable="false">Show real time clock</string>
+    <string name="tv_layout_clock_settings_des" translatable="false">Show a real time clock at the top of the screen. Applies to the homepage and player</string>
     <string name="primary_color_settings">Primary color</string>
     <string name="app_theme_settings">App theme</string>
     <string name="bottom_title_settings">Poster title location</string>
     <string name="bottom_title_settings_des">Put the title under the poster</string>
-    <!-- account stuff -->
     <string name="example_password">password123</string>
     <string name="example_username">Username</string>
     <string name="example_email">hello@world.com</string>
@@ -419,7 +413,6 @@
     <string name="sync_total_episodes_some" formatted="true">/%d</string>
     <string name="authenticated_user" formatted="true">%s authenticated</string>
     <string name="authenticated_user_fail" formatted="true">Could not log in at %s</string>
-    <!-- ============ -->
     <string name="disable">Disable</string>
     <string name="none">None</string>
     <string name="normal">Normal</string>
@@ -436,12 +429,6 @@
     <string name="subtitle_offset_extra_hint_later_format">Use this if the subtitles are shown %d ms too early</string>
     <string name="subtitle_offset_extra_hint_before_format">Use this if subtitles are shown %d ms too late</string>
     <string name="subtitle_offset_extra_hint_none_format">No subtitle delay</string>
-    <!--
-    Example text (pangram) can optionally be translated; if you do, include all the letters in the alphabet,
-    see: 
-	https://en.wikipedia.org/w/index.php?title=Pangram&oldid=225849300
-	https://en.wikipedia.org/wiki/The_quick_brown_fox_jumps_over_the_lazy_dog
-    -->
     <string name="subtitles_example_text">The quick brown fox jumps over the lazy dog</string>
     <string name="recommended">Recommended</string>
     <string name="player_loaded_subtitles" formatted="true">Loaded %s</string>
@@ -578,10 +565,7 @@
     <string name="dismiss">Dismiss</string>
     <string name="open_downloaded_repo">Open repository</string>
     <string name="battery_dialog_title">Disable Battery optimization</string>
-    <string name="battery_dialog_message">To ensure uninterrupted downloads and notifications for subscribed
-        TV shows, CloudStream needs permission to run in background. By pressing "OK", you\'ll be shown a request dialog.
-        Please press \'Allow\'.\n\nPlease note, this permission does not mean CS3 will drain your battery. It will only operate in the background when necessary, such as
-        when receiving notifications or downloading videos from official extensions.</string>
+    <string name="battery_dialog_message">To ensure uninterrupted downloads and notifications for subscribed shows, CloudStream needs permission to run in background. By pressing "OK", you\'ll be shown a request dialog. Please press \'Allow\'.\n\nPlease note, this permission does not mean CS3 will drain your battery. It will only operate in the background when necessary, such as when receiving notifications or downloading videos from official extensions.</string>
     <string name="app_unrestricted_toast">App battery usage is already set to unrestricted</string>
     <string name="app_info_intent_error">Unable to open CloudStream\'s App info.</string>
     <string name="update_notification_downloading">Downloading app update…</string>
@@ -692,7 +676,6 @@
     <string name="auto_rotate_video">Auto rotate</string>
     <string name="favorite">Favorite</string>
     <string name="unfavorite">Unfavorite</string>
-    <!-- For Biometrics -->
     <string name="biometric_authentication_title">Unlock CloudStream</string>
     <string name="biometric_setting">Lock with Biometrics</string>
     <string name="password_pin_authentication_title">Password/PIN Authentication</string>
@@ -714,10 +697,8 @@
     <string name="no_subtitles_loaded">No subtitles loaded yet</string>
     <string name="backup_path_title">Backup folder location</string>
     <string name="custom">Custom</string>
-    <!--confirm exit dialog-->
     <string name="confirm_before_exiting_title">Confirm before exiting</string>
     <string name="confirm_before_exiting_desc">Show dialog before exiting the app</string>
-    <!--confirm exit dialog-->
     <string name="show">Show</string>
     <string name="dont_show">Don\'t Show</string>
     <string name="subs_edge_size">Edge Size</string>
@@ -728,7 +709,6 @@
     <string name="volume_exceeded_100">Volume has exceeded 100%</string>
     <string name="slide_up_again_to_exceed_100">Slide up again to go beyond 100%</string>
     <string name="update_plugins">Update Plugins</string>
-    <!--Manual Update Button-->
     <string name="update_plugins_manually">Update plugins manually</string>
     <string name="starting_plugin_update_manually">Starting plugin update process!</string>
     <string name="plugins_updated_manually">Successfully updated %d plugin(s)</string>

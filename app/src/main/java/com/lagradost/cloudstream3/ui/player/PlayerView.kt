@@ -52,9 +52,7 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.ui.player.live.LivePreviewTimeBar
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.ui.subtitles.SaveCaptionStyle
 import com.lagradost.cloudstream3.ui.subtitles.SubtitlesFragment
@@ -107,8 +105,6 @@ class PlayerView @JvmOverloads constructor(
     fun releaseKeyEventListener() = gestureHelper.releaseKeyEventListener()
     fun requestUpdateBrightnessOverlayOnNextLayout() = gestureHelper.requestUpdateBrightnessOverlayOnNextLayout()
     fun releaseOverlayLayoutListener() = gestureHelper.releaseOverlayLayoutListener()
-
-    /** Callbacks */
 
     /** Host-fragment-level callbacks invoked by [mainCallback]. */
     interface Callbacks {
@@ -287,13 +283,7 @@ class PlayerView @JvmOverloads constructor(
             val previewFrameLayout: FrameLayout? =
                 exoPlayerView?.findViewById(R.id.previewFrameLayout)
 
-            /** Hide the previewFrameLayout on TV to make the skip op button not float,
-             * as previewFrameLayout is normally invisible */
-            if(isLayout(TV)) {
-                previewFrameLayout?.isVisible = false
-            }
-
-            if (progressBar != null && previewImageView != null && previewFrameLayout != null && !isLayout(TV)) {
+            if (progressBar != null && previewImageView != null && previewFrameLayout != null) {
                 var resume = false
                 progressBar.addOnScrubListener(object : PreviewBar.OnScrubListener {
                     override fun onScrubStart(previewBar: PreviewBar?) {
@@ -407,18 +397,14 @@ class PlayerView @JvmOverloads constructor(
                 logError(e)
             }
 
-            // Duration toggle click listeners
             exoDuration?.setOnClickListener { setRemainingTimeCounter(true) }
             timeLeft?.setOnClickListener { setRemainingTimeCounter(false) }
-            // Keep remaining-time text in sync with playback position
             exoPosition?.doOnTextChanged { _, _, _, _ -> updateRemainingTime() }
 
-            // Delegate gesture/input setup (settings, brightness overlay, touch gestures, key listener)
             gestureHelper.initialize()
             setupKeyEventListener()
 
-            // Apply duration-mode display (remaining time vs elapsed); TV always shows remaining
-            setRemainingTimeCounter(durationMode || isLayout(TV))
+            setRemainingTimeCounter(durationMode)
         }
     }
 
@@ -443,7 +429,6 @@ class PlayerView @JvmOverloads constructor(
         val activity = context as? Activity
         gestureHelper.resetZoomToDefault()
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
-        // Simply resets brightness and notch settings that might have been overridden.
         val lp = activity?.window?.attributes
         lp?.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -466,9 +451,6 @@ class PlayerView @JvmOverloads constructor(
         player.release()
         player.releaseCallbacks()
         player = CS3IPlayer()
-
-        // keyEventListener is deregistered in onPause so that the incoming player's
-        // onResume can register its own listener without racing against release().
 
         PlayerPipHelper.updatePIPModeActions(
             context as? Activity,
@@ -496,7 +478,6 @@ class PlayerView @JvmOverloads constructor(
         try {
             isInPIPMode = isInPictureInPictureMode
             if (isInPictureInPictureMode) {
-                // Hide the full-screen UI (controls, etc.) while in picture-in-picture mode.
                 piphide?.isVisible = false
                 pipReceiver = object : BroadcastReceiver() {
                     override fun onReceive(context: Context, intent: Intent) {
@@ -518,11 +499,9 @@ class PlayerView @JvmOverloads constructor(
                 val status = if (isPlaying) CSPlayerLoading.IsPlaying else CSPlayerLoading.IsPaused
                 updateIsPlaying(status, status)
             } else {
-                // Restore the full-screen UI.
                 piphide?.isVisible = true
                 callbacks?.exitedPipMode()
                 pipReceiver?.let {
-                    // Prevents java.lang.IllegalArgumentException: Receiver not registered
                     safe { activity?.unregisterReceiver(it) }
                 }
                 activity?.hideSystemUI()
@@ -568,7 +547,6 @@ class PlayerView @JvmOverloads constructor(
                 }
                 if (drawable is AnimatedVectorDrawable) { drawable.start(); startedAnimation = true }
                 if (drawable is AnimatedVectorDrawableCompat) { drawable.start(); startedAnimation = true }
-                // Somehow the phone is wacked
                 if (!startedAnimation) {
                     playerPausePlay?.setImageResource(
                         if (isPlayingRightNow) R.drawable.netflix_pause else R.drawable.netflix_play
@@ -599,11 +577,9 @@ class PlayerView @JvmOverloads constructor(
         if (player is ExoPlayer) {
             mMediaSession?.release()
             mMediaSession = MediaSession.Builder(context, player)
-                // Ensure unique ID for concurrent players.
                 .setId(System.currentTimeMillis().toString())
                 .build()
 
-            // Necessary for multiple combined videos.
             @Suppress("DEPRECATION")
             exoPlayerView?.setShowMultiWindowTimeBar(true)
             exoPlayerView?.player = player
@@ -614,7 +590,6 @@ class PlayerView @JvmOverloads constructor(
 
     private fun onSubStyleChanged(style: SaveCaptionStyle) {
         player.updateSubtitleStyle(style)
-        // Forcefully update the subtitle encoding in case the edge size is changed.
         player.seekTime(-1)
     }
 
@@ -697,7 +672,6 @@ class PlayerView @JvmOverloads constructor(
     }
 
     fun resize(resize: Int, showToast: Boolean) {
-        // Clear all zoom state before applying the new resize mode
         gestureHelper.clearZoomState()
         resize(PlayerResize.entries[resize], showToast)
     }
@@ -717,11 +691,9 @@ class PlayerView @JvmOverloads constructor(
 
     /**
      * Returns the desired [ActivityInfo] orientation constant based on [isVerticalOrientation]
-     * and [autoPlayerRotateEnabled].  TV/emulator always returns sensor-landscape.
-     * Host fragments call this from [Callbacks.playerDimensionsLoaded] to apply rotation.
+     * and [autoPlayerRotateEnabled].
      */
     fun dynamicOrientation(): Int {
-        if (isLayout(TV or EMULATOR)) return ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         return if (autoPlayerRotateEnabled && isVerticalOrientation)
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         else ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -729,24 +701,14 @@ class PlayerView @JvmOverloads constructor(
 
     /** Event dispatch */
 
-    /**
-     * This receives the events from the player, if you want to append functionality
-     * you do it here, do note that this only receives events for UI changes,
-     * and returning early WON'T stop it from changing in e.g. the player time
-     * or pause status.
-     */
     @MainThread
     fun mainCallback(event: PlayerEvent) {
-        // We don't want to spam DownloadEvent.
         if (event !is DownloadEvent) Log.i(TAG, "Handle event: $event")
         when (event) {
             is DownloadEvent -> callbacks?.onDownload(event)
             is ResizedEvent -> {
-                // Skip 0x0 dimensions that the player emits when going to STATE_IDLE
-                // to avoid incorrectly resetting the auto-detected orientation.
                 if (event.width > 0 && event.height > 0) {
-                    // TV never rotates; otherwise track whether the video is portrait.
-                    isVerticalOrientation = !isLayout(TV or EMULATOR) && event.height > event.width
+                    isVerticalOrientation = event.height > event.width
                 }
                 callbacks?.playerDimensionsLoaded(event.width, event.height)
             }
@@ -772,7 +734,6 @@ class PlayerView @JvmOverloads constructor(
                 duration = event.durationMs
             )
             is VideoEndedEvent -> {
-                // Only play next episode if autoplay is on (default).
                 val ctx = context
                 if (PreferenceManager.getDefaultSharedPreferences(ctx)
                         ?.getBoolean(ctx.getString(R.string.autoplay_next_key), true) == true
@@ -817,12 +778,6 @@ class PlayerView @JvmOverloads constructor(
 
     /** Auto-hide */
 
-    /**
-     * Schedules a delayed auto-hide of the player UI after [delayMs] ms.
-     * Any previously pending hide is canceled first.
-     * The hide fires only when no touch is active and [Callbacks.isUIShowing] is true;
-     * the actual hide action is delegated to [Callbacks.onAutoHideUI].
-     */
     fun scheduleAutoHide(delayMs: Long = 3000L) {
         val token = ++autoHideToken
         autoHideHandler.removeCallbacksAndMessages(null)
@@ -834,7 +789,6 @@ class PlayerView @JvmOverloads constructor(
         }, delayMs)
     }
 
-    /** Cancels any pending auto-hide scheduled by [scheduleAutoHide]. */
     fun cancelAutoHide() {
         autoHideToken++
         autoHideHandler.removeCallbacksAndMessages(null)

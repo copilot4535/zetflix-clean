@@ -1,7 +1,6 @@
 package com.lagradost.cloudstream3.utils
 
 import android.animation.ObjectAnimator
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.NotificationChannel
@@ -10,11 +9,9 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
-import android.media.tv.TvContract.Channels.COLUMN_INTERNAL_PROVIDER_ID
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -29,8 +26,6 @@ import android.view.View.LAYOUT_DIRECTION_RTL
 import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
@@ -42,10 +37,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.tvprovider.media.tv.PreviewChannelHelper
-import androidx.tvprovider.media.tv.TvContractCompat
-import androidx.tvprovider.media.tv.WatchNextProgram
-import androidx.tvprovider.media.tv.WatchNextProgram.fromCursor
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastState
@@ -66,27 +57,19 @@ import com.lagradost.cloudstream3.MainActivity.Companion.afterRepositoryLoadedEv
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.TvType
-import com.lagradost.cloudstream3.isMovieType
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.plugins.RepositoryManager
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.APP_STRING_RESUME_WATCHING
 import com.lagradost.cloudstream3.ui.WebviewFragment
 import com.lagradost.cloudstream3.ui.player.SubtitleData
 import com.lagradost.cloudstream3.ui.result.ResultFragment
-import com.lagradost.cloudstream3.ui.settings.Globals
 import com.lagradost.cloudstream3.ui.settings.extensions.PluginsFragment
 import com.lagradost.cloudstream3.ui.settings.extensions.RepositoryData
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Coroutines.main
-import com.lagradost.cloudstream3.utils.DataStoreHelper.getAllResumeStateIds
-import com.lagradost.cloudstream3.utils.DataStoreHelper.getLastWatched
 import com.lagradost.cloudstream3.utils.FillerEpisodeCheck.toClassDir
 import com.lagradost.cloudstream3.utils.JsUnpacker.Companion.load
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
-import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import okhttp3.Cache
 import java.io.File
 import java.util.concurrent.Executor
@@ -97,7 +80,7 @@ object AppContextUtils {
         val layoutManager =
             this.layoutManager as? LinearLayoutManager?
         val adapter = adapter
-        return if (layoutManager == null || adapter == null) false else layoutManager.findLastCompletelyVisibleItemPosition() < adapter.itemCount - 7 // bit more than 1 to make it more seamless
+        return if (layoutManager == null || adapter == null) false else layoutManager.findLastCompletelyVisibleItemPosition() < adapter.itemCount - 7
     }
 
     fun View.isLtr() = this.layoutDirection == LAYOUT_DIRECTION_LTR
@@ -108,7 +91,6 @@ object AppContextUtils {
     }
 
     fun BottomSheetDialog?.ownShow() {
-        // the reason for this is because show has a shitty animation we don't want
         this?.window?.setWindowAnimations(-1)
         this?.show()
         Handler(Looper.getMainLooper()).postDelayed({
@@ -116,25 +98,12 @@ object AppContextUtils {
         }, 200)
     }
 
-    //fun Context.deleteFavorite(data: SearchResponse) {
-    //    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-    //    safe {
-    //        val existingId =
-    //            getWatchNextProgramByVideoId(data.url, this).second ?: return@safe
-    //        contentResolver.delete(
-//
-    //            TvContractCompat.buildWatchNextProgramUri(existingId),
-    //            null, null
-    //        )
-    //    }
-    //}
     fun String?.html(): Spanned {
         return getHtmlText(this ?: return "".toSpanned())
     }
 
     private fun getHtmlText(text: String): Spanned {
         return try {
-            // I have no idea if this can throw any error, but I dont want to try
             HtmlCompat.fromHtml(
                 text, HtmlCompat.FROM_HTML_MODE_LEGACY
             )
@@ -144,52 +113,6 @@ object AppContextUtils {
         }
     }
 
-    /** Get channel ID by name */
-    @SuppressLint("RestrictedApi")
-    private fun buildWatchNextProgramUri(
-        context: Context,
-        card: DataStoreHelper.ResumeWatchingResult,
-        resumeWatching: DownloadObjects.ResumeWatching?
-    ): WatchNextProgram {
-        val isSeries = card.type?.isMovieType() == false
-        val title = if (isSeries) {
-            context.getNameFull(card.name, card.episode, card.season)
-        } else {
-            card.name
-        }
-
-        val builder = WatchNextProgram.Builder()
-            .setEpisodeTitle(title)
-            .setType(
-                if (isSeries) {
-                    TvContractCompat.WatchNextPrograms.TYPE_TV_EPISODE
-                } else TvContractCompat.WatchNextPrograms.TYPE_MOVIE
-            )
-            .setWatchNextType(TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_CONTINUE)
-            .setTitle(title)
-            .setPosterArtUri(card.posterUrl?.toUri())
-            .setIntentUri((card.id?.let {
-                "$APP_STRING_RESUME_WATCHING://$it"
-            } ?: card.url).toUri())
-            .setInternalProviderId(card.url)
-            .setLastEngagementTimeUtcMillis(
-                resumeWatching?.updateTime ?: System.currentTimeMillis()
-            )
-
-        card.watchPos?.let {
-            builder.setDurationMillis(it.duration.toInt())
-            builder.setLastPlaybackPositionMillis(it.position.toInt())
-        }
-
-        if (isSeries)
-            card.episode?.let {
-                builder.setEpisodeNumber(it)
-            }
-
-        return builder.build()
-    }
-
-    // https://stackoverflow.com/a/67441735/13746422
     fun ViewPager2.reduceDragSensitivity(f: Int = 4) {
         val recyclerViewField = ViewPager2::class.java.getDeclaredField("mRecyclerView")
         recyclerViewField.isAccessible = true
@@ -198,7 +121,7 @@ object AppContextUtils {
         val touchSlopField = RecyclerView::class.java.getDeclaredField("mTouchSlop")
         touchSlopField.isAccessible = true
         val touchSlop = touchSlopField.get(recyclerView) as Int
-        touchSlopField.set(recyclerView, touchSlop * f)       // "8" was obtained experimentally
+        touchSlopField.set(recyclerView, touchSlop * f)
     }
 
     fun ContentLoadingProgressBar?.animateProgressTo(to: Int) {
@@ -227,7 +150,6 @@ object AppContextUtils {
                     this.description = description
                 }
 
-            // Register the channel with the system.
             val notificationManager: NotificationManager =
                 this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -235,136 +157,8 @@ object AppContextUtils {
         }
     }
 
-    @SuppressLint("RestrictedApi")
-    fun getAllWatchNextPrograms(context: Context): Set<Long> {
-        val COLUMN_WATCH_NEXT_ID_INDEX = 0
-        val cursor = context.contentResolver.query(
-            TvContractCompat.WatchNextPrograms.CONTENT_URI,
-            WatchNextProgram.PROJECTION,
-            /* selection = */ null,
-            /* selectionArgs = */ null,
-            /* sortOrder = */ null
-        )
-        val set = mutableSetOf<Long>()
-        cursor?.use {
-            if (it.moveToFirst()) {
-                do {
-                    set.add(cursor.getLong(COLUMN_WATCH_NEXT_ID_INDEX))
-                } while (it.moveToNext())
-            }
-        }
-        return set
-    }
-
-    /**
-     * Find the Watch Next program for given id.
-     * Returns the first instance available.
-     */
-    @SuppressLint("RestrictedApi")
-    // Suppress RestrictedApi due to https://issuetracker.google.com/138150076
-    fun findFirstWatchNextProgram(context: Context, predicate: (Cursor) -> Boolean):
-            Pair<WatchNextProgram?, Long?> {
-        val COLUMN_WATCH_NEXT_ID_INDEX = 0
-//        val COLUMN_WATCH_NEXT_INTERNAL_PROVIDER_ID_INDEX = 1
-//        val COLUMN_WATCH_NEXT_COLUMN_BROWSABLE_INDEX = 2
-
-        val cursor = context.contentResolver.query(
-            TvContractCompat.WatchNextPrograms.CONTENT_URI,
-            WatchNextProgram.PROJECTION,
-            /* selection = */ null,
-            /* selectionArgs = */ null,
-            /* sortOrder = */ null
-        )
-        cursor?.use {
-            if (it.moveToFirst()) {
-                do {
-                    if (predicate(cursor)) {
-                        return fromCursor(cursor) to cursor.getLong(COLUMN_WATCH_NEXT_ID_INDEX)
-                    }
-                } while (it.moveToNext())
-            }
-        }
-        return null to null
-    }
-
-    /**
-     * Query the Watch Next list and find the program with given videoId.
-     * Return null if not found.
-     */
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("Range")
-    @Synchronized
-    private fun getWatchNextProgramByVideoId(
-        id: String,
-        context: Context
-    ): Pair<WatchNextProgram?, Long?> {
-        return findFirstWatchNextProgram(context) { cursor ->
-            (cursor.getString(cursor.getColumnIndex(COLUMN_INTERNAL_PROVIDER_ID)) == id)
-        }
-    }
-
-    /** Prevents losing data when removing and adding simultaneously */
-    private val continueWatchingLock = Mutex()
-
-    // https://github.com/googlearchive/leanback-homescreen-channels/blob/master/app/src/main/java/com/google/android/tvhomescreenchannels/SampleTvProvider.java
-    @SuppressLint("RestrictedApi")
-    @Throws
-    @WorkerThread
-    suspend fun Context.addProgramsToContinueWatching(data: List<DataStoreHelper.ResumeWatchingResult>) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val context = this
-        continueWatchingLock.withLock {
-            // A way to get all last watched timestamps
-            val timeStampHashMap = HashMap<Int, DownloadObjects.ResumeWatching>()
-            getAllResumeStateIds()?.forEach { id ->
-                val lastWatched = getLastWatched(id) ?: return@forEach
-                timeStampHashMap[lastWatched.parentId] = lastWatched
-            }
-
-            val currentProgramIds = data.mapNotNull { episodeInfo ->
-                try {
-                    val customId = "${episodeInfo.id}|${episodeInfo.apiName}|${episodeInfo.url}"
-                    val (program, id) = getWatchNextProgramByVideoId(customId, context)
-                    val nextProgram = buildWatchNextProgramUri(
-                        context,
-                        episodeInfo,
-                        timeStampHashMap[episodeInfo.id]
-                    )
-
-                    // If the program is already in the Watch Next row, update it
-                    if (program != null && id != null) {
-                        PreviewChannelHelper(context).updateWatchNextProgram(
-                            nextProgram,
-                            id,
-                        )
-                        id
-                    } else {
-                        PreviewChannelHelper(context)
-                            .publishWatchNextProgram(nextProgram)
-                    }
-                } catch (e: Exception) {
-                    logError(e)
-                    null
-                }
-            }.toSet()
-
-            val allOldPrograms = getAllWatchNextPrograms(context) - currentProgramIds
-
-            // Ensures synced watch next progress by deleting all old programs.
-            allOldPrograms.forEach {
-                context.contentResolver.delete(
-                    TvContractCompat.buildWatchNextProgramUri(it),
-                    null, null
-                )
-            }
-        }
-    }
-
     /** Sort subtitles by names */
     fun sortSubs(subs: Set<SubtitleData>): List<SubtitleData> {
-        // Be aware, sorting by "$originalName $nameSuffix" causes "a (b) 1" < "a 1",
-        // where "originalName then nameSuffix" preserves "a 1" < "a (b) 1", because we do not compare '(' and '1'.
         return subs
             .sortedWith(
                 compareBy { subtitle: SubtitleData -> subtitle.originalName }
@@ -390,15 +184,13 @@ object AppContextUtils {
         ) ?: return hashSet
 
         val names = DubStatus.values().map { it.name }.toHashSet()
-        //if(realSet.isEmpty()) return hashSet
 
         return list.filter { names.contains(it) }.map { DubStatus.valueOf(it) }.toHashSet()
     }
 
     fun Context.getApiProviderLangSettings(): HashSet<String> {
         val settingsManager = PreferenceManager.getDefaultSharedPreferences(this)
-        val hashSet = hashSetOf(AllLanguagesName) // def is all languages
-//        hashSet.add("en") // def is only en
+        val hashSet = hashSetOf(AllLanguagesName)
         val list = settingsManager.getStringSet(
             this.getString(R.string.provider_lang_key),
             hashSet
@@ -444,9 +236,6 @@ object AppContextUtils {
     }
 
     fun Context.filterProviderByPreferredMedia(hasHomePageIsRequired: Boolean = true): List<MainAPI> {
-        // We are getting the weirdest crash ever done:
-        // java.lang.ClassCastException: com.lagradost.cloudstream3.TvType cannot be cast to com.lagradost.cloudstream3.TvType
-        // Trying fixing using classloader fuckery
         val oldLoader = Thread.currentThread().contextClassLoader
         Thread.currentThread().contextClassLoader = TvType::class.java.classLoader
 
@@ -472,13 +261,11 @@ object AppContextUtils {
         return if (currentPrefMedia.isEmpty()) {
             allApis
         } else {
-            // Filter API depending on preferred media type
             allApis.filter { api -> api.supportedTypes.any { currentPrefMedia.contains(it.ordinal) } }
         }
     }
 
     fun Context.filterSearchResultByFilmQuality(data: List<SearchResponse>): List<SearchResponse> {
-        // Filter results omitting entries with certain quality
         if (data.isNotEmpty()) {
             val filteredSearchQuality = PreferenceManager.getDefaultSharedPreferences(this)
                 ?.getStringSet(getString(R.string.pref_filter_search_quality_key), setOf())
@@ -488,7 +275,6 @@ object AppContextUtils {
             if (filteredSearchQuality.isNotEmpty()) {
                 return data.filter { item ->
                     val searchQualVal = item.quality?.ordinal ?: -1
-                    //Log.i("filterSearch", "QuickSearch item => ${item.toJson()}")
                     !filteredSearchQuality.contains(searchQualVal)
                 }
             }
@@ -497,7 +283,6 @@ object AppContextUtils {
     }
 
     fun Context.filterHomePageListByFilmQuality(data: HomePageList): HomePageList {
-        // Filter results omitting entries with certain quality
         if (data.list.isNotEmpty()) {
             val filteredSearchQuality = PreferenceManager.getDefaultSharedPreferences(this)
                 ?.getStringSet(getString(R.string.pref_filter_search_quality_key), setOf())
@@ -510,7 +295,6 @@ object AppContextUtils {
                     isHorizontalImages = data.isHorizontalImages,
                     list = data.list.filter { item ->
                         val searchQualVal = item.quality?.ordinal ?: -1
-                        //Log.i("filterSearch", "QuickSearch item => ${item.toJson()}")
                         !filteredSearchQuality.contains(searchQualVal)
                     }
                 )
@@ -544,7 +328,6 @@ object AppContextUtils {
     ) {
         val repos = RepositoryManager.getRepositories()
 
-        // navigate to newly added repository on pressing Open Repository
         fun openAddedRepo() {
             if (repos.isNotEmpty()) {
                 navigate(
@@ -582,9 +365,6 @@ object AppContextUtils {
             }
     }
 
-    /**
-     * If fallbackWebview is true and a fragment is supplied then it will open a webview with the url if the browser fails.
-     * */
     fun Context.openBrowser(
         url: String,
         fallbackWebview: Boolean = false,
@@ -595,9 +375,6 @@ object AppContextUtils {
             intent.data = url.toUri()
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
 
-            // activityResultRegistry is used to fall back to webview if a browser is missing
-            // On older versions the startActivity just crashes, but on newer android versions
-            // You need to check the result to make sure it failed
             val activityResultRegistry = fragment?.activity?.activityResultRegistry
             if (activityResultRegistry != null) {
                 activityResultRegistry.register(
@@ -631,25 +408,10 @@ object AppContextUtils {
         }
     }
 
-    // Deprecate after next stable
-    /* @Deprecated(
-        message = "Use splitUrlParameters instead.",
-        replaceWith = ReplaceWith(
-            expression = "splitUrlParameters(url.toString())",
-            imports = ["com.lagradost.cloudstream3.splitUrlParameters"],
-        ),
-        level = DeprecationLevel.WARNING,
-    ) */
     fun splitQuery(url: java.net.URL): Map<String, String> {
         return com.lagradost.cloudstream3.splitUrlParameters(url.toString())
     }
 
-    /**| S1:E2 Hello World
-     * | Episode 2. Hello world
-     * | Hello World
-     * | Season 1 - Episode 2
-     * | Episode 2
-     * **/
     fun Context.getNameFull(name: String?, episode: Int?, season: Int?): String {
         val rEpisode = if (episode == 0) null else episode
         val rSeason = if (season == 0) null else season
@@ -696,8 +458,6 @@ object AppContextUtils {
         }
     }
 
-    //private val viewModel: ResultViewModel by activityViewModels()
-
     private fun getResultsId(): Int {
         return R.id.global_to_navigation_results_phone
     }
@@ -721,7 +481,6 @@ object AppContextUtils {
     ) {
 
         this.runOnUiThread {
-            // viewModelStore.clear()
             this.navigate(
                 getResultsId(),
                 ResultFragment.newInstance(url, apiName, name, startAction, startValue)
@@ -743,13 +502,11 @@ object AppContextUtils {
         startValue: Int? = null,
     ) {
         this?.runOnUiThread {
-            // viewModelStore.clear()
             this.navigate(
                 getResultsId(),
                 ResultFragment.newInstance(card, startAction, startValue)
             )
         }
-        //(this as? AppCompatActivity?)?.loadResult(card.url, card.apiName, startAction, startValue)
     }
 
     fun Activity.requestLocalAudioFocus(focusRequest: AudioFocusRequest?) {
@@ -804,7 +561,6 @@ object AppContextUtils {
             }
         } catch (e: Exception) {
             println(e)
-            // Track non-fatal
             return false
         }
 
@@ -822,11 +578,7 @@ object AppContextUtils {
         return false
     }
 
-    /**
-     * Sets the focus to the negative button when in TV and Emulator layout.
-     **/
     fun AlertDialog.setDefaultFocus(buttonFocus: Int = DialogInterface.BUTTON_NEGATIVE) {
-        if (!Globals.isLayout(Globals.TV or Globals.EMULATOR)) return
         this.getButton(buttonFocus).run {
             isFocusableInTouchMode = true
             requestFocus()
@@ -853,7 +605,7 @@ object AppContextUtils {
             this?.cacheDir?.let {
                 Cache(
                     directory = File(it, c.toClassDir()),
-                    maxSize = 20L * 1024L * 1024L // 20 MiB
+                    maxSize = 20L * 1024L * 1024L
                 )
             }
         }
@@ -863,7 +615,7 @@ object AppContextUtils {
         val pm = Wrappers.packageManager(this)
 
         return try {
-            pm.getPackageInfo(uri, 0) // PackageManager.GET_ACTIVITIES
+            pm.getPackageInfo(uri, 0)
             true
         } catch (e: PackageManager.NameNotFoundException) {
             false

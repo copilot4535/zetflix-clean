@@ -33,9 +33,6 @@ import com.lagradost.cloudstream3.ui.search.SearchClickCallback
 import com.lagradost.cloudstream3.ui.search.SearchHelper
 import com.lagradost.cloudstream3.ui.search.SearchViewModel
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterSearchResultByFilmQuality
@@ -96,7 +93,6 @@ class QuickSearchFragment : BaseFragment<QuickSearchBinding>(
     override fun fixLayout(view: View) {
         fixSystemBarsPadding(view)
 
-        // Fix grid
         HomeFragment.currentSpan = view.context.getSpanCount()
         binding?.quickSearchAutofitResults?.spanCount = HomeFragment.currentSpan
         HomeFragment.configEvent.invoke()
@@ -190,12 +186,6 @@ class QuickSearchFragment : BaseFragment<QuickSearchBinding>(
                     id = "quickSearchMasterRecycler".hashCode(),
                     { callback ->
                         SearchHelper.handleSearchClickCallback(callback)
-                        //when (callback.action) {
-                        //SEARCH_ACTION_LOAD -> {
-                        //    clickCallback?.invoke(callback)
-                        //}
-                        //    else -> SearchHelper.handleSearchClickCallback(activity, callback)
-                        //}
                     },
                     { item ->
                         bottomSheetDialog = activity?.loadHomepageList(item, dismissCallback = {
@@ -215,7 +205,6 @@ class QuickSearchFragment : BaseFragment<QuickSearchBinding>(
         val listLock = ReentrantLock()
         observe(searchViewModel.currentSearch) { list ->
             try {
-                // https://stackoverflow.com/questions/6866238/concurrent-modification-exception-adding-to-an-arraylist
                 listLock.lock()
                 (binding.quickSearchMasterRecycler.adapter as? ParentItemAdapter)?.apply {
                     val newItems = list.map { ongoing ->
@@ -238,7 +227,6 @@ class QuickSearchFragment : BaseFragment<QuickSearchBinding>(
                     }
 
                     submitList(newItems)
-                    //notifyDataSetChanged()
                 }
             } catch (e: Exception) {
                 logError(e)
@@ -280,7 +268,6 @@ class QuickSearchFragment : BaseFragment<QuickSearchBinding>(
                 }
 
                 is Resource.Failure -> {
-                    // Toast.makeText(activity, "Server error", Toast.LENGTH_LONG).show()
                     searchExitIcon?.alpha = 1f
                     binding.quickSearchLoadingBar.alpha = 0f
                 }
@@ -292,17 +279,11 @@ class QuickSearchFragment : BaseFragment<QuickSearchBinding>(
             }
         }
 
-        if (isLayout(PHONE or EMULATOR)) {
-            binding.quickSearchBack.apply {
-                isVisible = true
-                setOnClickListener {
-                    activity?.popCurrentPage()
-                }
+        binding.quickSearchBack.apply {
+            isVisible = true
+            setOnClickListener {
+                activity?.popCurrentPage()
             }
-        }
-
-        if (isLayout(TV)) {
-            binding.quickSearch.requestFocus()
         }
 
         arguments?.getString(AUTOSEARCH_KEY)?.let {

@@ -25,7 +25,6 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.AccountManagmentBinding
 import com.lagradost.cloudstream3.databinding.AccountSwitchBinding
 import com.lagradost.cloudstream3.databinding.AddAccountInputBinding
-import com.lagradost.cloudstream3.databinding.DeviceAuthBinding
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.animeSkipApi
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.openSubtitlesApi
@@ -35,14 +34,8 @@ import com.lagradost.cloudstream3.syncproviders.AuthRepo
 import com.lagradost.cloudstream3.syncproviders.AuthUser
 import com.lagradost.cloudstream3.syncproviders.PlainAuthRepo
 import com.lagradost.cloudstream3.syncproviders.SubtitleRepo
-import com.lagradost.cloudstream3.syncproviders.SyncRepo
 import com.lagradost.cloudstream3.ui.BasePreferenceFragmentCompat
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.getPref
-import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.hideOn
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setPaddingBottom
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setToolBarScrollFlags
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setUpToolbar
@@ -69,7 +62,6 @@ import qrcode.QRCode
 
 class SettingsAccount : BasePreferenceFragmentCompat(), BiometricCallback {
     companion object {
-        /** Used by nginx plugin too */
         @SuppressLint("StringFormatInvalid")
         fun showLoginInfo(
             activity: FragmentActivity?,
@@ -111,10 +103,6 @@ class SettingsAccount : BasePreferenceFragmentCompat(), BiometricCallback {
                 dialog.dismissSafe(activity)
                 showAccountSwitch(activity, api)
             }
-
-            if (isLayout(TV or EMULATOR)) {
-                binding.accountSwitchAccount.requestFocus()
-            }
         }
 
         private fun showAccountSwitch(activity: FragmentActivity, api: AuthRepo) {
@@ -148,125 +136,6 @@ class SettingsAccount : BasePreferenceFragmentCompat(), BiometricCallback {
         }
 
 
-        @UiThread
-        fun showPin(activity: FragmentActivity, api: AuthRepo) {
-            val binding: DeviceAuthBinding =
-                DeviceAuthBinding.inflate(activity.layoutInflater, null, false)
-
-            val builder =
-                AlertDialog.Builder(activity)
-                    .setView(binding.root)
-
-            builder.apply {
-                setNegativeButton(R.string.cancel) { _, _ -> }
-                if (api.hasOAuth2) {
-                    setPositiveButton(R.string.auth_locally) { _, _ ->
-                        api.openOAuth2PageWithToast()
-                    }
-                }
-            }
-
-            val dialog = builder.create()
-
-            ioSafe {
-                val pinCodeData = try {
-                    api.pinRequest()
-                } catch (e: ErrorLoadingException) {
-                    if (e.message != null) {
-                        showToast(e.message)
-                        null
-                    } else {
-                        throw e
-                    }
-                } catch (t: Throwable) {
-                    logError(t)
-                    null
-                }
-                if (pinCodeData == null) {
-                    if (api.hasOAuth2) {
-                        showToast(R.string.device_pin_error_message)
-                        api.openOAuth2PageWithToast()
-                    } else {
-                        showToast(
-                            txt(
-                                R.string.authenticated_user_fail,
-                                api.name
-                            )
-                        )
-                    }
-                    return@ioSafe
-                }
-
-                /*val logoBytes = ContextCompat.getDrawable(
-                    activity,
-                    R.drawable.cloud_2_solid
-                )?.toBitmapOrNull()?.let { bitmap ->
-                    val csLogo = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, csLogo)
-                    csLogo.toByteArray()
-                }*/
-
-                val qrCodeImage = QRCode.ofRoundedSquares()
-                    .withColor(activity.colorFromAttribute(R.attr.textColor))
-                    .withBackgroundColor(activity.colorFromAttribute(R.attr.primaryBlackBackground))
-                    //.withLogo(logoBytes, 200.toPx, 200.toPx) //For later if logo needed anytime
-                    .build(pinCodeData.verificationUrl)
-                    .render().nativeImage() as Bitmap
-
-                activity.runOnUiThread {
-                    dialog.show()
-                    binding.apply {
-                        devicePinCode.setText(txt(pinCodeData.userCode))
-                        deviceAuthMessage.setText(
-                            txt(
-                                R.string.device_pin_url_message,
-                                pinCodeData.verificationUrl
-                            )
-                        )
-                        deviceAuthQrcode.loadImage(qrCodeImage)
-                    }
-
-                    val expirationMillis =
-                        pinCodeData.expiresIn.times(1000).toLong()
-
-                    object : CountDownTimer(expirationMillis, 1000) {
-                        override fun onTick(millisUntilFinished: Long) {
-                            val secondsUntilFinished =
-                                millisUntilFinished.div(1000).toInt()
-
-                            binding.deviceAuthValidationCounter.setText(
-                                txt(
-                                    R.string.device_pin_counter_text,
-                                    secondsUntilFinished.div(60),
-                                    secondsUntilFinished.rem(60)
-                                )
-                            )
-
-                            ioSafe {
-                                if (secondsUntilFinished.rem(pinCodeData.interval) == 0 && api.login(
-                                        pinCodeData
-                                    )
-                                ) {
-                                    showToast(
-                                        txt(
-                                            R.string.authenticated_user,
-                                            api.name
-                                        )
-                                    )
-                                    dialog.dismissSafe(activity)
-                                    cancel()
-                                }
-                            }
-                        }
-
-                        override fun onFinish() {
-                            showToast(R.string.device_pin_expired_message)
-                            dialog.dismissSafe(activity)
-                        }
-                    }.start()
-                }
-            }
-        }
 
 
         fun showAppLogin(activity: FragmentActivity, api: AuthRepo) {
@@ -286,25 +155,8 @@ class SettingsAccount : BasePreferenceFragmentCompat(), BiometricCallback {
                 binding.loginUsernameInput to req.username
             )
 
-            if (isLayout(TV or EMULATOR)) {
-                visibilityMap.forEach { (input, isVisible) ->
-                    input.isVisible = isVisible
-
-                    // Band-aid for weird FireTV behavior causing crashes because keyboard covers the screen
-                    input.setOnEditorActionListener { textView, actionId, _ ->
-                        if (actionId == EditorInfo.IME_ACTION_NEXT) {
-                            val view = textView.focusSearch(FOCUS_DOWN)
-                            return@setOnEditorActionListener view?.requestFocus(
-                                FOCUS_DOWN
-                            ) == true
-                        }
-                        return@setOnEditorActionListener true
-                    }
-                }
-            } else {
-                visibilityMap.forEach { (input, isVisible) ->
-                    input.isVisible = isVisible
-                }
+            visibilityMap.forEach { (input, isVisible) ->
+                input.isVisible = isVisible
             }
 
             binding.createAccount.isGone = api.createAccountUrl.isNullOrBlank()
@@ -389,9 +241,7 @@ class SettingsAccount : BasePreferenceFragmentCompat(), BiometricCallback {
         @UiThread
         fun addAccount(activity: FragmentActivity, api: AuthRepo) {
             try {
-                if (api.hasPin && !isLayout(PHONE)) {
-                    showPin(activity, api)
-                } else if (api.hasOAuth2) {
+                if (api.hasOAuth2) {
                     api.openOAuth2PageWithToast()
                 } else if (api.hasInApp) {
                     showAppLogin(activity, api)
@@ -442,10 +292,7 @@ class SettingsAccount : BasePreferenceFragmentCompat(), BiometricCallback {
         hideKeyboard()
         setPreferencesFromResource(R.xml.settings_account, rootKey)
 
-        //Hides the security  category on TV as it's only Biometric for now
-        getPref(R.string.pref_category_security_key)?.hideOn(TV or EMULATOR)
-
-        getPref(R.string.biometric_key)?.hideOn(TV or EMULATOR)?.setOnPreferenceClickListener {
+        getPref(R.string.biometric_key)?.setOnPreferenceClickListener {
             val ctx = context ?: return@setOnPreferenceClickListener false
 
             if (deviceHasPasswordPinLock(ctx)) {

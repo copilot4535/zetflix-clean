@@ -20,25 +20,16 @@ import com.lagradost.cloudstream3.ui.newSharedPool
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_LOAD
 import com.lagradost.cloudstream3.ui.search.SearchClickCallback
 import com.lagradost.cloudstream3.ui.search.SearchResultBuilder
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.UIHelper.isBottomLayout
 import com.lagradost.cloudstream3.utils.UIHelper.toPx
 
 class HomeScrollViewHolderState(view: ViewBinding) : ViewHolderState<Boolean>(view) {
-    // very shitty that we cant store the state when the view clears,
-    // but this is because the focus clears before the view is removed
-    // so we have to manually store it
     var wasFocused: Boolean = false
     override fun save(): Boolean = wasFocused
     override fun restore(state: Boolean) {
         if (state) {
             wasFocused = false
-            // only refocus if tv
-            if (isLayout(TV)) {
-                itemView.requestFocus()
-            }
         }
     }
 }
@@ -54,8 +45,7 @@ class ResumeItemAdapter(
     nextFocusDown = nextFocusDown,
     clickCallback = clickCallback
 ) {
-    // As there is no popup on TV we instead use the footer to clear
-    override val footers = if (isLayout(TV or EMULATOR)) 1 else 0
+    override val footers = 0
 
     override fun onCreateFooter(parent: ViewGroup): ViewHolderState<Boolean> {
         val expanded = parent.context.isBottomLayout()
@@ -69,7 +59,6 @@ class ResumeItemAdapter(
     }
 
     override fun onClearView(holder: ViewHolderState<Boolean>) {
-        // Clear the image, idk if this saves ram or not, but I guess?
         clearImage(holder.view.root.findViewById(R.id.imageView))
     }
 
@@ -85,10 +74,6 @@ class ResumeItemAdapter(
             }
         }
         holder.itemView.apply {
-            if (isLayout(TV)) {
-                isFocusableInTouchMode = true
-                isFocusable = true
-            }
             nextFocusUp?.let {
                 nextFocusUpId = it
             }
@@ -159,8 +144,6 @@ open class HomeChildItemAdapter(
     }
 
     companion object {
-        // The vast majority of the lag comes from creating the view
-        // This simply shares the views between all HomeChildItemAdapter
         val sharedPool =
             newSharedPool { setMaxRecycledViews(CONTENT, 20) }
 
@@ -170,7 +153,6 @@ open class HomeChildItemAdapter(
         fun updatePosterSize(context: Context, value: Int? = null) {
             val scale = value ?: PreferenceManager.getDefaultSharedPreferences(context)
                 ?.getInt(context.getString(R.string.poster_size_key), 0) ?: 0
-            // Scale by +10% per step
             val mul = 1.0f + scale * 0.1f
             minPosterSize = (114.toPx.toFloat() * mul).toInt()
             maxPosterSize = (180.toPx.toFloat() * mul).toInt()
@@ -195,10 +177,6 @@ open class HomeChildItemAdapter(
 
             is HomeResultGridExpandedBinding -> {
                 updateLayoutParms(binding.backgroundCard, setWidth, setHeight)
-
-                if (isFirstItem) { // to fix tv
-                    binding.backgroundCard.nextFocusLeftId = R.id.nav_rail_view
-                }
             }
         }
     }
@@ -212,7 +190,6 @@ open class HomeChildItemAdapter(
 
         SearchResultBuilder.bind(
             clickCallback = { click ->
-                // ok, so here we hijack the callback to fix the focus
                 when (click.action) {
                     SEARCH_ACTION_LOAD -> (holder as? HomeScrollViewHolderState)?.wasFocused = true
                 }

@@ -39,18 +39,8 @@ import com.lagradost.cloudstream3.actions.VideoClickActionHolder
 import com.lagradost.cloudstream3.databinding.ToastBinding
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.syncproviders.AccountManager
-import com.lagradost.cloudstream3.ui.home.HomeChildItemAdapter
-import com.lagradost.cloudstream3.ui.home.ParentItemAdapter
 import com.lagradost.cloudstream3.ui.player.PlayerPipHelper.isPIPPossible
 import com.lagradost.cloudstream3.ui.player.Torrent
-import com.lagradost.cloudstream3.ui.result.ActorAdaptor
-import com.lagradost.cloudstream3.ui.result.EpisodeAdapter
-import com.lagradost.cloudstream3.ui.result.ImageAdapter
-import com.lagradost.cloudstream3.ui.search.SearchAdapter
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.updateTv
-import com.lagradost.cloudstream3.ui.settings.extensions.PluginAdapter
 import com.lagradost.cloudstream3.utils.AppContextUtils.isRtl
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Event
@@ -91,8 +81,6 @@ object CommonActivity {
 
     val displayMetrics: DisplayMetrics = Resources.getSystem().displayMetrics
 
-    // screenWidth and screenHeight does always
-    // refer to the screen while in landscape mode
     val screenWidth: Int
         get() {
             return max(displayMetrics.widthPixels, displayMetrics.heightPixels)
@@ -153,7 +141,6 @@ object CommonActivity {
         }
     }
 
-    /** duration is Toast.LENGTH_SHORT if null*/
     @MainThread
     fun showToast(act: Activity?, @StringRes message: Int, duration: Int? = null) {
         if (act == null) return
@@ -162,7 +149,6 @@ object CommonActivity {
 
     const val TAG = "COMPACT"
 
-    /** duration is Toast.LENGTH_SHORT if null*/
     @MainThread
     fun showToast(act: Activity?, message: String?, duration: Int? = null) {
         if (act == null || message == null) {
@@ -181,20 +167,18 @@ object CommonActivity {
             val binding = ToastBinding.inflate(act.layoutInflater)
             binding.text.text = message.trim()
 
-            // custom toasts are deprecated and won't appear when cs3 sets minSDK to api30 (A11)
             val toast = Toast(act)
             toast.duration = duration ?: Toast.LENGTH_SHORT
             toast.setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, 5.toPx)
             @Suppress("DEPRECATION")
             toast.view =
-                binding.root // FIXME Find an alternative using default Toasts since custom toasts are deprecated and won't appear with api30 set as minSDK version.
+                binding.root
             currentToast = toast
             toast.show()
 
             val handler = Handler(Looper.getMainLooper())
             val ref = WeakReference(toast)
 
-            /* Clean up activity leak */
             handler.postDelayed({
                 if (ref.get() == currentToast) {
                     currentToast = null
@@ -206,17 +190,6 @@ object CommonActivity {
         }
     }
 
-    /**
-     * Set locale
-     * @param languageTag shall a IETF BCP 47 conformant tag.
-     * Check [com.lagradost.cloudstream3.utils.SubtitleHelper].
-     *
-     * See locales on:
-     * https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/availableLocales.json
-     * https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
-     * https://android.googlesource.com/platform/frameworks/base/+/android-16.0.0_r2/core/res/res/values/locale_config.xml
-     * https://iso639-3.sil.org/code_tables/639/data/all
-     */
     fun setLocale(context: Context?, languageTag: String?) {
         val locale = Locale.ENGLISH
         val resources: Resources = context?.resources ?: return
@@ -244,7 +217,6 @@ object CommonActivity {
         val componentActivity = activity as? ComponentActivity ?: return
 
         componentActivity.updateLocale()
-        componentActivity.updateTv()
         AccountManager.initMainAPI()
         NewPipe.init(DownloaderTestImpl.getInstance())
 
@@ -262,7 +234,6 @@ object CommonActivity {
                 }
             }
 
-        // Ask for notification permissions on Android 13
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(
                 componentActivity,
@@ -280,7 +251,6 @@ object CommonActivity {
         }
     }
 
-    /** Enters pip mode if it is both possible and desired to do so*/
     private fun Activity.enterPIPMode() {
         if (!isPipDesired || !this.isPIPPossible()) return
 
@@ -289,7 +259,6 @@ object CommonActivity {
                 try {
                     enterPictureInPictureMode(PictureInPictureParams.Builder().build())
                 } catch (_: Exception) {
-                    // Use fallback just in case
                     @Suppress("DEPRECATION")
                     enterPictureInPictureMode()
                 }
@@ -305,7 +274,6 @@ object CommonActivity {
     }
 
     fun onUserLeaveHint(act: Activity) {
-        // On Android 12 and later we use setAutoEnterEnabled() instead.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) return
         act.enterPIPMode()
     }
@@ -325,8 +293,8 @@ object CommonActivity {
             val currentNightMode =
                 act.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
             return when (currentNightMode) {
-                Configuration.UI_MODE_NIGHT_NO -> R.style.LightMode // Night mode is not active, we're using the light theme
-                else -> R.style.AppTheme // Night mode is active, we're using dark theme
+                Configuration.UI_MODE_NIGHT_NO -> R.style.LightMode
+                else -> R.style.AppTheme
             }
         } else {
             return R.style.AppTheme
@@ -342,30 +310,18 @@ object CommonActivity {
         act.theme.applyStyle(
             R.style.LoadedStyle,
             true
-        ) // THEME IS SET BEFORE VIEW IS CREATED TO APPLY THE THEME TO THE MAIN VIEW
+        )
     }
 
-    /** because we want closes find, aka when multiple have the same id, we go to parent
-    until the correct one is found */
     private fun localLook(from: View, id: Int): View? {
         if (id == NO_ID) return null
         var currentLook: View = from
-        // limit to 15 look depth
         for (i in 0..15) {
             currentLook.findViewById<View?>(id)?.let { return it }
             currentLook = (currentLook.parent as? View) ?: break
         }
         return null
     }
-    /*var currentLook: View = view
-    while (true) {
-        val tmpNext = currentLook.findViewById<View?>(nextId)
-        if (tmpNext != null) {
-            next = tmpNext
-            break
-        }
-        currentLook = currentLook.parent as? View ?: break
-    }*/
 
     private fun View.hasContent(): Boolean {
         return isShown && when (this) {
@@ -374,7 +330,6 @@ object CommonActivity {
         }
     }
 
-    /** skips the initial stage of searching for an id using the view, see getNextFocus for specification */
     fun continueGetNextFocus(
         root: Any?,
         view: View,
@@ -384,8 +339,6 @@ object CommonActivity {
     ): View? {
         if (nextId == NO_ID) return null
 
-        // do an initial search for the view, in case the localLook is too deep we can use this as
-        // an early break and backup view
         var next =
             when (root) {
                 is Activity -> root.findViewById(nextId)
@@ -396,16 +349,12 @@ object CommonActivity {
         next = localLook(view, nextId) ?: next
         val shown = next.hasContent()
 
-        // if cant focus but visible then break and let android decide
-        // the exception if is the view is a parent and has children that wants focus
         val hasChildrenThatWantsFocus = (next as? ViewGroup)?.let { parent ->
             parent.descendantFocusability == ViewGroup.FOCUS_AFTER_DESCENDANTS && parent.isNotEmpty()
         } ?: false
         if (!next.isFocusable && shown && !hasChildrenThatWantsFocus) return null
 
-        // if not shown then continue because we will "skip" over views to get to a replacement
         if (!shown) {
-            // we don't want a while true loop, so we let android decide if we find a recursive view
             if (next == view) return null
             return getNextFocus(root, next, direction, depth + 1)
         }
@@ -424,20 +373,15 @@ object CommonActivity {
             return it
         }
 
-        // nothing wrong with the view found, return it
         return next
     }
 
-    /** recursively looks for a next focus up to a depth of 10,
-     * this is used to override the normal shit focus system
-     * because this application has a lot of invisible views that messes with some tv devices*/
     fun getNextFocus(
         root: Any?,
         view: View?,
         direction: FocusDirection,
         depth: Int = 0
     ): View? {
-        // if input is invalid let android decide + depth test to not crash if loop is found
         if (view == null || depth >= 10 || root == null) {
             return null
         }
@@ -467,9 +411,7 @@ object CommonActivity {
         }
 
         if (nextId == NO_ID) {
-            // if not specified then use forward id
             nextId = view.nextFocusForwardId
-            // if view is still not found to next focus then return and let android decide
             if (nextId == NO_ID)
                 return null
         }
@@ -481,7 +423,6 @@ object CommonActivity {
         return null
     }
 
-    /** overrides focus and custom key events */
     fun dispatchKeyEvent(act: Activity?, event: KeyEvent?): Boolean? {
         if (act == null) return null
         val currentFocus = act.currentFocus
@@ -516,34 +457,20 @@ object CommonActivity {
                 else -> null
             }
 
-            // println("NEXT FOCUS : $nextView")
             if (nextView != null) {
                 nextView.requestFocus()
                 keyEventListener?.invoke(Pair(event, true))
                 return true
             }
 
-            // TODO: Figure out why removing the check for SearchAutoComplete seems
-            // to break focus on TV as it shouldn't need to be used.
-            // Also handle KEYCODE_ENTER here because some remotes (e.g. LG Magic Remote)
-            // send KEYCODE_ENTER instead of KEYCODE_DPAD_CENTER when clicking the OK button.
             @SuppressLint("RestrictedApi")
             if ((keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) &&
                 (act.currentFocus is SearchView || act.currentFocus is SearchView.SearchAutoComplete)
             ) {
                 showInputMethod(act.currentFocus?.findFocus())
             }
-
-            //println("Keycode: $keyCode")
-            //showToast(
-            //    this,
-            //    "Got Keycode $keyCode | ${KeyEvent.keyCodeToString(keyCode)} \n ${event?.action}",
-            //    Toast.LENGTH_LONG
-            //)
         }
 
-        // if someone else want to override the focus then don't handle the event as it is already
-        // consumed. used in video player
         if (keyEventListener?.invoke(Pair(event, false)) == true) {
             return true
         }

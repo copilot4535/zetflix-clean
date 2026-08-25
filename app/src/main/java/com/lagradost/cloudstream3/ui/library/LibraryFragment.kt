@@ -64,9 +64,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     companion object {
         fun newInstance() = LibraryFragment()
 
-        /**
-         * Store which page was last seen when exiting the fragment and returning
-         **/
         const val VIEWPAGER_ITEM_KEY = "viewpager_item"
     }
 
@@ -74,8 +71,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
     private var toggleRandomButton = false
 
-    override fun pickLayout(): Int? =
-        if (isLayout(PHONE)) R.layout.fragment_library else R.layout.fragment_library_tv
+    override fun pickLayout(): Int = R.layout.fragment_library
 
     override fun onSaveInstanceState(outState: Bundle) {
         binding?.viewpager?.currentItem?.let { currentItem ->
@@ -87,23 +83,20 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     private fun updateRandomVisibility(binding: FragmentLibraryBinding) {
         if (!toggleRandomButton) {
             binding.libraryRandom.isGone = true
-            binding.libraryRandomButtonTv.isGone = true
             return
         }
         val position = libraryViewModel.currentPage.value ?: 0
         val pages = (libraryViewModel.pages.value as? Resource.Success)?.value ?: return
         val hasItems = pages[position].items.isNotEmpty()
-        val isPhone = isLayout(PHONE)
 
-        binding.libraryRandom.isVisible = isPhone && hasItems
-        binding.libraryRandomButtonTv.isVisible = !isPhone && hasItems
+        binding.libraryRandom.isVisible = hasItems
     }
 
     override fun fixLayout(view: View) {
         fixSystemBarsPadding(
             view,
             padBottom = isLandscape(),
-            padLeft = !isLayout(PHONE)
+            padLeft = isLayout(PHONE)
         )
     }
 
@@ -117,8 +110,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
         binding.libraryRoot.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
             ?.apply {
-                tag = "tv_no_focus_tag"
-                // Expand the Appbar when search bar is focused, fixing scroll up issue
                 setOnFocusChangeListener { _, _ ->
                     binding.searchBar.setExpanded(true)
                 }
@@ -135,9 +126,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 return true
             }
 
-            // This is required to prevent the first text change
-            // When this is attached it'll immediately send a onQueryTextChange("")
-            // Which we do not want
             var hasInitialized = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (!hasInitialized) {
@@ -147,8 +135,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
 
                 binding.mainSearch.removeCallbacks(searchCallback)
 
-                // Delay the execution of the search operation by 1 second (adjust as needed)
-                // this prevents running search when the user is typing
                 binding.mainSearch.postDelayed(searchCallback, 1000)
 
                 return true
@@ -172,7 +158,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
             }
         }
 
-        //Load value for toggling Random button. Hide at startup
         context?.let {
             val settingsManager = PreferenceManager.getDefaultSharedPreferences(it)
             toggleRandomButton =
@@ -181,7 +166,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                     false
                 )
             binding.libraryRandom.visibility = View.GONE
-            binding.libraryRandomButtonTv.visibility = View.GONE
         }
 
         binding.viewpager.setPageTransformer(LibraryScrollTransformer())
@@ -196,7 +180,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                     binding.libraryRandom.extend()
                 }
             }) callback@{ searchClickCallback ->
-            // To prevent future accidents
             debugAssert({
                 searchClickCallback.card !is SyncAPI.LibraryItem
             }, {
@@ -266,24 +249,12 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                                 items = CopyOnWriteArrayList(it.items)
                             )
                         })
-                        //fix focus on the viewpager itself
-                        (viewpager.getChildAt(0) as RecyclerView).apply {
-                            tag = "tv_no_focus_tag"
-                            //isFocusable = false
-                        }
-
-                        // Using notifyItemRangeChanged keeps the animations when sorting
-                        /*viewpager.adapter?.notifyItemRangeChanged(
-                            0,
-                            viewpager.adapter?.itemCount ?: 0
-                        )*/
 
                         libraryViewModel.currentPage.value?.let { page ->
                             binding.viewpager.setCurrentItem(page, false)
                             binding.searchBar.setExpanded(true)
                         }
 
-                        // Set up random button click listener
                         if (toggleRandomButton) {
                             val randomClickListener = View.OnClickListener {
                                 val position = libraryViewModel.currentPage.value ?: 0
@@ -292,24 +263,17 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                                 }
                             }
                             libraryRandom.setOnClickListener(randomClickListener)
-                            libraryRandomButtonTv.setOnClickListener(randomClickListener)
                         }
                         updateRandomVisibility(binding)
 
-                        // Only stop loading after 300ms to hide the fade effect the viewpager produces when updating
-                        // Without this there would be a flashing effect:
-                        // loading -> show old viewpager -> black screen -> show new viewpager
                         handler.postDelayed(stopLoading, 300)
 
                         savedInstanceState?.getInt(VIEWPAGER_ITEM_KEY)?.let { currentPos ->
                             if (currentPos < 0) return@let
                             viewpager.setCurrentItem(currentPos, false)
-                            // Using remove() sets the key to 0 instead of removing it
                             savedInstanceState.putInt(VIEWPAGER_ITEM_KEY, -1)
                         }
 
-                        // Since the animation to scroll multiple items is so much its better to just hide
-                        // the viewpager a bit while the fastest animation is running
                         fun hideViewpager(distance: Int) {
                             if (distance < 3) return
 
@@ -331,15 +295,12 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                             viewpager,
                         ) { tab, position ->
                             tab.text = pages.getOrNull(position)?.title?.asStringNull(context)
-                            tab.view.tag = "tv_no_focus_tag"
-                            tab.view.nextFocusDownId = R.id.search_result_root
 
                             tab.view.setOnClickListener {
                                 val currentItem = binding.viewpager.currentItem
                                 val distance = abs(position - currentItem)
                                 hideViewpager(distance)
                             }
-                            //Expand the appBar on tab focus
                             tab.view.setOnFocusChangeListener { _, _ ->
                                 binding.searchBar.setExpanded(true)
                             }
@@ -360,14 +321,11 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                 }
 
                 is Resource.Loading -> {
-                    // Only start loading after 200ms to prevent loading cached lists
                     handler.postDelayed(startLoading, 200)
                 }
 
                 is Resource.Failure -> {
                     stopLoading.run()
-                    // No user indication it failed :(
-                    // TODO
                 }
             }
         }

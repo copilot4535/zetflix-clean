@@ -58,9 +58,7 @@ import com.lagradost.cloudstream3.ui.home.ParentItemAdapter
 import com.lagradost.cloudstream3.ui.result.FOCUS_SELF
 import com.lagradost.cloudstream3.ui.result.setLinearListLayout
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
@@ -125,8 +123,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
             }
         }
 
-    override fun pickLayout(): Int? =
-        if (isLayout(TV or EMULATOR)) R.layout.fragment_search_tv else R.layout.fragment_search
+    override fun pickLayout(): Int = R.layout.fragment_search
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -160,14 +157,8 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
     var selectedSearchTypes = mutableListOf<TvType>()
     var selectedApis = mutableSetOf<String>()
 
-    /**
-     * Will filter all providers by preferred media and selectedSearchTypes.
-     * If that results in no available providers then only filter
-     * providers by preferred media
-     **/
     fun search(query: String?) {
         if (query == null) return
-        // don't resume state from prev search
         (binding?.searchMasterRecycler?.adapter as? BaseAdapter<*, *>)?.clearState()
         context?.let { ctx ->
             val default = enumValues<TvType>().sorted().filter { it != TvType.NSFW }
@@ -196,9 +187,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         }
     }
 
-    // Null if defined as a variable
-    // This needs to be run after view created
-
     private fun reloadRepos(success: Boolean = false) = main {
         searchViewModel.reloadRepos()
         context?.filterProviderByPreferredMedia()?.let { validAPIs ->
@@ -221,10 +209,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         fixSystemBarsPadding(
             view,
             padBottom = isLandscape(),
-            padLeft = isLayout(TV or EMULATOR)
+            padLeft = isLayout(PHONE)
         )
 
-        // Fix grid
         currentSpan = view.context.getSpanCount()
         binding?.searchAutofitResults?.spanCount = currentSpan
         HomeFragment.configEvent.invoke()
@@ -243,8 +230,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                     SearchHelper.handleSearchClickCallback(callback)
                 }
 
-            searchRoot.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)?.tag =
-                "tv_no_focus_tag"
             searchAutofitResults.setRecycledViewPool(SearchAdapter.sharedPool)
             searchAutofitResults.adapter = adapter
             searchLoadingBar.alpha = 0f
@@ -270,7 +255,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                         speechRecognizerLauncher.launch(intent)
                     }
                 } catch (_: Throwable) {
-                    // launch may throw
                     showToast(R.string.speech_recognition_unavailable)
                 }
             }
@@ -281,149 +265,15 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
 
         selectedApis = DataStoreHelper.searchPreferenceProviders.toMutableSet()
 
-        /*
-        binding.searchFilter.setOnClickListener { searchView ->
-            searchView?.context?.let { ctx ->
-                val validAPIs = ctx.filterProviderByPreferredMedia(hasHomePageIsRequired = false)
-                var currentValidApis = listOf<MainAPI>()
-                val currentSelectedApis = if (selectedApis.isEmpty()) validAPIs.map { it.name }
-                    .toMutableSet() else selectedApis
-
-                val builder =
-                    BottomSheetDialog(ctx)
-
-                builder.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-
-                val selectMainpageBinding: HomeSelectMainpageBinding =
-                    HomeSelectMainpageBinding.inflate(
-                        builder.layoutInflater,
-                        null,
-                        false
-                    )
-                builder.setContentView(selectMainpageBinding.root)
-                builder.show()
-                builder.let { dialog ->
-                    val previousSelectedApis = selectedApis.toSet()
-                    val previousSelectedSearchTypes = selectedSearchTypes.toSet()
-
-                    val isMultiLang = ctx.getApiProviderLangSettings().let { set ->
-                        set.size > 1 || set.contains(AllLanguagesName)
-                    }
-
-                    val cancelBtt = dialog.findViewById<MaterialButton>(R.id.cancel_btt)
-                    val applyBtt = dialog.findViewById<MaterialButton>(R.id.apply_btt)
-
-                    val listView = dialog.findViewById<ListView>(R.id.listview1)
-                    val arrayAdapter = ArrayAdapter<String>(ctx, R.layout.sort_bottom_single_choice)
-                    listView?.adapter = arrayAdapter
-                    listView?.choiceMode = AbsListView.CHOICE_MODE_MULTIPLE
-
-                    listView?.setOnItemClickListener { _, _, i, _ ->
-                        if (currentValidApis.isNotEmpty()) {
-                            val api = currentValidApis[i].name
-                            if (currentSelectedApis.contains(api)) {
-                                listView.setItemChecked(i, false)
-                                currentSelectedApis -= api
-                            } else {
-                                listView.setItemChecked(i, true)
-                                currentSelectedApis += api
-                            }
-                        }
-                    }
-
-                    fun updateList(types: List<TvType>) {
-                        DataStoreHelper.searchPreferenceTags = types
-
-                        arrayAdapter.clear()
-                        currentValidApis = validAPIs.filter { api ->
-                            api.supportedTypes.any {
-                                types.contains(it)
-                            }
-                        }.sortedBy { it.name.lowercase() }
-
-                        val names = currentValidApis.map {
-                            if (isMultiLang) "${
-                                SubtitleHelper.getFlagFromIso(
-                                    it.lang
-                                )?.plus(" ") ?: ""
-                            }${it.name}" else it.name
-                        }
-                        for ((index, api) in currentValidApis.map { it.name }.withIndex()) {
-                            listView?.setItemChecked(index, currentSelectedApis.contains(api))
-                        }
-
-                        //arrayAdapter.notifyDataSetChanged()
-                        arrayAdapter.addAll(names)
-                        arrayAdapter.notifyDataSetChanged()
-                    }
-
-                    bindChips(
-                        selectMainpageBinding.tvtypesChipsScroll.tvtypesChips,
-                        selectedSearchTypes,
-                        validAPIs.flatMap { api -> api.supportedTypes }.distinct()
-                    ) { list ->
-                        updateList(list)
-
-                        // refresh selected chips in main chips
-                        if (selectedSearchTypes.toSet() != list.toSet()) {
-                            selectedSearchTypes.clear()
-                            selectedSearchTypes.addAll(list)
-                            updateChips(
-                                binding.tvtypesChipsScroll.tvtypesChips,
-                                selectedSearchTypes
-                            )
-
-                        }
-                    }
-
-
-                    cancelBtt?.setOnClickListener {
-                        dialog.dismissSafe()
-                    }
-
-                    cancelBtt?.setOnClickListener {
-                        dialog.dismissSafe()
-                    }
-
-                    applyBtt?.setOnClickListener {
-                        //if (currentApiName != selectedApiName) {
-                        //    currentApiName?.let(callback)
-                        //}
-                        dialog.dismissSafe()
-                    }
-
-                    dialog.setOnDismissListener {
-                        DataStoreHelper.searchPreferenceProviders = currentSelectedApis.toList()
-                        selectedApis = currentSelectedApis
-
-                        // run search when dialog is close
-                        if (previousSelectedApis != selectedApis.toSet() || previousSelectedSearchTypes != selectedSearchTypes.toSet()) {
-                            search(binding.mainSearch.query.toString())
-                        }
-                    }
-                    updateList(selectedSearchTypes.toList())
-                }
-            }
-        }
-        */
-
         val settingsManager = context?.let { PreferenceManager.getDefaultSharedPreferences(it) }
         val isAdvancedSearch = settingsManager?.getBoolean("advanced_search", true) ?: true
         val isSearchSuggestionsEnabled = settingsManager?.getBoolean("search_suggestions_enabled", true) ?: true
 
         selectedSearchTypes = DataStoreHelper.searchPreferenceTags.toMutableList()
 
-        if (!isLayout(PHONE)) {
-            binding.searchFilter.isFocusable = true
-            binding.searchFilter.isFocusableInTouchMode = true
-        }
-
-        // Hide suggestions when search view loses focus (phone only)
-        if (isLayout(PHONE)) {
-            binding.mainSearch.setOnQueryTextFocusChangeListener { _, hasFocus ->
-                if (!hasFocus) {
-                    searchViewModel.clearSuggestions()
-                }
+        binding.mainSearch.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                searchViewModel.clearSuggestions()
             }
         }
 
@@ -441,14 +291,12 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                //searchViewModel.quickSearch(newText)
                 val showHistory = newText.isBlank()
                 if (showHistory) {
                     searchViewModel.clearSearch()
                     searchViewModel.updateHistory()
                     searchViewModel.clearSuggestions()
                 } else {
-                    // Fetch suggestions when user is typing (if enabled)
                     if (isSearchSuggestionsEnabled) {
                         searchViewModel.fetchSuggestions(newText)
                     }
@@ -457,7 +305,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                     searchHistoryRecycler.isVisible = showHistory
                     searchMasterRecycler.isVisible = !showHistory && isAdvancedSearch
                     searchAutofitResults.isVisible = !showHistory && !isAdvancedSearch
-                    // Hide suggestions when showing history or showing search results
                     searchSuggestionsRecycler.isVisible = !showHistory && isSearchSuggestionsEnabled
                 }
 
@@ -481,7 +328,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                 }
 
                 is Resource.Failure -> {
-                    // Toast.makeText(activity, "Server error", Toast.LENGTH_LONG).show()
                     searchExitIcon?.alpha = 1f
                     binding.searchLoadingBar.alpha = 0f
                 }
@@ -496,7 +342,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         val listLock = ReentrantLock()
         observe(searchViewModel.currentSearch) { list ->
             try {
-                // https://stackoverflow.com/questions/6866238/concurrent-modification-exception-adding-to-an-arraylist
                 listLock.lock()
 
                 val pinnedOrder = DataStoreHelper.pinnedProviders.reversedArray()
@@ -525,7 +370,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                     }
 
                     submitList(newItems)
-                    //notifyDataSetChanged()
                 }
             } catch (e: Exception) {
                 logError(e)
@@ -533,15 +377,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                 listLock.unlock()
             }
         }
-
-
-        /*main_search.setOnQueryTextFocusChangeListener { _, b ->
-            if (b) {
-                // https://stackoverflow.com/questions/12022715/unable-to-show-keyboard-automatically-in-the-searchview
-                showInputMethod(view.findFocus())
-            }
-        }*/
-        //main_search.onActionViewExpanded()*/
 
         val masterAdapter =
             ParentItemAdapter(id = "masterAdapter".hashCode(), { callback ->
@@ -577,7 +412,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                 }
 
                 SEARCH_HISTORY_CLEAR -> {
-                    // Show confirmation dialog (from footer button)
                     activity?.let { ctx ->
                         val builder: AlertDialog.Builder = AlertDialog.Builder(ctx)
                         val dialogClickListener =
@@ -609,7 +443,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                 }
 
                 else -> {
-                    // wth are you doing???
                 }
             }
         }
@@ -617,16 +450,13 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         val suggestionAdapter = SearchSuggestionAdapter { callback ->
             when (callback.clickAction) {
                 SEARCH_SUGGESTION_CLICK -> {
-                    // Search directly
                     binding.mainSearch.setQuery(callback.suggestion, true)
                     searchViewModel.clearSuggestions()
                 }
                 SEARCH_SUGGESTION_FILL -> {
-                    // Fill the search box without searching
                     binding.mainSearch.setQuery(callback.suggestion, false)
                 }
                 SEARCH_SUGGESTION_CLEAR -> {
-                    // Clear suggestions (from footer button)
                     searchViewModel.clearSuggestions()
                 }
             }
@@ -635,19 +465,15 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         binding.apply {
             searchHistoryRecycler.adapter = historyAdapter
             searchHistoryRecycler.setLinearListLayout(isHorizontal = false, nextRight = FOCUS_SELF)
-            //searchHistoryRecycler.layoutManager = GridLayoutManager(context, 1)
 
-            // Setup suggestions RecyclerView
             searchSuggestionsRecycler.adapter = suggestionAdapter
             searchSuggestionsRecycler.layoutManager = LinearLayoutManager(context)
 
             searchMasterRecycler.setRecycledViewPool(ParentItemAdapter.sharedPool)
             searchMasterRecycler.adapter = masterAdapter
-            //searchMasterRecycler.setLinearListLayout(isHorizontal = false, nextRight = FOCUS_SELF)
 
             searchMasterRecycler.layoutManager = GridLayoutManager(context, 1)
 
-            // Automatically search the specified query, this allows the app search to launch from intent
             var sq =
                 arguments?.getString(SEARCH_QUERY) ?: savedInstanceState?.getString(SEARCH_QUERY)
             if (sq.isNullOrBlank()) {
@@ -657,11 +483,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
             sq?.let { query ->
                 if (query.isBlank()) return@let
 
-                // Queries are dropped if you are submitted before layout finishes
                 mainSearch.doOnLayout {
                     mainSearch.setQuery(query, true)
                 }
-                // Clear the query as to not make it request the same query every time the page is opened
                 arguments?.remove(SEARCH_QUERY)
                 savedInstanceState?.remove(SEARCH_QUERY)
                 MainActivity.nextSearchQuery = null
@@ -670,33 +494,15 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
 
         observe(searchViewModel.currentHistory) { list ->
             (binding.searchHistoryRecycler.adapter as? SearchHistoryAdaptor?)?.submitList(list)
-             // Scroll to top to show newest items (list is sorted by newest first)
             if (list.isNotEmpty()) {
                 binding.searchHistoryRecycler.scrollToPosition(0)
             }
         }
 
-        // Observe search suggestions
         observe(searchViewModel.searchSuggestions) { suggestions ->
             val hasSuggestions = suggestions.isNotEmpty()
             binding.searchSuggestionsRecycler.isVisible = hasSuggestions
             (binding.searchSuggestionsRecycler.adapter as? SearchSuggestionAdapter?)?.submitList(suggestions)
-
-            // On non-phone layouts, redirect focus and handle back button
-            if (!isLayout(PHONE)) {
-                if (hasSuggestions) {
-                    binding.tvtypesChipsScroll.tvtypesChips.root.nextFocusDownId = R.id.search_suggestions_recycler
-                    // Attach back button callback to clear suggestions
-                    activity?.attachBackPressedCallback("SearchFragment") {
-                        searchViewModel.clearSuggestions()
-                    }
-                } else {
-                    // Reset to default focus target (history)
-                    binding.tvtypesChipsScroll.tvtypesChips.root.nextFocusDownId = R.id.search_history_recycler
-                    // Detach back button callback when no suggestions
-                    activity?.detachBackPressedCallback("SearchFragment")
-                }
-            }
         }
 
         searchViewModel.updateHistory()

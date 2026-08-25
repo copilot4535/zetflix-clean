@@ -6,10 +6,7 @@ import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.doOnAttach
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView.OnFlingListener
-import com.google.android.material.appbar.AppBarLayout
-import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.LibraryViewpagerPageBinding
 import com.lagradost.cloudstream3.syncproviders.SyncAPI
 import com.lagradost.cloudstream3.ui.BaseAdapter
@@ -17,9 +14,6 @@ import com.lagradost.cloudstream3.ui.BaseDiffCallback
 import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.home.getSafeParcelable
 import com.lagradost.cloudstream3.ui.search.SearchClickCallback
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.UIHelper.getSpanCount
 
 class ViewpagerAdapterViewHolderState(val binding: LibraryViewpagerPageBinding) :
@@ -77,10 +71,7 @@ class ViewpagerAdapter(
         binding.pageRecyclerview.tag = position
         binding.pageRecyclerview.apply {
             spanCount = binding.root.context.getSpanCount()
-            if (adapter == null) { //  || rebind
-                // Only add the items after it has been attached since the items rely on ItemWidth
-                // Which is only determined after the recyclerview is attached.
-                // If this fails then item height becomes 0 when there is only one item
+            if (adapter == null) {
                 doOnAttach {
                     adapter = PageAdapter(
                         this,
@@ -91,23 +82,11 @@ class ViewpagerAdapter(
                 }
             } else {
                 (adapter as? PageAdapter)?.submitList(item.items)
-                // scrollToPosition(0)
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
                     val diff = scrollY - oldScrollY
-
-                    //Expand the top Appbar based on scroll direction up/down, simulate phone behavior
-                    if (isLayout(TV or EMULATOR)) {
-                        binding.root.rootView.findViewById<AppBarLayout>(R.id.search_bar)
-                            ?.apply {
-                                if (diff <= 0)
-                                    setExpanded(true)
-                                else
-                                    setExpanded(false)
-                            }
-                    }
                     if (diff == 0) return@setOnScrollChangeListener
 
                     scrollCallback.invoke(diff > 0)

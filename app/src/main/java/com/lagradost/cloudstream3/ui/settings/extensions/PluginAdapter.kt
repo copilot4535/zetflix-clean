@@ -20,8 +20,6 @@ import com.lagradost.cloudstream3.ui.BaseDiffCallback
 import com.lagradost.cloudstream3.ui.NoStateAdapter
 import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.newSharedPool
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.html
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.SubtitleHelper.getNameNextToFlagEmoji
@@ -50,11 +48,11 @@ class PluginAdapter(
     a.pluginWrapper.plugin.internalName == b.pluginWrapper.plugin.internalName && a.pluginWrapper.repositoryData.url == b.pluginWrapper.repositoryData.url
 })) {
     override fun onCreateContent(parent: ViewGroup): ViewHolderState<Any> {
-        val layout = if (isLayout(TV)) R.layout.repository_item_tv else R.layout.repository_item
+        val layout = R.layout.repository_item
         val inflated = LayoutInflater.from(parent.context).inflate(layout, parent, false)
 
         return RepositoryViewHolderState(
-            RepositoryItemBinding.bind(inflated) // may crash
+            RepositoryItemBinding.bind(inflated)
         )
     }
 
@@ -107,14 +105,6 @@ class PluginAdapter(
             val activity = itemView.context.getActivity() as AppCompatActivity
             sheet.show(activity.supportFragmentManager, "PluginDetails")
         }
-        //if (itemView.context?.isTrueTvSettings() == false) {
-        //    val siteUrl = metadata.repositoryUrl
-        //    if (siteUrl != null && siteUrl.isNotBlank() && siteUrl != "NONE") {
-        //        itemView.setOnClickListener {
-        //            openBrowser(siteUrl)
-        //        }
-        //    }
-        //}
 
         if (item.isDownloaded) {
             // On local plugins page the filepath is provided instead of url.
@@ -169,25 +159,7 @@ class PluginAdapter(
             binding.langIcon.text = getNameNextToFlagEmoji(metadata.language) ?: metadata.language
         }
 
-        //val oldRecycleCount = (holder as? RepositoryViewHolderState)?.recycleCount
-
         binding.extVotes.isVisible = false
-
-        // Disable this for now as the vote api is down, this will also significantly improve the lag
-        // from doing all these network requests
-        /*if (!isLocal) {
-            ioSafe {
-                metadata.getVotes().main { votes ->
-                    val currentRecycleCount = (holder as? RepositoryViewHolderState)?.recycleCount
-
-                    // Only set the text if the view is correctly rendered
-                    if (currentRecycleCount == oldRecycleCount) {
-                        binding.extVotes.setText(txt(R.string.extension_rating, prettyCount(votes)))
-                        binding.extVotes.isVisible = true
-                    }
-                }
-            }
-        }*/
 
         if (metadata.fileSize != null) {
             binding.extFilesize.isVisible = true
@@ -217,17 +189,6 @@ class PluginAdapter(
             if (current >= target) return current
             return findClosestBase2(target, current * 2, max)
         }
-
-        // DO NOT MOVE, as running this test will result in ExceptionInInitializerError on prerelease due to static variables using Resources.getSystem()
-        // this test function is only to show how the function works
-        /*@Test
-        fun testFindClosestBase2() {
-            Assert.assertEquals(16, findClosestBase2(0))
-            Assert.assertEquals(256, findClosestBase2(170))
-            Assert.assertEquals(256, findClosestBase2(256))
-            Assert.assertEquals(512, findClosestBase2(257))
-            Assert.assertEquals(512, findClosestBase2(700))
-        }*/
 
         private val iconSizeExact = 32.toPx
         private val iconSize by lazy {

@@ -8,9 +8,6 @@ import com.lagradost.cloudstream3.databinding.SearchSuggestionItemBinding
 import com.lagradost.cloudstream3.ui.BaseDiffCallback
 import com.lagradost.cloudstream3.ui.NoStateAdapter
 import com.lagradost.cloudstream3.ui.ViewHolderState
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 
 const val SEARCH_SUGGESTION_CLICK = 0
 const val SEARCH_SUGGESTION_FILL = 1
@@ -73,10 +70,6 @@ class SearchSuggestionAdapter(
         val binding = holder.view as? SearchSuggestionFooterBinding ?: return
         binding.clearSuggestionsButton.apply {
             isGone = immutableCurrentList.isEmpty()
-            if (isLayout(TV or EMULATOR)) {
-                isFocusable = true
-                isFocusableInTouchMode = true
-            }
             setOnClickListener {
                 clickCallback.invoke(SearchSuggestionCallback("", SEARCH_SUGGESTION_CLEAR))
             }

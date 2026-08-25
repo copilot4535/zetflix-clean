@@ -1,7 +1,6 @@
 package com.lagradost.cloudstream3.ui.download
 
 import android.app.Activity
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -15,8 +14,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.activityViewModels
+import androidx.preference.PreferenceManager
 import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentDownloadsBinding
@@ -31,21 +30,15 @@ import com.lagradost.cloudstream3.ui.download.queue.DownloadQueueViewModel
 import com.lagradost.cloudstream3.ui.player.OfflinePlaybackHelper.playUri
 import com.lagradost.cloudstream3.ui.result.FOCUS_SELF
 import com.lagradost.cloudstream3.ui.result.setLinearListLayout
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.loadResult
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPressedCallback
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPressedCallback
 import com.lagradost.cloudstream3.utils.DOWNLOAD_EPISODE_CACHE
 import com.lagradost.cloudstream3.utils.DataStore.getFolderName
-import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
-import com.lagradost.cloudstream3.utils.UIHelper.setAppBarNoScrollFlagsOnTV
-import java.net.URI
 
 const val DOWNLOAD_NAVIGATE_TO = "downloadpage"
 
@@ -60,7 +53,7 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
         val param = LinearLayout.LayoutParams(
             0,
             LinearLayout.LayoutParams.MATCH_PARENT,
-            maxOf((weight / 1000000000f), 0.1f) // 100mb
+            maxOf((weight / 1000000000f), 0.1f)
         )
         this.layoutParams = param
     }
@@ -73,15 +66,12 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
     override fun fixLayout(view: View) {
         fixSystemBarsPadding(
             view,
-            padBottom = isLandscape(),
-            padLeft = isLayout(TV or EMULATOR)
+            padBottom = isLandscape()
         )
     }
 
     override fun onBindingCreated(binding: FragmentDownloadsBinding) {
         hideKeyboard()
-        binding.downloadAppbar.setAppBarNoScrollFlagsOnTV()
-        binding.downloadDeleteAppbar.setAppBarNoScrollFlagsOnTV()
 
         observe(downloadViewModel.headerCards) { cards ->
             when (cards) {
@@ -226,21 +216,10 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
         }
 
         binding.apply {
-            openLocalVideoButton.apply {
-                isGone = isLayout(TV)
-                setOnClickListener { openLocalVideo() }
-            }
+            openLocalVideoButton.setOnClickListener { openLocalVideo() }
 
             downloadQueueButton.setOnClickListener {
                 activity?.navigate(R.id.action_navigation_global_to_navigation_download_queue)
-            }
-
-            downloadAppbar.isFocusableInTouchMode = isLayout(TV)
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.downloadList.setOnScrollChangeListener { _, _, _, _, _ ->
-                // handleScroll(scrollY - oldScrollY)
             }
         }
 
@@ -291,7 +270,7 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
             .setAction(Intent.ACTION_GET_CONTENT)
             .setType("video/*")
             .addCategory(Intent.CATEGORY_OPENABLE)
-            .addFlags(FLAG_GRANT_READ_URI_PERMISSION) // Request temporary access
+            .addFlags(FLAG_GRANT_READ_URI_PERMISSION)
         safe {
             videoResultLauncher.launch(
                 Intent.createChooser(
@@ -302,70 +281,6 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
         }
     }
 
-    /*
-    private fun showStreamInputDialog(context: Context) {
-        val dialog = Dialog(context, R.style.AlertDialogCustom)
-        val binding = StreamInputBinding.inflate(dialog.layoutInflater)
-        dialog.setContentView(binding.root)
-        dialog.show()
-
-        var preventAutoSwitching = false
-        binding.hlsSwitch.setOnClickListener { preventAutoSwitching = true }
-
-        binding.streamReferer.doOnTextChanged { text, _, _, _ ->
-            if (!preventAutoSwitching) activateSwitchOnHls(text?.toString(), binding)
-        }
-
-        (activity?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)?.primaryClip?.getItemAt(
-            0
-        )?.text?.toString()?.let { copy ->
-            val fixedText = copy.trim()
-            binding.streamUrl.setText(fixedText)
-            activateSwitchOnHls(fixedText, binding)
-        }
-
-        binding.applyBtt.setOnClickListener {
-            val url = binding.streamUrl.text?.toString()
-            if (url.isNullOrEmpty()) {
-                showToast(R.string.error_invalid_url, Toast.LENGTH_SHORT)
-            } else {
-                val referer = binding.streamReferer.text?.toString()
-                activity?.navigate(
-                    R.id.global_to_navigation_player,
-                    GeneratorPlayer.newInstance(
-                        LinkGenerator(
-                            listOf(BasicLink(url)),
-                            extract = true,
-                            refererUrl = referer,
-                            id = url.hashCode()
-                        ), 0
-                    )
-                )
-                dialog.dismissSafe(activity)
-            }
-        }
-
-        binding.cancelBtt.setOnClickListener {
-            dialog.dismissSafe(activity)
-        }
-    }
-
-    private fun activateSwitchOnHls(text: String?, binding: StreamInputBinding) {
-        binding.hlsSwitch.isChecked = safe {
-            URI(text).path?.substringAfterLast(".")?.contains("m3u")
-        } == true
-    }
-
-    private fun handleScroll(dy: Int) {
-        if (dy > 0) {
-            binding?.downloadStreamButton?.shrink()
-        } else if (dy < -5) {
-            binding?.downloadStreamButton?.extend()
-        }
-    }
-    */
-
-    // Open local video from files using content provider x safeFile
     private val videoResultLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->

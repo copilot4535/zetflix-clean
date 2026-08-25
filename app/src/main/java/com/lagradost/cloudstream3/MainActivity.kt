@@ -1,6 +1,5 @@
 package com.lagradost.cloudstream3
 
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
@@ -12,7 +11,6 @@ import android.graphics.Rect
 import android.os.Bundle
 import android.util.AttributeSet
 import android.util.Log
-import android.view.Gravity
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -21,22 +19,13 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.CheckBox
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.IdRes
-import androidx.annotation.MainThread
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
-import androidx.core.content.edit
-import androidx.core.net.toUri
-import androidx.core.view.children
-import androidx.core.view.get
-import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.core.view.marginStart
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
@@ -47,20 +36,13 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import androidx.preference.PreferenceManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.Session
 import com.google.android.gms.cast.framework.SessionManager
 import com.google.android.gms.cast.framework.SessionManagerListener
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.navigationrail.NavigationRailView
-import com.google.android.material.snackbar.Snackbar
-import com.google.common.collect.Comparators.min
-import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import com.lagradost.cloudstream3.APIHolder.allProviders
 import com.lagradost.cloudstream3.APIHolder.apis
 import com.lagradost.cloudstream3.APIHolder.initAll
@@ -77,7 +59,6 @@ import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.CommonActivity.updateLocale
 import com.lagradost.cloudstream3.CommonActivity.updateTheme
 import com.lagradost.cloudstream3.databinding.ActivityMainBinding
-import com.lagradost.cloudstream3.databinding.ActivityMainTvBinding
 import com.lagradost.cloudstream3.databinding.BottomResultviewPreviewBinding
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.logError
@@ -90,56 +71,35 @@ import com.lagradost.cloudstream3.plugins.PluginManager.___DO_NOT_CALL_FROM_A_PL
 import com.lagradost.cloudstream3.plugins.PluginManager.loadSinglePlugin
 import com.lagradost.cloudstream3.receivers.VideoDownloadRestartReceiver
 import com.lagradost.cloudstream3.services.SubscriptionWorkManager
-import com.lagradost.cloudstream3.syncproviders.AccountManager
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.APP_STRING
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.APP_STRING_PLAYER
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.APP_STRING_REPO
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.APP_STRING_RESUME_WATCHING
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.APP_STRING_SEARCH
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.APP_STRING_SHARE
-import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.localListApi
 import com.lagradost.cloudstream3.syncproviders.SyncAPI
 import com.lagradost.cloudstream3.ui.APIRepository
 import com.lagradost.cloudstream3.ui.SyncWatchType
 import com.lagradost.cloudstream3.ui.WatchType
-import com.lagradost.cloudstream3.ui.account.AccountHelper.showAccountSelectLinear
-import com.lagradost.cloudstream3.ui.download.DOWNLOAD_NAVIGATE_TO
-import com.lagradost.cloudstream3.ui.home.HomeViewModel
-import com.lagradost.cloudstream3.ui.player.BasicLink
-import com.lagradost.cloudstream3.ui.player.GeneratorPlayer
-import com.lagradost.cloudstream3.ui.player.LinkGenerator
-import com.lagradost.cloudstream3.ui.result.LinearListLayout
 import com.lagradost.cloudstream3.ui.result.ResultViewModel2
-import com.lagradost.cloudstream3.ui.result.START_ACTION_RESUME_LATEST
 import com.lagradost.cloudstream3.ui.result.SyncViewModel
 import com.lagradost.cloudstream3.ui.search.SearchFragment
 import com.lagradost.cloudstream3.ui.search.SearchResultBuilder
-import com.lagradost.cloudstream3.ui.settings.Globals.EMULATOR
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.TV
+import com.lagradost.cloudstream3.ui.settings.SettingsGeneral
+import com.google.android.material.navigationrail.NavigationRailView
+import com.google.android.material.snackbar.Snackbar
+import com.lagradost.cloudstream3.utils.BackupUtils.backup
+import com.lagradost.cloudstream3.utils.BackupUtils.setUpBackup
+import com.lagradost.cloudstream3.utils.TvChannelUtils
+import androidx.core.content.edit
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.ui.settings.Globals.updateTv
-import com.lagradost.cloudstream3.ui.settings.SettingsGeneral
 import com.lagradost.cloudstream3.ui.setup.HAS_DONE_SETUP_KEY
 import com.lagradost.cloudstream3.ui.setup.SetupFragmentExtensions
 import com.lagradost.cloudstream3.utils.ApkInstaller
 import com.lagradost.cloudstream3.utils.AppContextUtils.getApiDubstatusSettings
 import com.lagradost.cloudstream3.utils.AppContextUtils.html
 import com.lagradost.cloudstream3.utils.AppContextUtils.isCastApiAvailable
-import com.lagradost.cloudstream3.utils.AppContextUtils.isLtr
 import com.lagradost.cloudstream3.utils.AppContextUtils.isNetworkAvailable
-import com.lagradost.cloudstream3.utils.AppContextUtils.isRtl
 import com.lagradost.cloudstream3.utils.AppContextUtils.loadCache
-import com.lagradost.cloudstream3.utils.AppContextUtils.loadRepository
-import com.lagradost.cloudstream3.utils.AppContextUtils.loadResult
 import com.lagradost.cloudstream3.utils.AppContextUtils.loadSearchResult
-import com.lagradost.cloudstream3.utils.AppContextUtils.setDefaultFocus
 import com.lagradost.cloudstream3.utils.AppContextUtils.updateHasTrailers
-import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPressedCallback
-import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPressedCallback
-import com.lagradost.cloudstream3.utils.BackupUtils.backup
-import com.lagradost.cloudstream3.utils.BackupUtils.setUpBackup
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.BiometricCallback
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.biometricPrompt
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.deviceHasPasswordPinLock
@@ -154,19 +114,15 @@ import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.utils.DataStoreHelper.accounts
 import com.lagradost.cloudstream3.utils.DataStoreHelper.migrateResumeWatching
 import com.lagradost.cloudstream3.utils.Event
-import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.InAppUpdater.runAutoUpdate
 import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showBottomDialog
 import com.lagradost.cloudstream3.utils.SnackbarHelper.showSnackbar
-import com.lagradost.cloudstream3.utils.TvChannelUtils
 import com.lagradost.cloudstream3.utils.UIHelper.changeStatusBarState
 import com.lagradost.cloudstream3.utils.UIHelper.checkWrite
 import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
 import com.lagradost.cloudstream3.utils.UIHelper.enableEdgeToEdgeCompat
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
-import com.lagradost.cloudstream3.utils.UIHelper.getResourceColor
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
-import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.utils.UIHelper.requestRW
 import com.lagradost.cloudstream3.utils.UIHelper.setNavigationBarColorCompat
 import com.lagradost.cloudstream3.utils.UIHelper.showProgress
@@ -183,14 +139,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
-import java.lang.ref.WeakReference
-import java.net.URI
-import java.net.URLDecoder
 import java.nio.charset.Charset
-import kotlin.math.abs
-import kotlin.math.absoluteValue
+import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
+import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPressedCallback
+import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPressedCallback
+import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import kotlin.reflect.full.createInstance
-import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCallback {
     companion object {
@@ -292,7 +246,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 val dy = screenHeight / 2
                 val r2 = Rect(x - dx, y - dy, x + dx, y + dy)
                 view.requestRectangleOnScreen(r2, false)
-                // TvFocus.current =TvFocus.current.copy(y=y.toFloat())
             } catch (_: Throwable) {
             }
         }
@@ -377,51 +330,9 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             R.id.navigation_test_providers,
         ).contains(destination.id)
 
-
-        /*val dontPush = listOf(
-            R.id.navigation_home,
-            R.id.navigation_search,
-            R.id.navigation_results_phone,
-            R.id.navigation_results_tv,
-            R.id.navigation_player,
-            R.id.navigation_quick_search,
-        ).contains(destination.id)
-
-        binding?.navHostFragment?.apply {
-            val params = layoutParams as ConstraintLayout.LayoutParams
-            val push =
-                if (!dontPush && isLayout(TV or EMULATOR)) resources.getDimensionPixelSize(R.dimen.navbar_width) else 0
-
-            if (!this.isLtr()) {
-                params.setMargins(
-                    params.leftMargin,
-                    params.topMargin,
-                    push,
-                    params.bottomMargin
-                )
-            } else {
-                params.setMargins(
-                    push,
-                    params.topMargin,
-                    params.rightMargin,
-                    params.bottomMargin
-                )
-            }
-
-            layoutParams = params
-        }*/
-
         binding?.apply {
             navRailView.isVisible = isNavVisible && isLandscape()
             navView.isVisible = isNavVisible && !isLandscape()
-            navHostFragment.apply {
-                val marginPx = resources.getDimensionPixelSize(R.dimen.nav_rail_view_width)
-                layoutParams =
-                    (navHostFragment.layoutParams as ViewGroup.MarginLayoutParams).apply {
-                        marginStart =
-                            if (isNavVisible && isLandscape() && isLayout(TV or EMULATOR)) marginPx else 0
-                    }
-            }
 
             /**
              * We need to make sure if we return to a sub-fragment,
@@ -541,9 +452,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         val confirmBeforeExit = settingsManager.getInt(getString(R.string.confirm_exit_key), -1)
 
         if (confirmBeforeExit == 1 || (confirmBeforeExit == -1 && isLayout(PHONE))) {
-            // finish() causes a bug on some TVs where player
-            // may keep playing after closing the app.
-            if (isLayout(TV)) exitProcess(0) else finish()
+            finish()
             return
         }
 
@@ -559,12 +468,10 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                         putInt(getString(R.string.confirm_exit_key), 1)
                     }
                 }
-                // finish() causes a bug on some TVs where player
-                // may keep playing after closing the app.
-                if (isLayout(TV)) exitProcess(0) else finish()
+                finish()
             }
 
-        builder.show().setDefaultFocus()
+        builder.show()
     }
 
     override fun onDestroy() {
@@ -613,35 +520,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         // Check if we are already at the selected destination
         if (navController.currentDestination?.id == destinationId) return false
-
-        // Make all nav buttons focus on this specific view when nextFocusRightId
-        val targetView = when (destinationId) {
-            // Please note that if R.id.navigation_home is readded, then it will only take affect when
-            // navigation to home for the second time as onNavDestinationSelected will not get called
-            // when first loading up the app
-
-            // R.id.navigation_home -> R.id.home_preview_change_api
-            R.id.navigation_search -> R.id.main_search
-            R.id.navigation_library -> R.id.main_search
-            R.id.navigation_downloads -> R.id.download_appbar
-            else -> null
-        }
-        if (targetView != null && isLayout(TV or EMULATOR)) {
-            val fromView = binding?.navRailView
-            if (fromView != null) {
-                fromView.nextFocusRightId = targetView
-
-                for (focusView in arrayOf(
-                    R.id.navigation_downloads,
-                    R.id.navigation_home,
-                    R.id.navigation_search,
-                    R.id.navigation_library,
-                    R.id.navigation_settings,
-                )) {
-                    fromView.findViewById<View?>(focusView)?.nextFocusRightId = targetView
-                }
-            }
-        }
 
         val builder = NavOptions.Builder().setLaunchSingleTop(true).setRestoreState(true)
             .setEnterAnim(R.anim.enter_anim)
@@ -729,17 +607,8 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             val builder: Dialog
             val layout: Int
 
-            if (isLayout(PHONE)) {
-                builder =
-                    BottomSheetDialog(this)
-                layout = R.layout.bottom_resultview_preview
-            } else {
-                builder =
-                    Dialog(this, R.style.DialogHalfFullscreen)
-                layout = R.layout.bottom_resultview_preview_tv
-                // No way to do this in styles :(
-                builder.window?.setGravity(Gravity.CENTER_VERTICAL or Gravity.END)
-            }
+            builder = BottomSheetDialog(this)
+            layout = R.layout.bottom_resultview_preview
 
             val root = layoutInflater.inflate(layout, null, false)
             val binding = BottomResultviewPreviewBinding.bind(root)
@@ -761,280 +630,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
     }
 
     var binding: ActivityMainBinding? = null
-
-    object TvFocus {
-        data class FocusTarget(
-            val width: Int,
-            val height: Int,
-            val x: Float,
-            val y: Float,
-        ) {
-            companion object {
-                fun lerp(a: FocusTarget, b: FocusTarget, lerp: Float): FocusTarget {
-                    val ilerp = 1 - lerp
-                    return FocusTarget(
-                        width = (a.width * ilerp + b.width * lerp).toInt(),
-                        height = (a.height * ilerp + b.height * lerp).toInt(),
-                        x = a.x * ilerp + b.x * lerp,
-                        y = a.y * ilerp + b.y * lerp
-                    )
-                }
-            }
-        }
-
-        var last: FocusTarget = FocusTarget(0, 0, 0.0f, 0.0f)
-        var current: FocusTarget = FocusTarget(0, 0, 0.0f, 0.0f)
-
-        var focusOutline: WeakReference<View> = WeakReference(null)
-        var lastFocus: WeakReference<View> = WeakReference(null)
-        private val layoutListener: View.OnLayoutChangeListener =
-            View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                // shitty fix for layouts
-                lastFocus.get()?.apply {
-                    updateFocusView(
-                        this, same = true
-                    )
-                    postDelayed({
-                        updateFocusView(
-                            lastFocus.get(), same = false
-                        )
-                    }, 300)
-                }
-            }
-        private val attachListener: View.OnAttachStateChangeListener =
-            object : View.OnAttachStateChangeListener {
-                override fun onViewAttachedToWindow(v: View) {
-                    updateFocusView(v)
-                }
-
-                override fun onViewDetachedFromWindow(v: View) {
-                    // removes the focus view but not the listener as updateFocusView(null) will remove the listener
-                    focusOutline.get()?.isVisible = false
-                }
-            }
-        /*private val scrollListener = object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                current = current.copy(x = current.x + dx, y = current.y + dy)
-                setTargetPosition(current)
-            }
-        }*/
-
-        private fun setTargetPosition(target: FocusTarget) {
-            focusOutline.get()?.apply {
-                layoutParams = layoutParams?.apply {
-                    width = target.width
-                    height = target.height
-                }
-
-                translationX = target.x
-                translationY = target.y
-                bringToFront()
-            }
-        }
-
-        private var animator: ValueAnimator? = null
-
-        /** if this is enabled it will keep the focus unmoving
-         *  during listview move */
-        private const val NO_MOVE_LIST: Boolean = false
-
-        /** If this is enabled then it will try to move the
-         * listview focus to the left instead of center */
-        private const val LEFTMOST_MOVE_LIST: Boolean = true
-
-        private val reflectedScroll by lazy {
-            try {
-                RecyclerView::class.java.declaredMethods.firstOrNull {
-                    it.name == "scrollStep"
-                }?.also { it.isAccessible = true }
-            } catch (t: Throwable) {
-                null
-            }
-        }
-
-        @MainThread
-        fun updateFocusView(newFocus: View?, same: Boolean = false) {
-            val focusOutline = focusOutline.get() ?: return
-            val lastView = lastFocus.get()
-            val exactlyTheSame = lastView == newFocus && newFocus != null
-            if (!exactlyTheSame) {
-                lastView?.removeOnLayoutChangeListener(layoutListener)
-                lastView?.removeOnAttachStateChangeListener(attachListener)
-                (lastView?.parent as? RecyclerView)?.apply {
-                    removeOnLayoutChangeListener(layoutListener)
-                    //removeOnScrollListener(scrollListener)
-                }
-            }
-
-            val wasGone = focusOutline.isGone
-
-            val visible =
-                newFocus != null && newFocus.measuredHeight > 0 && newFocus.measuredWidth > 0 && newFocus.isShown && newFocus.tag != "tv_no_focus_tag"
-            focusOutline.isVisible = visible
-
-            if (newFocus != null) {
-                lastFocus = WeakReference(newFocus)
-                val parent = newFocus.parent
-                var targetDx = 0
-                if (parent is RecyclerView) {
-                    val layoutManager = parent.layoutManager
-                    if (layoutManager is LinearListLayout && layoutManager.orientation == LinearLayoutManager.HORIZONTAL) {
-                        val dx =
-                            LinearSnapHelper().calculateDistanceToFinalSnap(layoutManager, newFocus)
-                                ?.get(0)
-
-                        if (dx != null) {
-                            val rdx = if (LEFTMOST_MOVE_LIST) {
-                                // this makes the item the leftmost in ltr, instead of center
-                                val diff =
-                                    ((layoutManager.width - layoutManager.paddingStart - newFocus.measuredWidth) / 2) - newFocus.marginStart
-                                dx + if (parent.isRtl()) {
-                                    -diff
-                                } else {
-                                    diff
-                                }
-                            } else {
-                                if (dx > 0) dx else 0
-                            }
-
-                            if (!NO_MOVE_LIST) {
-                                parent.smoothScrollBy(rdx, 0)
-                            } else {
-                                val smoothScroll = reflectedScroll
-                                if (smoothScroll == null) {
-                                    parent.smoothScrollBy(rdx, 0)
-                                } else {
-                                    try {
-                                        // this is very fucked but because it is a protected method to
-                                        // be able to compute the scroll I use reflection, scroll, then
-                                        // scroll back, then smooth scroll and set the no move
-                                        val out = IntArray(2)
-                                        smoothScroll.invoke(parent, rdx, 0, out)
-                                        val scrolledX = out[0]
-                                        if (abs(scrolledX) <= 0) { // newFocus.measuredWidth*2
-                                            smoothScroll.invoke(parent, -rdx, 0, out)
-                                            parent.smoothScrollBy(scrolledX, 0)
-                                            if (NO_MOVE_LIST) targetDx = scrolledX
-                                        }
-                                    } catch (t: Throwable) {
-                                        parent.smoothScrollBy(rdx, 0)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                val out = IntArray(2)
-                newFocus.getLocationInWindow(out)
-                val (screenX, screenY) = out
-                var (x, y) = screenX.toFloat() to screenY.toFloat()
-                val (currentX, currentY) = focusOutline.translationX to focusOutline.translationY
-
-                if (!newFocus.isLtr()) {
-                    x = x - focusOutline.rootView.width + newFocus.measuredWidth
-                }
-                x -= targetDx
-
-                // out of bounds = 0,0
-                if (screenX == 0 && screenY == 0) {
-                    focusOutline.isVisible = false
-                }
-                if (!exactlyTheSame) {
-                    (newFocus.parent as? RecyclerView)?.apply {
-                        addOnLayoutChangeListener(layoutListener)
-                        //addOnScrollListener(scrollListener)
-                    }
-                    newFocus.addOnLayoutChangeListener(layoutListener)
-                    newFocus.addOnAttachStateChangeListener(attachListener)
-                }
-                val start = FocusTarget(
-                    x = currentX,
-                    y = currentY,
-                    width = focusOutline.measuredWidth,
-                    height = focusOutline.measuredHeight
-                )
-                val end = FocusTarget(
-                    x = x,
-                    y = y,
-                    width = newFocus.measuredWidth,
-                    height = newFocus.measuredHeight
-                )
-
-                // if they are the same within then snap, aka scrolling
-                val deltaMinX = min(end.width / 2, 60.toPx)
-                val deltaMinY = min(end.height / 2, 60.toPx)
-                if (start.width == end.width && start.height == end.height && (start.x - end.x).absoluteValue < deltaMinX && (start.y - end.y).absoluteValue < deltaMinY) {
-                    animator?.cancel()
-                    last = start
-                    current = end
-                    setTargetPosition(end)
-                    return
-                }
-
-                // if running then "reuse"
-                if (animator?.isRunning == true) {
-                    current = end
-                    return
-                } else {
-                    animator?.cancel()
-                }
-
-
-                last = start
-                current = end
-
-                // if previously gone, then tp
-                if (wasGone) {
-                    setTargetPosition(current)
-                    return
-                }
-
-                // animate between a and b
-                animator = ValueAnimator.ofFloat(0.0f, 1.0f).apply {
-                    startDelay = 0
-                    duration = 200
-                    addUpdateListener { animation ->
-                        val animatedValue = animation.animatedValue as Float
-                        val target = FocusTarget.lerp(last, current, minOf(animatedValue, 1.0f))
-                        setTargetPosition(target)
-                    }
-                    start()
-                }
-
-                // post check
-                if (!same) {
-                    newFocus.postDelayed({
-                        updateFocusView(lastFocus.get(), same = true)
-                    }, 200)
-                }
-
-                /*
-
-                the following is working, but somewhat bad code code
-
-                if (!wasGone) {
-                    (focusOutline.parent as? ViewGroup)?.let {
-                        TransitionManager.endTransitions(it)
-                        TransitionManager.beginDelayedTransition(
-                            it,
-                            TransitionSet().addTransition(ChangeBounds())
-                                .addTransition(ChangeTransform())
-                                .setDuration(100)
-                        )
-                    }
-                }
-
-                focusOutline.layoutParams = focusOutline.layoutParams?.apply {
-                    width = newFocus.measuredWidth
-                    height = newFocus.measuredHeight
-                }
-                focusOutline.translationX = x.toFloat()
-                focusOutline.translationY = y.toFloat()*/
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         app.initClient(this, ignoreSSL = false)
@@ -1116,7 +711,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         val padding = settingsManager.getInt(getString(R.string.overscan_key), 0).toPx
         binding?.homeRoot?.setPadding(padding, padding, padding, padding)
 
-        changeStatusBarState(isLayout(EMULATOR))
+        changeStatusBarState(false)
 
         /** Biometric stuff for users without accounts **/
         val noAccounts = settingsManager.getBoolean(
@@ -1124,7 +719,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             false
         ) || accounts.count() <= 1
 
-        if (isLayout(PHONE) && isAuthEnabled(this) && noAccounts) {
+        if (isAuthEnabled(this) && noAccounts) {
             if (deviceHasPasswordPinLock(this)) {
                 startBiometricAuthentication(this, R.string.biometric_authentication_title, false)
 
@@ -1202,9 +797,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                         false
                     )
                 }
-
-// Add your channel creation here
-
             }
         } else {
             val builder: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -1220,7 +812,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
                 setNegativeButton("Ok") { _, _ -> }
             }
-            builder.show().setDefaultFocus()
+            builder.show()
         }
 
 
@@ -1243,8 +835,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     else -> {
                         resultviewPreviewBookmark.isEnabled = false
                         resultviewPreviewBookmark.showProgress()
-                        //resultviewPreviewBookmark.setIconResource(R.drawable.ic_baseline_bookmark_border_24)
-                        //resultviewPreviewBookmark.setText(R.string.loading)
                     }
                 }
             }
@@ -1330,24 +920,16 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                         resultviewPreviewMetaRating.setText(d.ratingText)
 
                         resultviewPreviewDescription.setTextHtml(d.plotText)
-                        if (isLayout(PHONE)) {
-                            resultviewPreviewPoster.loadImage(
-                                d.posterImage ?: d.posterBackgroundImage,
-                                headers = d.posterHeaders
-                            )
-                        } else {
-                            resultviewPreviewPoster.loadImage(
-                                d.posterBackgroundImage ?: d.posterImage,
-                                headers = d.posterHeaders
-                            )
-                        }
+                        resultviewPreviewPoster.loadImage(
+                            d.posterImage ?: d.posterBackgroundImage,
+                            headers = d.posterHeaders
+                        )
 
                         setUserData(syncViewModel.userData.value)
                         setWatchStatus(viewModel.watchStatus.value)
                         setSubscribeStatus(viewModel.subscribeStatus.value)
 
                         resultviewPreviewBookmark.setOnClickListener {
-                            //viewModel.updateWatchStatus(WatchType.PLANTOWATCH)
                             if (isLocalList) {
                                 val value = viewModel.watchStatus.value ?: WatchType.NONE
 
@@ -1408,16 +990,15 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                             }
                         }
 
-                        if (isLayout(PHONE)) // dont want this clickable on tv layout
-                            resultviewPreviewDescription.setOnClickListener { view ->
-                                view.context?.let { ctx ->
-                                    val builder: AlertDialog.Builder =
-                                        AlertDialog.Builder(ctx, R.style.AlertDialogCustom)
-                                    builder.setMessage(d.plotText.asString(ctx).html())
-                                        .setTitle(d.plotHeaderText.asString(ctx))
-                                        .show()
-                                }
+                        resultviewPreviewDescription.setOnClickListener { view ->
+                            view.context?.let { ctx ->
+                                val builder: AlertDialog.Builder =
+                                    AlertDialog.Builder(ctx, R.style.AlertDialogCustom)
+                                builder.setMessage(d.plotText.asString(ctx).html())
+                                    .setTitle(d.plotHeaderText.asString(ctx))
+                                    .show()
                             }
+                        }
 
                         resultviewPreviewMoreInfo.setOnClickListener {
                             viewModel.clear()
@@ -1431,27 +1012,13 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             }
         }
 
-//        ioSafe {
-//            val plugins =
-//                RepositoryParser.getRepoPlugins("https://raw.githubusercontent.com/recloudstream/TestPlugin/master/repo.json")
-//                    ?: emptyList()
-//            plugins.map {
-//                println("Load plugin: ${it.name} ${it.url}")
-//                RepositoryParser.loadSiteTemp(applicationContext, it.url, it.name)
-//            }
-//        }
-
-        // init accounts
-
         SearchResultBuilder.updateCache(this)
 
         ioSafe {
             initAll()
-            // No duplicates (which can happen by registerMainAPI)
             apis = allProviders.distinctBy { it }
         }
 
-        //  val navView: BottomNavigationView = findViewById(R.id.nav_view)
         setUpBackup()
 
         CommonActivity.init(this)
@@ -1460,7 +1027,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         val navController = navHostFragment.navController
 
         navController.addOnDestinationChangedListener { _: NavController, navDestination: NavDestination, bundle: Bundle? ->
-            // Intercept search and add a query
             updateNavBar(navDestination)
             if (navDestination.matchDestination(R.id.navigation_search) && !nextSearchQuery.isNullOrBlank()) {
                 bundle?.apply {
@@ -1474,19 +1040,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 }
             } else detachBackPressedCallback("MainActivity")
         }
-
-        //val navController = findNavController(R.id.nav_host_fragment)
-
-        /*navOptions = NavOptions.Builder()
-            .setLaunchSingleTop(true)
-            .setEnterAnim(R.anim.nav_enter_anim)
-            .setExitAnim(R.anim.nav_exit_anim)
-            .setPopEnterAnim(R.anim.nav_pop_enter)
-            .setPopExitAnim(R.anim.nav_pop_exit)
-            .setPopUpTo(navController.graph.startDestination, false)
-            .build()*/
-
-        // val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.colorPrimary, 0.1f))
 
         binding?.navView?.apply {
             itemRippleColor = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
@@ -1505,18 +1058,8 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             itemRippleColor = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
             itemActiveIndicatorColor = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
 
-            if (!isLayout(PHONE)) {
-                // val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.textColor, 1.0f))
-                // val rippleColorTransparent =
-                //     ColorStateList.valueOf(getResourceColor(R.attr.textColor, 0.2f))
-                itemSpacing = 12.toPx // expandedItemSpacing does not have an attr
-            }
+            itemSpacing = 12.toPx
             setupWithNavController(navController)
-            /*if (isLayout(TV or EMULATOR)) {
-                background?.alpha = 200
-            } else {
-                background?.alpha = 255
-            }*/
 
             setOnItemSelectedListener { item ->
                 onNavDestinationSelected(
@@ -1524,59 +1067,16 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     navController
                 )
             }
-
-
-            fun noFocus(view: View) {
-                view.tag = view.context.getString(R.string.tv_no_focus_tag)
-                (view as? ViewGroup)?.let {
-                    for (child in it.children) {
-                        noFocus(child)
-                    }
-                }
-            }
-            //noFocus(this)
-
-            val navProfileRoot = findViewById<LinearLayout>(R.id.nav_footer_root)
-
-            if (isLayout(TV or EMULATOR)) {
-                val navProfilePic = findViewById<ImageView>(R.id.nav_footer_profile_pic)
-                val navProfileCard = findViewById<CardView>(R.id.nav_footer_profile_card)
-
-                navProfileCard?.setOnClickListener {
-                    showAccountSelectLinear()
-                }
-
-                val homeViewModel =
-                    ViewModelProvider(this@MainActivity)[HomeViewModel::class.java]
-
-                observe(homeViewModel.currentAccount) { currentAccount ->
-                    if (currentAccount != null) {
-                        navProfilePic?.loadImage(
-                            currentAccount.image
-                        )
-                        navProfileRoot.isVisible = true
-                    } else {
-                        navProfileRoot.isGone = true
-                    }
-                }
-            } else {
-                navProfileRoot.isGone = true
-            }
         }
 
         val rail = binding?.navRailView
         if (rail != null) {
             binding?.navRailView?.labelVisibilityMode =
                 NavigationRailView.LABEL_VISIBILITY_UNLABELED
-            //val focus = mutableSetOf<Int>()
 
             var prevId: Int? = null
             var prevView: View? = null
 
-            // The genius engineers at google did not actually 
-            // write a nextFocus for the navrail
-            rail.findViewById<View?>(R.id.navigation_settings)?.nextFocusDownId =
-                R.id.nav_footer_profile_card
             for (id in arrayOf(
                 R.id.navigation_home,
                 R.id.navigation_search,
@@ -1590,33 +1090,9 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
                 prevView = view
                 prevId = id
-                // Uncomment for focus expand
-                /*if (!isLayout(TV)) {
-                    view.onFocusChangeListener = null
-                } else {
-                    view.onFocusChangeListener =
-                        View.OnFocusChangeListener { v, hasFocus ->
-                            if (hasFocus) {
-                                focus += id
-                                binding?.navRailView?.labelVisibilityMode =
-                                    NavigationRailView.LABEL_VISIBILITY_LABELED
-                                binding?.navRailView?.expand()
-                            } else {
-                                focus -= id
-                                v.post {
-                                    if (focus.isEmpty()) {
-                                        binding?.navRailView?.labelVisibilityMode =
-                                            NavigationRailView.LABEL_VISIBILITY_UNLABELED
-                                        binding?.navRailView?.collapse()
-                                    }
-                                }
-                            }
-                        }
-                }*/
             }
         }
 
-        // Navigation button long click functionality to scroll to top
         for (view in listOf(binding?.navView, binding?.navRailView)) {
             view?.findViewById<View?>(R.id.navigation_home)?.setOnLongClickListener {
                 val recycler = binding?.root?.findViewById<RecyclerView?>(R.id.home_master_recycler)
@@ -1648,93 +1124,11 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         loadCache()
         updateHasTrailers()
-        /*nav_view.setOnNavigationItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.navigation_home -> {
-                    navController.navigate(R.id.navigation_home, null, navOptions)
-                }
-                R.id.navigation_search -> {
-                    navController.navigate(R.id.navigation_search, null, navOptions)
-                }
-                R.id.navigation_downloads -> {
-                    navController.navigate(R.id.navigation_downloads, null, navOptions)
-                }
-                R.id.navigation_settings -> {
-                    navController.navigate(R.id.navigation_settings, null, navOptions)
-                }
-            }
-            true
-        }*/
-
 
         if (!checkWrite()) {
             requestRW()
             if (checkWrite()) return
         }
-        //CastButtonFactory.setUpMediaRouteButton(this, media_route_button)
-
-        // THIS IS CURRENTLY REMOVED BECAUSE HIGHER VERS OF ANDROID NEEDS A NOTIFICATION
-        //if (!VideoDownloadManager.isMyServiceRunning(this, VideoDownloadKeepAliveService::class.java)) {
-        //    val mYourService = VideoDownloadKeepAliveService()
-        //    val mServiceIntent = Intent(this, mYourService::class.java).putExtra(START_VALUE_KEY, RESTART_ALL_DOWNLOADS_AND_QUEUE)
-        //    this.startService(mServiceIntent)
-        //}
-//settingsManager.getBoolean("disable_automatic_data_downloads", true) &&
-
-        // TODO RETURN TO TRUE
-        /*
-        if (isUsingMobileData()) {
-            Toast.makeText(this, "Downloads not resumed on mobile data", Toast.LENGTH_LONG).show()
-        } else {
-            val keys = getKeys(VideoDownloadManager.KEY_RESUME_PACKAGES)
-            val resumePkg = keys.mapNotNull { k -> getKey<VideoDownloadManager.DownloadResumePackage>(k) }
-
-            // To remove a bug where this is permanent
-            removeKeys(VideoDownloadManager.KEY_RESUME_PACKAGES)
-
-            for (pkg in resumePkg) { // ADD ALL CURRENT DOWNLOADS
-                VideoDownloadManager.downloadFromResume(this, pkg, false)
-            }
-
-            // ADD QUEUE
-            // array needed because List gets cast exception to linkedList for some unknown reason
-            val resumeQueue =
-                getKey<Array<VideoDownloadManager.DownloadQueueResumePackage>>(VideoDownloadManager.KEY_RESUME_QUEUE_PACKAGES)
-
-            resumeQueue?.sortedBy { it.index }?.forEach {
-                VideoDownloadManager.downloadFromResume(this, it.pkg)
-            }
-        }*/
-
-
-        /*
-        val castContext = CastContext.getSharedInstance(applicationContext)
-         fun buildMediaQueueItem(video: String): MediaQueueItem {
-           // val movieMetadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_PHOTO)
-            //movieMetadata.putString(MediaMetadata.KEY_TITLE, "CloudStream")
-            val mediaInfo = MediaInfo.Builder(video.toUri().toString())
-                .setStreamType(MediaInfo.STREAM_TYPE_NONE)
-                .setContentType(MimeTypes.IMAGE_JPEG)
-               // .setMetadata(movieMetadata).build()
-                .build()
-            return MediaQueueItem.Builder(mediaInfo).build()
-        }*/
-        /*
-        castContext.addCastStateListener { state ->
-            if (state == CastState.CONNECTED) {
-                println("TESTING")
-                val isCasting = castContext?.sessionManager?.currentCastSession?.remoteMediaClient?.currentItem != null
-                if(!isCasting) {
-                    val castPlayer = CastPlayer(castContext)
-                    println("LOAD ITEM")
-
-                    castPlayer.loadItem(buildMediaQueueItem("https://cdn.discordapp.com/attachments/551382684560261121/730169809408622702/ChromecastLogo6.png"),0)
-                }
-            }
-        }*/
-        /*thread {
-            createISO()
-        }*/
 
         if (BuildConfig.DEBUG) {
             var providersAndroidManifestString = "Current androidmanifest should be:\n"
@@ -1756,12 +1150,9 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             runAutoUpdate()
         }
 
-        // FcastManager().init(this, false)
-
         APIRepository.dubStatusActive = getApiDubstatusSettings()
 
         try {
-            // this ensures that no unnecessary space is taken
             loadCache()
             File(filesDir, "exoplayer").deleteRecursively() // old cache
             deleteFileOnExit(File(cacheDir, "exoplayer"))   // current cache
@@ -1794,7 +1185,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             if (getKey<Boolean>(HAS_DONE_SETUP_KEY, false) != true) {
                 if (PluginManager.getPluginsOnline().isEmpty()
                     && PluginManager.getPluginsLocal().isEmpty()
-//                && PREBUILT_REPOSITORIES.isNotEmpty()
                 ) {
                     navController.navigate(
                         R.id.navigation_setup_extensions,
@@ -1808,28 +1198,17 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             logError(e)
         }
 
-//        Used to check current focus for TV
-//        main {
-//            while (true) {
-//                delay(5000)
-//                println("Current focus: $currentFocus")
-//                showToast(this, currentFocus.toString(), Toast.LENGTH_LONG)
-//            }
-//        }
-
         attachBackPressedCallback("MainActivityDefault") {
             setNavigationBarColorCompat(R.attr.primaryGrayBackground)
             updateLocale()
             runDefault()
         }
 
-        // Start the download queue
         DownloadQueueManager.init(this)
     }
 
     /** Biometric stuff **/
     override fun onAuthenticationSuccess() {
-        // make background (nav host fragment) visible again
         binding?.navHostFragment?.isInvisible = false
     }
 

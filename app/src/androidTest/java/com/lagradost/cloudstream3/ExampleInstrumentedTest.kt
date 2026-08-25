@@ -9,23 +9,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.viewbinding.ViewBinding
 import com.lagradost.cloudstream3.databinding.BottomResultviewPreviewBinding
 import com.lagradost.cloudstream3.databinding.FragmentHomeBinding
-import com.lagradost.cloudstream3.databinding.FragmentHomeTvBinding
 import com.lagradost.cloudstream3.databinding.FragmentLibraryBinding
-import com.lagradost.cloudstream3.databinding.FragmentLibraryTvBinding
 import com.lagradost.cloudstream3.databinding.FragmentPlayerBinding
-import com.lagradost.cloudstream3.databinding.FragmentPlayerTvBinding
-import com.lagradost.cloudstream3.databinding.FragmentResultBinding
-import com.lagradost.cloudstream3.databinding.FragmentResultTvBinding
 import com.lagradost.cloudstream3.databinding.FragmentSearchBinding
-import com.lagradost.cloudstream3.databinding.FragmentSearchTvBinding
 import com.lagradost.cloudstream3.databinding.HomeResultGridBinding
 import com.lagradost.cloudstream3.databinding.HomepageParentBinding
-import com.lagradost.cloudstream3.databinding.HomepageParentEmulatorBinding
-import com.lagradost.cloudstream3.databinding.HomepageParentTvBinding
 import com.lagradost.cloudstream3.databinding.PlayerCustomLayoutBinding
-import com.lagradost.cloudstream3.databinding.PlayerCustomLayoutTvBinding
 import com.lagradost.cloudstream3.databinding.RepositoryItemBinding
-import com.lagradost.cloudstream3.databinding.RepositoryItemTvBinding
 import com.lagradost.cloudstream3.databinding.SearchResultGridBinding
 import com.lagradost.cloudstream3.databinding.SearchResultGridExpandedBinding
 import com.lagradost.cloudstream3.databinding.TrailerCustomLayoutBinding
@@ -52,7 +42,7 @@ class TestApplication : Activity() {
 class ExampleInstrumentedTest {
     private fun getAllProviders(): Array<MainAPI> {
         println("Providers: ${APIHolder.allProviders.size}")
-        return APIHolder.allProviders.toTypedArray() //.filter { !it.usesWebView }
+        return APIHolder.allProviders.toTypedArray()
     }
 
     @Throws
@@ -74,55 +64,28 @@ class ExampleInstrumentedTest {
     fun layoutTest() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity: MainActivity ->
-                // FragmentHomeHeadBinding and FragmentHomeHeadTvBinding CANT be the same
-                //testAllLayouts<FragmentHomeHeadBinding>(activity, R.layout.fragment_home_head, R.layout.fragment_home_head_tv)
-                //testAllLayouts<FragmentHomeHeadTvBinding>(activity, R.layout.fragment_home_head, R.layout.fragment_home_head_tv)
 
-                // main cant be tested
-               // testAllLayouts<ActivityMainTvBinding>(activity,R.layout.activity_main, R.layout.activity_main_tv)
-               // testAllLayouts<ActivityMainBinding>(activity,R.layout.activity_main, R.layout.activity_main_tv)
-                //testAllLayouts<ActivityMainBinding>(activity, R.layout.activity_main_tv)
+                testAllLayouts<BottomResultviewPreviewBinding>(activity, R.layout.bottom_resultview_preview)
 
-                testAllLayouts<BottomResultviewPreviewBinding>(activity, R.layout.bottom_resultview_preview,R.layout.bottom_resultview_preview_tv)
+                testAllLayouts<FragmentPlayerBinding>(activity, R.layout.fragment_player)
 
-                testAllLayouts<FragmentPlayerBinding>(activity, R.layout.fragment_player,R.layout.fragment_player_tv)
-                testAllLayouts<FragmentPlayerTvBinding>(activity, R.layout.fragment_player,R.layout.fragment_player_tv)
+                testAllLayouts<PlayerCustomLayoutBinding>(activity, R.layout.player_custom_layout, R.layout.trailer_custom_layout)
+                testAllLayouts<TrailerCustomLayoutBinding>(activity, R.layout.player_custom_layout, R.layout.trailer_custom_layout)
 
-               // testAllLayouts<FragmentResultBinding>(activity, R.layout.fragment_result,R.layout.fragment_result_tv)
-               // testAllLayouts<FragmentResultTvBinding>(activity, R.layout.fragment_result,R.layout.fragment_result_tv)
+                testAllLayouts<RepositoryItemBinding>(activity, R.layout.repository_item)
 
-                testAllLayouts<PlayerCustomLayoutBinding>(activity, R.layout.player_custom_layout,R.layout.player_custom_layout_tv, R.layout.trailer_custom_layout)
-                testAllLayouts<PlayerCustomLayoutTvBinding>(activity, R.layout.player_custom_layout,R.layout.player_custom_layout_tv, R.layout.trailer_custom_layout)
-                testAllLayouts<TrailerCustomLayoutBinding>(activity, R.layout.player_custom_layout,R.layout.player_custom_layout_tv, R.layout.trailer_custom_layout)
+                testAllLayouts<FragmentHomeBinding>(activity, R.layout.fragment_home)
 
-                testAllLayouts<RepositoryItemBinding>(activity, R.layout.repository_item_tv, R.layout.repository_item)
-                testAllLayouts<RepositoryItemTvBinding>(activity, R.layout.repository_item_tv, R.layout.repository_item)
+                testAllLayouts<FragmentSearchBinding>(activity, R.layout.fragment_search)
 
-                testAllLayouts<RepositoryItemBinding>(activity, R.layout.repository_item_tv, R.layout.repository_item)
-                testAllLayouts<RepositoryItemTvBinding>(activity, R.layout.repository_item_tv, R.layout.repository_item)
-
-                testAllLayouts<FragmentHomeBinding>(activity, R.layout.fragment_home_tv, R.layout.fragment_home)
-                testAllLayouts<FragmentHomeTvBinding>(activity, R.layout.fragment_home_tv, R.layout.fragment_home)
-
-                testAllLayouts<FragmentSearchBinding>(activity, R.layout.fragment_search_tv, R.layout.fragment_search)
-                testAllLayouts<FragmentSearchTvBinding>(activity, R.layout.fragment_search_tv, R.layout.fragment_search)
-
-                testAllLayouts<HomeResultGridBinding>(activity, R.layout.home_result_grid_expanded, R.layout.home_result_grid)
-                //testAllLayouts<HomeResultGridExpandedBinding>(activity, R.layout.home_result_grid_expanded, R.layout.home_result_grid) ??? fails ???
+                testAllLayouts<HomeResultGridBinding>(activity, R.layout.home_result_grid)
 
                 testAllLayouts<SearchResultGridExpandedBinding>(activity, R.layout.search_result_grid, R.layout.search_result_grid_expanded)
                 testAllLayouts<SearchResultGridBinding>(activity, R.layout.search_result_grid, R.layout.search_result_grid_expanded)
 
+                testAllLayouts<HomepageParentBinding>(activity, R.layout.homepage_parent)
 
-               // testAllLayouts<HomeScrollViewBinding>(activity, R.layout.home_scroll_view, R.layout.home_scroll_view_tv)
-               // testAllLayouts<HomeScrollViewTvBinding>(activity, R.layout.home_scroll_view, R.layout.home_scroll_view_tv)
-
-                testAllLayouts<HomepageParentTvBinding>(activity, R.layout.homepage_parent_tv, R.layout.homepage_parent_emulator, R.layout.homepage_parent)
-                testAllLayouts<HomepageParentEmulatorBinding>(activity, R.layout.homepage_parent_tv, R.layout.homepage_parent_emulator, R.layout.homepage_parent)
-                testAllLayouts<HomepageParentBinding>(activity, R.layout.homepage_parent_tv, R.layout.homepage_parent_emulator, R.layout.homepage_parent)
-
-                testAllLayouts<FragmentLibraryTvBinding>(activity, R.layout.fragment_library_tv, R.layout.fragment_library)
-                testAllLayouts<FragmentLibraryBinding>(activity, R.layout.fragment_library_tv, R.layout.fragment_library)
+                testAllLayouts<FragmentLibraryBinding>(activity, R.layout.fragment_library)
             }
         }
     }
