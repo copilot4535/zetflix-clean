@@ -796,4 +796,15 @@
     <string name="fingerprint_setup_failed">Could not enable fingerprint. You can enable it later in Settings.</string>
     <string name="fingerprint_login_button">Login with Fingerprint</string>
     <string name="fingerprint_login_failed">Fingerprint authentication failed. Try again or use password.</string>
+
+    <string name="zetflix_account_title">My Account</string>
+    <string name="zetflix_account_username_label">Username</string>
+    <string name="zetflix_account_email_label">Email</string>
+    <string name="zetflix_account_phone_label">Phone</string>
+    <string name="zetflix_account_fingerprint_label">Fingerprint Login</string>
+    <string name="zetflix_account_fingerprint_enabled">Enabled</string>
+    <string name="zetflix_account_fingerprint_disabled">Disabled</string>
+    <string name="logout_confirmation_title">Confirm Logout</string>
+    <string name="logout_confirmation_message">Are you sure you want to log out? Bookmarks and downloads will be preserved.</string>
+    <string name="logout_button">Logout</string>
 </resources>
