@@ -8,8 +8,7 @@ object BiometricSetupDialog {
     fun show(
         activity: FragmentActivity,
         onEnable: () -> Unit,
-        onSkip: () -> Unit,
-        onFinished: () -> Unit
+        onSkip: () -> Unit
     ) {
         MaterialAlertDialogBuilder(activity)
             .setTitle(R.string.fingerprint_setup_title)
@@ -17,12 +16,10 @@ object BiometricSetupDialog {
             .setPositiveButton(R.string.fingerprint_setup_enable) { dialog, _ ->
                 onEnable()
                 dialog.dismiss()
-                onFinished()
             }
             .setNegativeButton(R.string.fingerprint_setup_skip) { dialog, _ ->
                 onSkip()
                 dialog.dismiss()
-                onFinished()
             }
             .setCancelable(false)
             .show()

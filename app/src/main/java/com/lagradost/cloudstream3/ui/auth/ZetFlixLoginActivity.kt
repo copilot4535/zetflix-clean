@@ -160,40 +160,59 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                 return@setOnClickListener
             }
 
-            if (isRegisterMode && password != confirmPassword) {
-                Toast.makeText(this, R.string.zetflix_password_mismatch, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            val storedEmail = sharedPreferences.getString("email", null)
+            val storedPassword = sharedPreferences.getString("password", null)
 
-            if (!privacyCheckbox.isChecked) {
-                Toast.makeText(this, "Please agree to the privacy policy", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            if (isRegisterMode) {
+                if (password != confirmPassword) {
+                    Toast.makeText(this, R.string.zetflix_password_mismatch, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
 
-            saveAuthData(country.code, phone, email, password)
-            ZetFlixAuthPrefs.setZetFlixAuthenticated(this, true)
-            ZetFlixSessionManager.setLoginTimestamp(this)
-            setKey("HAS_DONE_SETUP", true)
-            
-            if (isRegisterMode && BiometricAuthenticator.deviceHasPasswordPinLock(this)) {
-                isBiometricSetupMode = true
-                BiometricSetupDialog.show(
-                    this,
-                    onEnable = {
-                        BiometricAuthenticator.startBiometricAuthentication(
-                            this,
-                            R.string.fingerprint_setup_title,
-                            false
-                        )
-                    },
-                    onSkip = {
-                        navigateToLoading()
-                    },
-                    onFinished = {
-                        // handled in callbacks
-                    }
-                )
+                if (storedEmail != null && storedEmail.equals(email, ignoreCase = true)) {
+                    Toast.makeText(this, "Account already exists. Please login.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                if (!privacyCheckbox.isChecked) {
+                    Toast.makeText(this, "Please agree to the privacy policy", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                saveAuthData(country.code, phone, email, password)
+                ZetFlixAuthPrefs.setZetFlixAuthenticated(this, true)
+                ZetFlixSessionManager.setLoginTimestamp(this)
+                setKey("HAS_DONE_SETUP", true)
+
+                if (BiometricAuthenticator.deviceHasPasswordPinLock(this)) {
+                    isBiometricSetupMode = true
+                    BiometricSetupDialog.show(
+                        this,
+                        onEnable = {
+                            BiometricAuthenticator.startBiometricAuthentication(
+                                this,
+                                R.string.fingerprint_setup_title,
+                                false
+                            )
+                        },
+                        onSkip = {
+                            navigateToLoading()
+                        }
+                    )
+                } else {
+                    navigateToLoading()
+                }
+
             } else {
+                // Login Mode
+                if (storedEmail == null || !storedEmail.equals(email, ignoreCase = true) || storedPassword != password) {
+                    Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                ZetFlixAuthPrefs.setZetFlixAuthenticated(this, true)
+                ZetFlixSessionManager.setLoginTimestamp(this)
+                setKey("HAS_DONE_SETUP", true)
                 navigateToLoading()
             }
         }

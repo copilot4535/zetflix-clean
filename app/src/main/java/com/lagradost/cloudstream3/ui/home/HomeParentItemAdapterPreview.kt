@@ -47,11 +47,15 @@ import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showBottomDialog
 import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showOptionSelectStringRes
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarMargin
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarView
+import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
+import android.content.SharedPreferences
+import kotlin.math.absoluteValue
 
 class HomeParentItemAdapterPreview(
     private val viewModel: HomeViewModel,
-    private val accountViewModel: AccountViewModel,
 ) : ParentItemAdapter(
     id = "HomeParentItemAdapterPreview".hashCode(),
     clickCallback = {
@@ -68,7 +72,7 @@ class HomeParentItemAdapterPreview(
         val inflater = LayoutInflater.from(parent.context)
         val binding = FragmentHomeHeadBinding.inflate(inflater, parent, false)
 
-        return HeaderViewHolder(binding, viewModel, accountViewModel)
+        return HeaderViewHolder(binding, viewModel)
     }
 
     override fun onBindHeader(holder: ViewHolderState<Bundle>) {
@@ -94,7 +98,6 @@ class HomeParentItemAdapterPreview(
     private class HeaderViewHolder(
         val binding: ViewBinding,
         val viewModel: HomeViewModel,
-        accountViewModel: AccountViewModel,
     ) :
         ViewHolderState<Bundle>(binding) {
 
@@ -380,42 +383,55 @@ class HomeParentItemAdapterPreview(
             headProfilePicCard?.isGone = false
             alternateHeadProfilePicCard?.isGone = false
 
-            (headProfilePic ?: alternateHeadProfilePic)?.observe(viewModel.currentAccount) { currentAccount ->
-                headProfilePic?.loadImage(currentAccount?.image)
-                alternateHeadProfilePic?.loadImage(currentAccount?.image)
-            }
+            val context = itemView.context
+            val mainKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val sharedPreferences = EncryptedSharedPreferences.create(
+                context,
+                "zetflix_secure_prefs",
+                mainKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
+            val email = sharedPreferences.getString("email", "") ?: ""
+            val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
+
+            val backgrounds = listOf(
+                R.drawable.profile_bg_blue,
+                R.drawable.profile_bg_dark_blue,
+                R.drawable.profile_bg_orange,
+                R.drawable.profile_bg_pink,
+                R.drawable.profile_bg_purple,
+                R.drawable.profile_bg_red,
+                R.drawable.profile_bg_teal
+            )
+            val bgIndex = if (username.isNotEmpty()) username.hashCode().absoluteValue % backgrounds.size else 0
+            
+            val avatarRes = R.drawable.ic_outline_account_circle_24
+            
+            headProfilePic?.setBackgroundResource(backgrounds[bgIndex])
+            headProfilePic?.setImageResource(avatarRes)
+            alternateHeadProfilePic?.setBackgroundResource(backgrounds[bgIndex])
+            alternateHeadProfilePic?.setImageResource(avatarRes)
 
             headProfilePicCard?.setOnClickListener {
-                activity?.showAccountSelectLinear()
-            }
-
-            fun showAccountEditBox(context: Context): Boolean {
-                val currentAccount = DataStoreHelper.getCurrentAccount()
-                return if (currentAccount != null) {
-                    showAccountEditDialog(
-                        context = context,
-                        account = currentAccount,
-                        isNewAccount = false,
-                        accountEditCallback = { accountViewModel.handleAccountUpdate(it, context) },
-                    ) {
-                        accountViewModel.handleAccountDelete(
-                            it,
-                            context
-                        )
-                    }
-                    true
-                } else false
-            }
-
-            alternateHeadProfilePicCard?.setOnLongClickListener {
-                showAccountEditBox(it.context)
-            }
-            headProfilePicCard?.setOnLongClickListener {
-                showAccountEditBox(it.context)
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.action_navigation_global_to_navigation_settings_account)
             }
 
             alternateHeadProfilePicCard?.setOnClickListener {
-                activity?.showAccountSelectLinear()
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.action_navigation_global_to_navigation_settings_account)
+            }
+
+            headProfilePicCard?.setOnLongClickListener {
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.action_navigation_global_to_navigation_settings_account)
+                true
+            }
+            alternateHeadProfilePicCard?.setOnLongClickListener {
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.action_navigation_global_to_navigation_settings_account)
+                true
             }
 
 

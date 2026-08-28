@@ -473,7 +473,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
     }
 
     private val homeViewModel: HomeViewModel by activityViewModels()
-    private val accountViewModel: AccountViewModel by activityViewModels()
 
     override fun pickLayout(): Int = R.layout.fragment_home
 
@@ -518,7 +517,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         }
         binding.apply {
             homeMasterAdapter = HomeParentItemAdapterPreview(
-                homeViewModel, accountViewModel
+                homeViewModel
             )
             homeMasterRecycler.setRecycledViewPool(ParentItemAdapter.sharedPool)
             homeMasterRecycler.adapter = homeMasterAdapter
