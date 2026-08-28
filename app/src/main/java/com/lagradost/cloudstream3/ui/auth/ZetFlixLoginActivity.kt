@@ -2,6 +2,7 @@ package com.lagradost.cloudstream3.ui.auth
 
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
@@ -224,20 +225,24 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
         finish()
     }
 
+    private val mainKey: MasterKey by lazy {
+        MasterKey.Builder(this)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+    }
+
+    private val sharedPreferences: SharedPreferences by lazy {
+        EncryptedSharedPreferences.create(
+            this,
+            "zetflix_secure_prefs",
+            mainKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
     private fun saveAuthData(countryCode: String, phone: String, email: String, password: String) {
         try {
-            val mainKey = MasterKey.Builder(this)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-
-            val sharedPreferences = EncryptedSharedPreferences.create(
-                this,
-                "zetflix_secure_prefs",
-                mainKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-
             val deviceId = sharedPreferences.getString("device_id", null) ?: UUID.randomUUID().toString()
             val deviceSecret = sharedPreferences.getString("device_secret", null) ?: (UUID.randomUUID().toString() + UUID.randomUUID().toString())
 

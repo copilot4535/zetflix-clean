@@ -409,9 +409,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
     override fun onResume() {
         super.onResume()
-        afterPluginsLoadedEvent += ::onAllPluginsLoaded
         setActivityInstance(this)
-        updateAvatarInNavigation()
         try {
             if (isCastApiAvailable()) {
                 mSessionManager?.addSessionManagerListener(mSessionManagerListener)
@@ -1179,23 +1177,28 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         DownloadQueueManager.init(this)
         updateAvatarInNavigation()
+        afterPluginsLoadedEvent += ::onAllPluginsLoaded
+    }
+
+    private val mainKey: MasterKey by lazy {
+        MasterKey.Builder(this)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+    }
+
+    private val encryptedPrefs: SharedPreferences by lazy {
+        EncryptedSharedPreferences.create(
+            this,
+            "zetflix_secure_prefs",
+            mainKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 
     private fun loadEmailFromEncryptedPrefs(): String? {
         return try {
-            val mainKey = MasterKey.Builder(this)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-
-            val sharedPreferences = EncryptedSharedPreferences.create(
-                this,
-                "zetflix_secure_prefs",
-                mainKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-
-            sharedPreferences.getString("email", null)
+            encryptedPrefs.getString("email", null)
         } catch (e: Exception) {
             e.printStackTrace()
             null

@@ -18,6 +18,8 @@ import com.lagradost.cloudstream3.ui.AutofitRecyclerView
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
 import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
+import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
+import com.lagradost.cloudstream3.utils.Coroutines.main
 import android.content.Intent
 import com.lagradost.cloudstream3.ui.account.AccountAdapter.Companion.VIEW_TYPE_EDIT_ACCOUNT
 import com.lagradost.cloudstream3.ui.account.AccountAdapter.Companion.VIEW_TYPE_SELECT_ACCOUNT
@@ -54,10 +56,14 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
             return
         }
 
-        if (ZetFlixAuthPrefs.isZetFlixAuthenticated(this) &&
-            !ZetFlixSessionManager.isSessionValid(this)) {
-            ZetFlixSessionManager.logout(this)
-            return
+        ioSafe {
+            val valid = ZetFlixSessionManager.isSessionValid(this@AccountSelectActivity)
+            if (!valid) {
+                main {
+                    ZetFlixSessionManager.logout(this@AccountSelectActivity)
+                }
+                return@ioSafe
+            }
         }
 
         val isEditingFromMainActivity = intent.getBooleanExtra(

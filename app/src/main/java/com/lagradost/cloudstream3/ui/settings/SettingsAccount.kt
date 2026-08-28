@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.content.SharedPreferences
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.security.crypto.EncryptedSharedPreferences
@@ -15,9 +16,27 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setUpToolbar
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
+import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
+import com.lagradost.cloudstream3.utils.Coroutines.main
 import kotlin.math.absoluteValue
 
 class SettingsAccount : Fragment() {
+
+    private val mainKey: MasterKey by lazy {
+        MasterKey.Builder(requireContext())
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+    }
+
+    private val sharedPreferences: SharedPreferences by lazy {
+        EncryptedSharedPreferences.create(
+            requireContext(),
+            "zetflix_secure_prefs",
+            mainKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,62 +54,56 @@ class SettingsAccount : Fragment() {
     }
 
     private fun loadUserData(view: View) {
-        val context = requireContext()
-        try {
-            val mainKey = MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
+        val context = context ?: return
+        ioSafe {
+            try {
+                val email = sharedPreferences.getString("email", "") ?: ""
+                val countryCode = sharedPreferences.getString("phoneCountryCode", "") ?: ""
+                val phone = sharedPreferences.getString("phoneNationalNumber", "") ?: ""
 
-            val sharedPreferences = EncryptedSharedPreferences.create(
-                context,
-                "zetflix_secure_prefs",
-                mainKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
+                val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
 
-            val email = sharedPreferences.getString("email", "") ?: ""
-            val countryCode = sharedPreferences.getString("phoneCountryCode", "") ?: ""
-            val phone = sharedPreferences.getString("phoneNationalNumber", "") ?: ""
+                val maskedPhone = if (phone.length >= 4) {
+                    val first2 = phone.take(2)
+                    val last4 = phone.takeLast(4)
+                    "$countryCode $first2****$last4"
+                } else {
+                    "$countryCode $phone"
+                }
 
-            val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
-            
-            view.findViewById<TextView>(R.id.account_username).text = username
-            view.findViewById<TextView>(R.id.account_email_sub).text = email
-            view.findViewById<TextView>(R.id.account_email).text = email
+                val isBiometricEnabled = BiometricAuthenticator.isAuthEnabled(context)
 
-            val maskedPhone = if (phone.length >= 4) {
-                val first2 = phone.take(2)
-                val last4 = phone.takeLast(4)
-                "$countryCode $first2****$last4"
-            } else {
-                "$countryCode $phone"
+                main {
+                    view.findViewById<TextView>(R.id.account_username).text = username
+                    view.findViewById<TextView>(R.id.account_email_sub).text = email
+                    view.findViewById<TextView>(R.id.account_email).text = email
+                    view.findViewById<TextView>(R.id.account_phone).text = maskedPhone
+                    view.findViewById<TextView>(R.id.account_fingerprint_status).text =
+                        if (isBiometricEnabled) {
+                            getString(R.string.zetflix_account_fingerprint_enabled)
+                        } else {
+                            getString(R.string.zetflix_account_fingerprint_disabled)
+                        }
+
+                    // Avatar logic: monogram for now
+                    val avatarView = view.findViewById<ImageView>(R.id.account_avatar)
+                    val backgrounds = listOf(
+                        R.drawable.profile_bg_blue,
+                        R.drawable.profile_bg_dark_blue,
+                        R.drawable.profile_bg_orange,
+                        R.drawable.profile_bg_pink,
+                        R.drawable.profile_bg_purple,
+                        R.drawable.profile_bg_red,
+                        R.drawable.profile_bg_teal
+                    )
+                    val bgIndex =
+                        if (username.isNotEmpty()) username.hashCode().absoluteValue % backgrounds.size else 0
+                    avatarView.setBackgroundResource(backgrounds[bgIndex])
+                    avatarView.setImageResource(R.drawable.ic_outline_account_circle_24)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            view.findViewById<TextView>(R.id.account_phone).text = maskedPhone
-
-            val isBiometricEnabled = BiometricAuthenticator.isAuthEnabled(context)
-            view.findViewById<TextView>(R.id.account_fingerprint_status).text = if (isBiometricEnabled) {
-                getString(R.string.zetflix_account_fingerprint_enabled)
-            } else {
-                getString(R.string.zetflix_account_fingerprint_disabled)
-            }
-
-            val avatarView = view.findViewById<ImageView>(R.id.account_avatar)
-            val backgrounds = listOf(
-                R.drawable.profile_bg_blue,
-                R.drawable.profile_bg_dark_blue,
-                R.drawable.profile_bg_orange,
-                R.drawable.profile_bg_pink,
-                R.drawable.profile_bg_purple,
-                R.drawable.profile_bg_red,
-                R.drawable.profile_bg_teal
-            )
-            val bgIndex = if (username.isNotEmpty()) username.hashCode().absoluteValue % backgrounds.size else 0
-            avatarView.setBackgroundResource(backgrounds[bgIndex])
-            avatarView.setImageResource(R.drawable.ic_outline_account_circle_24)
-
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 
