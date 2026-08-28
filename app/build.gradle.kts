@@ -153,6 +153,7 @@ android {
             "\"" + (System.getenv("ANILIST_KEY") ?: localProperties["anilist.key"]) + "\""
         )
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        resConfigs("en")
     }
 
     buildTypes {
