@@ -193,7 +193,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                                 
                                 withContext(Dispatchers.Main) {
                                     setKey("HAS_DONE_SETUP", true)
-                                    if (BiometricAuthenticator.deviceHasPasswordPinLock(this@ZetFlixLoginActivity)) {
+                                    if (BiometricAuthenticator.canSetupBiometrics(this@ZetFlixLoginActivity)) {
                                         isBiometricSetupMode = true
                                         BiometricSetupDialog.show(
                                             this@ZetFlixLoginActivity,

@@ -130,9 +130,13 @@
                         android:layout_marginBottom="16dp" />
 
                     <LinearLayout
+                        android:id="@+id/account_fingerprint_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"

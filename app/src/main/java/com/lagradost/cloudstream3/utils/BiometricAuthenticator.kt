@@ -155,8 +155,27 @@ object BiometricAuthenticator {
     // checks if device is secured i.e has at least some type of lock
     fun deviceHasPasswordPinLock(context: Context?): Boolean {
         val keyMgr =
-            context?.getSystemService(AppCompatActivity.KEYGUARD_SERVICE) as? KeyguardManager
+            context?.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
         return keyMgr?.isKeyguardSecure ?: false
+    }
+
+    fun canSetupBiometrics(context: Context): Boolean {
+        val manager = BiometricManager.from(context)
+        val authenticators = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            BIOMETRIC_STRONG or DEVICE_CREDENTIAL
+        } else {
+            BIOMETRIC_STRONG
+        }
+        return manager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS || 
+               manager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ||
+               deviceHasPasswordPinLock(context)
+    }
+
+    fun isBiometricHardwareAvailable(context: Context): Boolean {
+        val manager = BiometricManager.from(context)
+        val result = manager.canAuthenticate(BIOMETRIC_STRONG)
+        return result != BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE && 
+               result != BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE
     }
 
     // function to start authentication in any fragment or activity
