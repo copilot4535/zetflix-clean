@@ -787,4 +787,11 @@
     <string name="zetflix_password_error">Password must be at least 8 characters</string>
     <string name="zetflix_password_mismatch">Passwords do not match</string>
     <string name="zetflix_phone_error">Please enter a valid phone number</string>
+
+    <string name="fingerprint_setup_title">Enable Fingerprint Login?</string>
+    <string name="fingerprint_setup_description">Use your fingerprint for faster access next time.</string>
+    <string name="fingerprint_setup_enable">Enable</string>
+    <string name="fingerprint_setup_skip">Skip</string>
+    <string name="fingerprint_setup_success">Fingerprint enabled</string>
+    <string name="fingerprint_setup_failed">Could not enable fingerprint. You can enable it later in Settings.</string>
 </resources>

@@ -10,6 +10,7 @@ import android.widget.*
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.google.android.gms.auth.api.identity.GetPhoneNumberHintIntentRequest
@@ -17,10 +18,12 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.R
+import com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity
+import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
 import java.util.*
 
-class ZetFlixLoginActivity : AppCompatActivity() {
+class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.BiometricCallback {
 
     private data class Country(val flag: String, val name: String, val code: String, val length: Int) {
         override fun toString(): String = "$flag $code"
@@ -156,9 +159,47 @@ class ZetFlixLoginActivity : AppCompatActivity() {
             ZetFlixSessionManager.setLoginTimestamp(this)
             setKey("HAS_DONE_SETUP", true)
             
-            startActivity(Intent(this, com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity::class.java))
-            finish()
+            if (isRegisterMode && BiometricAuthenticator.deviceHasPasswordPinLock(this)) {
+                BiometricSetupDialog.show(
+                    this,
+                    onEnable = {
+                        BiometricAuthenticator.startBiometricAuthentication(
+                            this,
+                            R.string.fingerprint_setup_title,
+                            false
+                        )
+                    },
+                    onSkip = {
+                        navigateToLoading()
+                    },
+                    onFinished = {
+                        // handled in callbacks
+                    }
+                )
+            } else {
+                navigateToLoading()
+            }
         }
+    }
+
+    override fun onAuthenticationSuccess() {
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .edit()
+            .putBoolean(getString(R.string.biometric_key), true)
+            .apply()
+
+        Toast.makeText(this, R.string.fingerprint_setup_success, Toast.LENGTH_SHORT).show()
+        navigateToLoading()
+    }
+
+    override fun onAuthenticationError() {
+        Toast.makeText(this, R.string.fingerprint_setup_failed, Toast.LENGTH_SHORT).show()
+        navigateToLoading()
+    }
+
+    private fun navigateToLoading() {
+        startActivity(Intent(this, ZetFlixLoadingActivity::class.java))
+        finish()
     }
 
     private fun saveAuthData(countryCode: String, phone: String, email: String, password: String) {
