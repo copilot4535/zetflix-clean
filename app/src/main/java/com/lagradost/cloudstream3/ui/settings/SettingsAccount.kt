@@ -92,7 +92,8 @@ class SettingsAccount : Fragment(), BiometricAuthenticator.BiometricCallback {
                                 BiometricAuthenticator.startBiometricAuthentication(
                                     requireActivity(),
                                     R.string.biometric_authentication_title,
-                                    false
+                                    false,
+                                    this@SettingsAccount
                                 )
                             }
                         }

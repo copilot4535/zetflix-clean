@@ -31,7 +31,7 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
         // Check session validity synchronously
         if (!ZetFlixSessionManager.isSessionValid(this)) {
             ZetFlixSessionManager.logout(this)
-            finish()
+            finish() // Explicitly finish here
             return
         }
 

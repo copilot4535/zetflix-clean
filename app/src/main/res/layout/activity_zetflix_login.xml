@@ -45,18 +45,45 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="16dp"
-                android:backgroundTint="#2c2c3a"
+                android:backgroundTint="#1a1a24"
                 android:text="@string/fingerprint_login_button"
                 android:textAllCaps="false"
                 android:textColor="#ffffff"
                 android:textSize="18sp"
-                android:visibility="gone" />
+                android:visibility="gone"
+                app:strokeColor="#2c2c3a"
+                app:strokeWidth="1dp" />
 
+            <!-- Login mode only identifier -->
             <LinearLayout
+                android:id="@+id/identifier_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <EditText
+                    android:id="@+id/identifier_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/zetflix_input_bg"
+                    android:hint="Email or phone number"
+                    android:inputType="text"
+                    android:paddingEnd="12dp"
+                    android:paddingStart="12dp"
+                    android:textColor="#ffffff"
+                    android:textColorHint="#80ffffff" />
+            </LinearLayout>
+
+            <!-- Register mode only phone -->
+            <LinearLayout
+                android:id="@+id/phone_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <Spinner
                     android:id="@+id/country_code_spinner"
@@ -81,18 +108,27 @@
                     android:textColorHint="#80ffffff" />
             </LinearLayout>
 
-            <EditText
-                android:id="@+id/email_edit"
+            <!-- Register mode only email -->
+            <LinearLayout
+                android:id="@+id/email_layout"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/zetflix_input_bg"
-                android:hint="@string/zetflix_email_hint"
-                android:inputType="textEmailAddress"
-                android:paddingEnd="12dp"
-                android:paddingStart="12dp"
-                android:textColor="#ffffff"
-                android:textColorHint="#80ffffff" />
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <EditText
+                    android:id="@+id/email_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/zetflix_input_bg"
+                    android:hint="@string/zetflix_email_hint"
+                    android:inputType="textEmailAddress"
+                    android:paddingEnd="12dp"
+                    android:paddingStart="12dp"
+                    android:textColor="#ffffff"
+                    android:textColorHint="#80ffffff" />
+            </LinearLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -126,7 +162,8 @@
                 android:id="@+id/confirm_password_layout"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="16dp"
+                android:visibility="gone">
 
                 <EditText
                     android:id="@+id/confirm_password_edit"
@@ -157,7 +194,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="@string/zetflix_agree_privacy"
-                android:textColor="#a0a0b0" />
+                android:textColor="#a0a0b0"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/login_button"

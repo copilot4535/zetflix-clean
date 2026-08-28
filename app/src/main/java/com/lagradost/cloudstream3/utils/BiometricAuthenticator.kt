@@ -179,9 +179,14 @@ object BiometricAuthenticator {
     }
 
     // function to start authentication in any fragment or activity
-    fun startBiometricAuthentication(activity: FragmentActivity, title: Int, setDeviceCred: Boolean) {
+    fun startBiometricAuthentication(
+        activity: FragmentActivity,
+        title: Int,
+        setDeviceCred: Boolean,
+        callback: BiometricCallback? = null
+    ) {
         initializeBiometrics(activity)
-        authCallback = activity as? BiometricCallback
+        authCallback = callback ?: (activity as? BiometricCallback)
         if (isBiometricHardWareAvailable()) {
             authCallback = activity as? BiometricCallback
             authenticationDialog(activity, title, setDeviceCred)

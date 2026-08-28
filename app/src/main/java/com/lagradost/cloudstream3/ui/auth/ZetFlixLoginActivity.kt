@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.activity.result.IntentSenderRequest
@@ -87,6 +88,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
         val countrySpinner = findViewById<Spinner>(R.id.country_code_spinner)
         val phoneEdit = findViewById<EditText>(R.id.phone_number_edit)
         val emailEdit = findViewById<EditText>(R.id.email_edit)
+        val identifierEdit = findViewById<EditText>(R.id.identifier_edit)
         val passwordEdit = findViewById<EditText>(R.id.password_edit)
         val passwordToggle = findViewById<ImageView>(R.id.password_visibility_toggle)
         val confirmPasswordLayout = findViewById<View>(R.id.confirm_password_layout)
@@ -96,6 +98,9 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
         val loginButton = findViewById<Button>(R.id.login_button)
         val modeSwitchLink = findViewById<TextView>(R.id.mode_switch_link)
         val fingerprintLoginButton = findViewById<Button>(R.id.fingerprint_login_button)
+        val phoneLayout = findViewById<View>(R.id.phone_layout)
+        val emailLayout = findViewById<View>(R.id.email_layout)
+        val identifierLayout = findViewById<View>(R.id.identifier_layout)
 
         setupPasswordToggle(passwordEdit, passwordToggle)
         setupPasswordToggle(confirmPasswordEdit, confirmPasswordToggle)
@@ -104,7 +109,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
         countrySpinner.adapter = adapter
 
         phoneEdit.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
+            if (hasFocus && isRegisterMode) {
                 requestPhoneHint()
             }
         }
@@ -113,12 +118,20 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
             if (isRegisterMode) {
                 loginButton.setText(R.string.zetflix_register_button)
                 modeSwitchLink.setText(R.string.zetflix_login_toggle)
-                confirmPasswordLayout.visibility = View.VISIBLE
+                confirmPasswordLayout?.visibility = View.VISIBLE
+                privacyCheckbox?.visibility = View.VISIBLE
+                phoneLayout?.visibility = View.VISIBLE
+                emailLayout?.visibility = View.VISIBLE
+                identifierLayout?.visibility = View.GONE
                 fingerprintLoginButton.visibility = View.GONE
             } else {
                 loginButton.setText(R.string.zetflix_login_button)
                 modeSwitchLink.setText(R.string.zetflix_register_toggle)
-                confirmPasswordLayout.visibility = View.GONE
+                confirmPasswordLayout?.visibility = View.GONE
+                privacyCheckbox?.visibility = View.GONE
+                phoneLayout?.visibility = View.GONE
+                emailLayout?.visibility = View.GONE
+                identifierLayout?.visibility = View.VISIBLE
                 fingerprintLoginButton.visibility = if (BiometricAuthenticator.isAuthEnabled(this)) View.VISIBLE else View.GONE
             }
         }
@@ -143,51 +156,74 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
 
         loginButton.setOnClickListener {
             val country = countrySpinner.selectedItem as Country
-            val phone = phoneEdit.text.toString().trim()
-            val email = emailEdit.text.toString().trim().lowercase()
+            val phone = phoneEdit.text.toString()
+            val emailRaw = emailEdit.text.toString()
+            val identifierRaw = identifierEdit.text.toString()
             val password = passwordEdit.text.toString()
             val confirmPassword = confirmPasswordEdit.text.toString()
 
-            if (phone.length != country.length) {
-                Toast.makeText(this, R.string.zetflix_phone_error, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            if (isRegisterMode) {
+                if (phone.trim().isEmpty()) {
+                    Toast.makeText(this, "Please enter phone number", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
 
-            if (email.isEmpty() || !email.endsWith("@gmail.com")) {
-                Toast.makeText(this, R.string.zetflix_email_error, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+                if (emailRaw.trim().isEmpty() || !emailRaw.trim().lowercase().endsWith("@gmail.com")) {
+                    Toast.makeText(this, R.string.zetflix_email_error, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
 
-            if (password.length < 8) {
-                Toast.makeText(this, R.string.zetflix_password_error, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+                if (password.length < 8) {
+                    Toast.makeText(this, R.string.zetflix_password_error, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
 
-            if (isRegisterMode && password != confirmPassword) {
-                Toast.makeText(this, R.string.zetflix_password_mismatch, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+                if (password != confirmPassword) {
+                    Toast.makeText(this, R.string.zetflix_password_mismatch, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
 
-            if (isRegisterMode && !privacyCheckbox.isChecked) {
-                Toast.makeText(this, "Please agree to the privacy policy", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+                if (!privacyCheckbox.isChecked) {
+                    Toast.makeText(this, "Please agree to the privacy policy", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            } else {
+                if (identifierRaw.trim().isEmpty()) {
+                    Toast.makeText(this, "Please enter email or phone number", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (password.length < 8) {
+                    Toast.makeText(this, R.string.zetflix_password_error, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
             }
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
                     val prefs = ZetFlixCryptoUtils.getEncryptedPrefs(this@ZetFlixLoginActivity)
                     val storedEmail = prefs.getString("email", null)
+                    val storedPhone = prefs.getString("phoneNationalNumber", null)
+                    val storedCountryCode = prefs.getString("phoneCountryCode", null)
                     val storedPassword = prefs.getString("password", null)
 
                     withContext(Dispatchers.Main) {
                         if (isRegisterMode) {
-                            if (storedEmail != null && storedEmail.equals(email, ignoreCase = true)) {
+                            val normalizedEmail = emailRaw.trim().lowercase()
+                            if (storedEmail != null && storedEmail.equals(normalizedEmail, ignoreCase = true)) {
                                 Toast.makeText(this@ZetFlixLoginActivity, "Account already exists. Please login.", Toast.LENGTH_SHORT).show()
                                 return@withContext
                             }
 
                             lifecycleScope.launch(Dispatchers.IO) {
-                                saveAuthData(prefs, country.code, phone, email, password)
+                                val normalizedPhone = phone.filter { it.isDigit() }
+                                saveAuthData(prefs, country.code, normalizedPhone, normalizedEmail, password)
+                                
+                                Log.d("ZetFlixAuthDebug", "Registration successful")
+                                Log.d("ZetFlixAuthDebug", "Stored Email: $normalizedEmail")
+                                Log.d("ZetFlixAuthDebug", "Stored Phone Country Code: ${country.code}")
+                                Log.d("ZetFlixAuthDebug", "Stored Phone National Number: $normalizedPhone")
+                                Log.d("ZetFlixAuthDebug", "Stored Password Length: ${password.length}")
+
                                 ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixLoginActivity, true)
                                 ZetFlixSessionManager.setLoginTimestamp(this@ZetFlixLoginActivity)
                                 
@@ -215,18 +251,66 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                             }
                         } else {
                             // Login Mode
-                            if (storedEmail == null || !storedEmail.equals(email, ignoreCase = true) || storedPassword != password) {
-                                Toast.makeText(this@ZetFlixLoginActivity, "Invalid email or password", Toast.LENGTH_SHORT).show()
-                                return@withContext
+                            var isMatch = false
+                            
+                            val inputIdentifier = identifierRaw.trim()
+                            val inputPassword = password
+
+                            Log.d("ZetFlixAuthDebug", "Login Attempt")
+                            Log.d("ZetFlixAuthDebug", "Entered Identifier: $inputIdentifier")
+                            
+                            val normalizedStoredEmail = storedEmail?.trim()?.lowercase()
+                            val normalizedStoredPhone = storedPhone?.filter { it.isDigit() } ?: ""
+                            val normalizedStoredCountryCode = storedCountryCode?.filter { it.isDigit() } ?: ""
+
+                            if (inputIdentifier.contains("@")) {
+                                Log.d("ZetFlixAuthDebug", "Classification: Email")
+                                val normalizedInputEmail = inputIdentifier.lowercase()
+                                Log.d("ZetFlixAuthDebug", "Normalized Identifier: $normalizedInputEmail")
+                                if (normalizedStoredEmail != null && normalizedInputEmail == normalizedStoredEmail) {
+                                    isMatch = true
+                                }
+                                Log.d("ZetFlixAuthDebug", "Email Match: $isMatch")
+                            } else {
+                                Log.d("ZetFlixAuthDebug", "Classification: Phone")
+                                val normalizedInputPhone = inputIdentifier.filter { it.isDigit() }
+                                Log.d("ZetFlixAuthDebug", "Normalized Identifier: $normalizedInputPhone")
+                                
+                                if (normalizedStoredPhone.isNotEmpty()) {
+                                    val matchA = normalizedInputPhone == normalizedStoredPhone
+                                    val matchB = normalizedInputPhone == (normalizedStoredCountryCode + normalizedStoredPhone)
+                                    
+                                    // Handle leading zeros
+                                    val inputNoLeadingZero = normalizedInputPhone.removePrefix("0")
+                                    val storedNoLeadingZero = normalizedStoredPhone.removePrefix("0")
+                                    val matchC = inputNoLeadingZero == storedNoLeadingZero
+                                    
+                                    isMatch = matchA || matchB || matchC
+                                }
+                                Log.d("ZetFlixAuthDebug", "Phone Match: $isMatch")
                             }
 
-                            ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixLoginActivity, true)
-                            ZetFlixSessionManager.setLoginTimestamp(this@ZetFlixLoginActivity)
-                            setKey("HAS_DONE_SETUP", true)
-                            navigateToLoading()
+                            Log.d("ZetFlixAuthDebug", "Stored Email: $normalizedStoredEmail")
+                            Log.d("ZetFlixAuthDebug", "Stored Phone: $normalizedStoredPhone")
+                            
+                            val passwordMatch = storedPassword == inputPassword
+                            Log.d("ZetFlixAuthDebug", "Entered Password Length: ${inputPassword.length}")
+                            Log.d("ZetFlixAuthDebug", "Password Match: $passwordMatch")
+
+                            if (isMatch && passwordMatch) {
+                                Log.d("ZetFlixAuthDebug", "Login Result: Success")
+                                ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixLoginActivity, true)
+                                ZetFlixSessionManager.setLoginTimestamp(this@ZetFlixLoginActivity)
+                                setKey("HAS_DONE_SETUP", true)
+                                navigateToLoading()
+                            } else {
+                                Log.d("ZetFlixAuthDebug", "Login Result: Failure")
+                                Toast.makeText(this@ZetFlixLoginActivity, "Invalid email/phone or password", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 } catch (e: Exception) {
+                    Log.e("ZetFlixAuthDebug", "Error during login/register", e)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@ZetFlixLoginActivity, "Error accessing secure storage", Toast.LENGTH_SHORT).show()
                     }
