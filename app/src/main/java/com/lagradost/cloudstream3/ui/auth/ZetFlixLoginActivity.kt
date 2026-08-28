@@ -41,6 +41,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
     )
 
     private var isRegisterMode = false
+    private var isBiometricSetupMode = false
 
     private val phoneHintLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
@@ -90,6 +91,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
         val privacyCheckbox = findViewById<CheckBox>(R.id.privacy_checkbox)
         val loginButton = findViewById<Button>(R.id.login_button)
         val modeSwitchLink = findViewById<TextView>(R.id.mode_switch_link)
+        val fingerprintLoginButton = findViewById<Button>(R.id.fingerprint_login_button)
 
         setupPasswordToggle(passwordEdit, passwordToggle)
         setupPasswordToggle(confirmPasswordEdit, confirmPasswordToggle)
@@ -108,14 +110,27 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                 loginButton.setText(R.string.zetflix_register_button)
                 modeSwitchLink.setText(R.string.zetflix_login_toggle)
                 confirmPasswordLayout.visibility = View.VISIBLE
+                fingerprintLoginButton.visibility = View.GONE
             } else {
                 loginButton.setText(R.string.zetflix_login_button)
                 modeSwitchLink.setText(R.string.zetflix_register_toggle)
                 confirmPasswordLayout.visibility = View.GONE
+                fingerprintLoginButton.visibility = if (BiometricAuthenticator.isAuthEnabled(this)) View.VISIBLE else View.GONE
             }
         }
 
         updateUI()
+
+        if (BiometricAuthenticator.isAuthEnabled(this)) {
+            fingerprintLoginButton.setOnClickListener {
+                isBiometricSetupMode = false
+                BiometricAuthenticator.startBiometricAuthentication(
+                    this,
+                    R.string.biometric_authentication_title,
+                    false
+                )
+            }
+        }
 
         modeSwitchLink.setOnClickListener {
             isRegisterMode = !isRegisterMode
@@ -160,6 +175,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
             setKey("HAS_DONE_SETUP", true)
             
             if (isRegisterMode && BiometricAuthenticator.deviceHasPasswordPinLock(this)) {
+                isBiometricSetupMode = true
                 BiometricSetupDialog.show(
                     this,
                     onEnable = {
@@ -183,18 +199,24 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
     }
 
     override fun onAuthenticationSuccess() {
-        PreferenceManager.getDefaultSharedPreferences(this)
-            .edit()
-            .putBoolean(getString(R.string.biometric_key), true)
-            .apply()
+        if (isBiometricSetupMode) {
+            PreferenceManager.getDefaultSharedPreferences(this)
+                .edit()
+                .putBoolean(getString(R.string.biometric_key), true)
+                .apply()
 
-        Toast.makeText(this, R.string.fingerprint_setup_success, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.fingerprint_setup_success, Toast.LENGTH_SHORT).show()
+        }
         navigateToLoading()
     }
 
     override fun onAuthenticationError() {
-        Toast.makeText(this, R.string.fingerprint_setup_failed, Toast.LENGTH_SHORT).show()
-        navigateToLoading()
+        if (isBiometricSetupMode) {
+            Toast.makeText(this, R.string.fingerprint_setup_failed, Toast.LENGTH_SHORT).show()
+            navigateToLoading()
+        } else {
+            Toast.makeText(this, R.string.fingerprint_login_failed, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun navigateToLoading() {

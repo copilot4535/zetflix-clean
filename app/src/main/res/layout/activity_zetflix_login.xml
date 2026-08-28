@@ -40,6 +40,18 @@
                 android:textColor="#a0a0b0"
                 android:textSize="16sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fingerprint_login_button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="#2c2c3a"
+                android:text="@string/fingerprint_login_button"
+                android:textAllCaps="false"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

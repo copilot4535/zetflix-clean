@@ -794,4 +794,6 @@
     <string name="fingerprint_setup_skip">Skip</string>
     <string name="fingerprint_setup_success">Fingerprint enabled</string>
     <string name="fingerprint_setup_failed">Could not enable fingerprint. You can enable it later in Settings.</string>
+    <string name="fingerprint_login_button">Login with Fingerprint</string>
+    <string name="fingerprint_login_failed">Fingerprint authentication failed. Try again or use password.</string>
 </resources>
