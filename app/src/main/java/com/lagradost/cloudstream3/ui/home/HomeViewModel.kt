@@ -50,6 +50,7 @@ import com.lagradost.cloudstream3.utils.DataStoreHelper.getCurrentAccount
 import com.lagradost.cloudstream3.utils.DataStoreHelper.getLastWatched
 import com.lagradost.cloudstream3.utils.DataStoreHelper.getResultWatchState
 import com.lagradost.cloudstream3.utils.DataStoreHelper.getViewPos
+import com.lagradost.cloudstream3.utils.PluginPriorityManager
 import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -351,8 +352,9 @@ class HomeViewModel : ViewModel() {
             _preview.postValue(Resource.Loading())
         }
 
-        val validAPIs = (context?.filterProviderByPreferredMedia() ?: emptyList()).shuffled()
-        if (validAPIs.isEmpty()) {
+        val filteredApis = context?.filterProviderByPreferredMedia() ?: emptyList()
+
+        if (filteredApis.isEmpty()) {
             if (!cachedShown) {
                 _page.postValue(Resource.Success(emptyMap()))
                 _preview.postValue(Resource.Failure(false, "No plugins found"))
@@ -360,8 +362,19 @@ class HomeViewModel : ViewModel() {
             return@ioSafe
         }
 
-        val stage1Plugins = validAPIs.take(STAGE1_PLUGIN_COUNT)
-        val stage2Plugins = validAPIs.drop(STAGE1_PLUGIN_COUNT)
+        // Overall list shuffled for stage 2
+        val shuffledApis = filteredApis.shuffled()
+
+        // Select 3 initial plugins with priority
+        val stage1Plugins = PluginPriorityManager.selectInitialPlugins(
+            filteredApis,
+            STAGE1_PLUGIN_COUNT
+        )
+
+        // Stage 2: remaining plugins excluding stage 1, shuffled
+        val stage2Plugins = shuffledApis.filterNot { api ->
+            stage1Plugins.any { it.name == api.name && it.lang == api.lang }
+        }
 
         suspend fun loadPlugins(plugins: List<MainAPI>, stageDeadline: Long) {
             plugins.chunked(MAX_CONCURRENT_PLUGIN_LOADS).forEach { chunk ->
