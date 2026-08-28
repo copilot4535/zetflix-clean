@@ -129,6 +129,9 @@
                 style="@style/WhiteButton"
                 android:layout_width="wrap_content"
                 android:layout_gravity="center"
+                android:backgroundTint="#e50914"
+                android:textColor="#ffffff"
+                app:iconTint="#ffffff"
                 android:text="@string/home_play"
                 app:icon="@drawable/ic_baseline_play_arrow_24" />
 

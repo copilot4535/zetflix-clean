@@ -50,9 +50,12 @@
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <com.google.android.material.imageview.ShapeableImageView
+                <ImageView
                     android:id="@+id/play_icon"
-                    style="@style/DownloadHeaderPlayUnderlayProgress"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_play_red_circle"
                     />
                 <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/download_header_episode_progress"

@@ -163,7 +163,7 @@ class DownloadAdapter(
                     playIcon.setImageResource(R.drawable.ic_baseline_check_24)
                     isVisible = false
                 } else {
-                    playIcon.setImageResource(R.drawable.netflix_play)
+                    playIcon.setImageResource(R.drawable.ic_play_red_circle)
                     this.max = max
                     this.progress = progress
                     isVisible = true
@@ -270,7 +270,7 @@ class DownloadAdapter(
                         downloadChildEpisodePlay.setImageResource(R.drawable.ic_baseline_check_24)
                         isVisible = false
                     } else {
-                        downloadChildEpisodePlay.setImageResource(R.drawable.play_button_transparent)
+                        downloadChildEpisodePlay.setImageResource(R.drawable.ic_play_red_circle)
                         this.max = max
                         this.progress = progress
                         isVisible = true

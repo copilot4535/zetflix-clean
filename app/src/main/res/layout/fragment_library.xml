@@ -168,9 +168,11 @@
             style="@style/ExtendedFloatingActionButton"
             android:layout_gravity="bottom|start"
             android:text="@string/home_random"
-            android:textColor="?attr/textColor"
+            android:textColor="#ffffff"
             android:visibility="gone"
             app:icon="@drawable/ic_baseline_play_arrow_24"
+            app:iconTint="#ffffff"
+            app:tint="#ffffff"
             tools:ignore="ContentDescription"
             tools:visibility="visible" />
 

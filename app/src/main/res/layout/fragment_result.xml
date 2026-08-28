@@ -592,6 +592,7 @@
                                 style="@style/WhiteButton"
                                 android:layout_width="match_parent"
                                 android:layout_margin="0dp"
+                                android:backgroundTint="#e50914"
                                 android:visibility="visible" />
 
                             <LinearLayout
@@ -609,8 +610,10 @@
 
                                     <ImageView
                                         android:id="@+id/episode_play_icon"
-                                        style="@style/ContinueWatchingPlayUnderlayProgress"
-                                        app:tint="?attr/black" />
+                                        android:layout_width="28dp"
+                                        android:layout_height="28dp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_play_red_circle" />
 
                                     <com.google.android.material.progressindicator.CircularProgressIndicator
                                         android:id="@+id/result_resume_series_progress"
@@ -707,6 +710,9 @@
                                     android:layout_gravity="center_vertical"
                                     android:layout_marginStart="0dp"
                                     android:layout_marginEnd="0dp"
+                                    android:backgroundTint="#e50914"
+                                    android:textColor="#ffffff"
+                                    app:iconTint="#ffffff"
 
                                     android:nextFocusDown="@id/result_download_movie"
                                     android:text="@string/play_movie_button"

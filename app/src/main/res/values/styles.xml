@@ -918,10 +918,9 @@
     </style>
 
     <style name="HomePlayUnderlayProgress" parent="PlayUnderlayProgress">
-        <item name="tint">@color/white</item>
-        <item name="android:layout_width">@dimen/home_poster_progress_size</item>
-        <item name="android:layout_height">@dimen/home_poster_progress_size</item>
-        <item name="android:background">@color/playIconBackground</item>
+        <item name="android:layout_width">28dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:src">@drawable/ic_play_red_circle</item>
     </style>
 
     <style name="HomeCircularProgress" parent="CircularProgress">
@@ -931,10 +930,9 @@
     </style>
 
     <style name="EpisodePlayUnderlayProgress" parent="PlayUnderlayProgress">
-        <item name="tint">@color/white</item>
-        <item name="android:layout_width">40dp</item>
-        <item name="android:layout_height">40dp</item>
-        <item name="android:background">@color/playIconBackground</item>
+        <item name="android:layout_width">28dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:src">@drawable/ic_play_red_circle</item>
     </style>
 
     <style name="EpisodeCircularProgress" parent="CircularProgress">
@@ -944,9 +942,9 @@
     </style>
 
     <style name="ContinueWatchingPlayUnderlayProgress">
-        <item name="android:layout_width">@dimen/continue_watching_progress_size</item>
-        <item name="android:layout_height">@dimen/continue_watching_progress_size</item>
-        <item name="android:src">@drawable/play_button_transparent</item>
+        <item name="android:layout_width">28dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:src">@drawable/ic_play_red_circle</item>
         <item name="android:layout_gravity">center</item>
     </style>
 
@@ -962,9 +960,9 @@
         <item name="indicatorSize">@dimen/download_header_progress_size</item>
     </style>
     <style name="DownloadHeaderPlayUnderlayProgress" parent="PlayUnderlayProgress">
-        <item name="tint">@color/white</item>
-        <item name="android:layout_width">@dimen/download_header_progress_size</item>
-        <item name="android:layout_height">@dimen/download_header_progress_size</item>
-        <item name="android:background">@color/playIconBackground</item>
+        <item name="android:layout_width">28dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:src">@drawable/ic_play_red_circle</item>
+        <item name="android:layout_gravity">center</item>
     </style>
 </resources>

@@ -333,10 +333,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_marginEnd="16dp"
-            android:backgroundTint="?attr/primaryGrayBackground"
+            android:backgroundTint="#e50914"
             android:contentDescription="@string/open_local_video"
             android:src="@drawable/netflix_play"
-            app:tint="?attr/textColor"
+            app:tint="#ffffff"
             android:tooltipText="@string/open_local_video" />
 
     </LinearLayout>

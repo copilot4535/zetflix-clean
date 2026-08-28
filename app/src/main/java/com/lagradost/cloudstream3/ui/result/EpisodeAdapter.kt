@@ -218,7 +218,7 @@ class EpisodeAdapter(
                             episodePlayIcon.setImageResource(R.drawable.ic_baseline_check_24)
                             episodeProgress.isVisible = false
                         } else {
-                            episodePlayIcon.setImageResource(R.drawable.netflix_play)
+                            episodePlayIcon.setImageResource(R.drawable.ic_play_red_circle)
                             episodeProgress.apply {
                                 max = durationSec
                                 progress = progressSec
@@ -416,7 +416,7 @@ class EpisodeAdapter(
                             episodePlayIcon.setImageResource(R.drawable.ic_baseline_check_24)
                             episodeProgress.isVisible = false
                         } else {
-                            episodePlayIcon.setImageResource(R.drawable.play_button_transparent)
+                            episodePlayIcon.setImageResource(R.drawable.ic_play_red_circle)
                             episodeProgress.apply {
                                 max = durationSec
                                 progress = progressSec

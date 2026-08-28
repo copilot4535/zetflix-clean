@@ -149,7 +149,7 @@
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center"
-            android:src="@drawable/play_button" />
+            android:src="@drawable/ic_play_red_circle" />
     </FrameLayout>
 
     <FrameLayout

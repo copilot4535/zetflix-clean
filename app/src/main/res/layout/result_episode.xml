@@ -66,7 +66,10 @@
 
             <ImageView
                 android:id="@+id/episode_play_icon"
-                style="@style/ContinueWatchingPlayUnderlayProgress"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_play_red_circle"
                 android:layout_margin="4dp"/>
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
