@@ -73,7 +73,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
         }
 
-        val jvmCommonMain by creating {
+        val jvmCommonMain = create("jvmCommonMain") {
             dependsOn(commonMain.get())
             dependencies {
                 implementation(libs.kotlin.reflect)

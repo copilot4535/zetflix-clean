@@ -1,7 +1,7 @@
 @file:Suppress(
     "UNUSED",
     "UnusedReceiverParameter",
-    "MemberVisibilityCanBePrivate"
+    "MemberVisibilityCanBePrivate",
 )
 
 package com.lagradost.cloudstream3
@@ -30,7 +30,6 @@ import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.format.DateTimeComponents
@@ -58,7 +57,7 @@ import kotlin.time.Instant
 @RequiresOptIn(
     message = "This API is only available on prerelease builds. " +
               "Using it will cause CloudStream stable to crash.",
-    level = RequiresOptIn.Level.ERROR
+    level = RequiresOptIn.Level.ERROR,
 )
 annotation class Prerelease
 
@@ -67,7 +66,7 @@ annotation class Prerelease
     message = "This API is marked as internal and should not be used by extensions. " +
               "Using it could cause catastrophic build or runtime errors and may " +
               "be changed or removed at any time.",
-    level = RequiresOptIn.Level.ERROR
+    level = RequiresOptIn.Level.ERROR,
 )
 annotation class InternalAPI
 
@@ -133,21 +132,21 @@ object APIHolder {
 
     fun addPluginMapping(plugin: MainAPI) {
         apis.withLock {
-            apis = apis + plugin
+            apis += plugin
         }
-        initMap(true)
+        initMap(forcedUpdate = true)
     }
 
     fun removePluginMapping(plugin: MainAPI) {
         apis.withLock {
             apis = apis.filter { it != plugin }
         }
-        initMap(true)
+        initMap(forcedUpdate = true)
     }
 
     private fun initMap(forcedUpdate: Boolean = false) {
         apis.withLock {
-            if (apiMap == null || forcedUpdate)
+            if ((apiMap == null) || forcedUpdate)
                 apiMap = apis.mapIndexed { index, api -> api.name to index }.toMap()
         }
     }
@@ -186,9 +185,9 @@ object APIHolder {
     // To get the key
     suspend fun getCaptchaToken(url: String, key: String, referer: String? = null): String? {
         try {
-            val _url = Url(url)
+            val urlParsed = Url(url)
             val domain = base64Encode(
-                (_url.protocol.name + "://" + _url.host + ":443").encodeToByteArray(),
+                (urlParsed.protocol.name + "://" + urlParsed.host + ":443").encodeToByteArray(),
             ).replace("\n", "").replace("=", ".")
 
             val vToken =
@@ -204,13 +203,13 @@ object APIHolder {
                 app.get("https://www.google.com/recaptcha/api2/anchor?ar=1&hl=en&size=invisible&cb=cs3&k=$key&co=$domain&v=$vToken")
                     .document
                     .selectFirst("#recaptcha-token")?.attr("value")
-            if (recapToken != null) {
-                return app.post(
+            return recapToken?.let { token ->
+                app.post(
                     "https://www.google.com/recaptcha/api2/reload?k=$key",
                     data = mapOf(
                         "v" to vToken,
                         "k" to key,
-                        "c" to recapToken,
+                        "c" to token,
                         "co" to domain,
                         "sa" to "",
                         "reason" to "q"
@@ -228,11 +227,11 @@ object APIHolder {
     private var trackerCache: HashMap<String, AniSearch> = hashMapOf()
 
     /** backwards compatibility, use getTracker4 instead */
-    suspend fun getTracker(
+    suspend    fun getTracker(
         titles: List<String>,
         types: Set<TrackerType>?,
         year: Int?,
-    ): Tracker? = getTracker(titles, types, year, false)
+    ): Tracker? = getTracker(titles, types, year, lessAccurate = false)
 
     /**
      * Get anime tracker information based on title, year and type.
@@ -260,14 +259,14 @@ object APIHolder {
                     } ?: return null
 
             val res = search.data?.page?.media?.find { media ->
-                val matchingYears = year == null || media.seasonYear == year
+                val matchingYears = (year == null) || (media.seasonYear == year)
                 val matchingTitles = media.title?.let { title ->
                     titles.any { userTitle ->
                         title.isMatchingTitles(userTitle)
                     }
                 } ?: false
 
-                val matchingTypes = types?.any { it.name.equals(media.format, true) } == true
+                val matchingTypes = types?.any { it.name.equals(media.format, ignoreCase = true) } == true
                 if (lessAccurate) matchingTitles || matchingTypes && matchingYears else matchingTitles && matchingTypes && matchingYears
             } ?: return null
 
@@ -751,13 +750,14 @@ fun MainAPI.fixUrl(url: String): String {
     }
 
     val startsWithNoHttp = url.startsWith("//")
-    if (startsWithNoHttp) {
-        return "https:$url"
+    return if (startsWithNoHttp) {
+        "https:$url"
     } else {
         if (url.startsWith('/')) {
-            return mainUrl + url
+            mainUrl + url
+        } else {
+            "$mainUrl/$url"
         }
-        return "$mainUrl/$url"
     }
 }
 
@@ -790,7 +790,7 @@ fun sortUrls(urls: Set<ExtractorLink>): List<ExtractorLink> {
  */
 @Prerelease
 fun splitUrlParameters(url: Url): Map<String, String> {
-    return url.parameters.entries().associate { (key, values) -> key to values.firstOrNull().orEmpty() }
+    return url.parameters.entries().associateBy({ it.key }) { it.value.firstOrNull().orEmpty() }
 }
 
 /**
@@ -853,7 +853,7 @@ suspend fun getRhinoContext(): org.mozilla.javascript.Context {
     return Coroutines.mainWork {
         val rhino = org.mozilla.javascript.Context.enter()
         rhino.initSafeStandardObjects()
-        rhino.setInterpretedMode(true)
+        rhino.optimizationLevel = -1
         rhino
     }
 }
@@ -1031,7 +1031,7 @@ class Score private constructor(
         )
         fun fromOld(value: Int?): Score? {
             if (value == null) return null
-            if (value < 0 || value > 10000) {
+            if (value !in 0..10000) {
                 com.lagradost.api.Log.w(TAG, "old: $value ∉ [0, 10000]")
                 return null
             }
@@ -1043,7 +1043,7 @@ class Score private constructor(
             if (value == null) {
                 return null
             }
-            if (value < 0 || value > maxScore) {
+            if (value !in 0..maxScore) {
                 com.lagradost.api.Log.w(TAG, "fromInt: $value ∉ [0, $maxScore]")
                 return null
             }
@@ -1236,9 +1236,7 @@ suspend fun newSubtitleFile(
 }
 
 /** Data class for the Audio file/track info.
- * @property lang Audio track language.
  * @property url Audio file url to download/load the file.
- * @property label Optional label to display (e.g., "English 5.1", "Japanese Stereo").
  * @property headers Optional headers for the audio file request.
  * @see newAudioFile
  * */
@@ -1868,7 +1866,7 @@ interface LoadResponse {
 
         /** Read the id string to get all other ids */
         fun readIdFromString(idString: String?): Map<SimklSyncServices, String> {
-            return tryParseJson<Map<SimklSyncServices, String>>(idString) ?: return emptyMap()
+            return tryParseJson<Map<SimklSyncServices, String>>(idString) ?: emptyMap()
         }
 
         fun LoadResponse.isMovie(): Boolean {
@@ -2102,10 +2100,7 @@ fun getDurationFromString(input: String?): Int? {
     }
     Regex("([0-9]*)m").find(cleanInput)?.groupValues?.let { values ->
         if (values.size == 2) {
-            val returnValue = values[1].toIntOrNull()
-            if (returnValue != null) {
-                return returnValue
-            }
+            values[1].toIntOrNull()?.let { return it }
         }
     }
     return null
@@ -2330,7 +2325,7 @@ constructor(
         return episodes.map { (status, episodes) ->
             val maxSeason = episodes.maxOfOrNull { it.season ?: Int.MIN_VALUE }
                 .takeUnless { it == Int.MIN_VALUE }
-            status to episodes
+            status to episodes.asSequence()
                 .filter { it.season == maxSeason }
                 .maxOfOrNull { it.episode ?: Int.MIN_VALUE }
                 .takeUnless { it == Int.MIN_VALUE }
@@ -2469,13 +2464,15 @@ suspend fun <T> MainAPI.newMovieLoadResponse(
     initializer: suspend MovieLoadResponse.() -> Unit = { }
 ): MovieLoadResponse {
     // just in case
-    if (data is String) return newMovieLoadResponse(
-        name,
-        url,
-        type,
-        dataUrl = data,
-        initializer = initializer
-    )
+    if (data is String) {
+        return newMovieLoadResponse(
+            name,
+            url,
+            type,
+            dataUrl = data,
+            initializer = initializer
+        )
+    }
     val dataUrl = data?.toJson() ?: ""
 
     @Suppress("DEPRECATION_ERROR")
@@ -2678,7 +2675,7 @@ constructor(
     override fun getLatestEpisodes(): Map<DubStatus, Int?> {
         val maxSeason =
             episodes.maxOfOrNull { it.season ?: Int.MIN_VALUE }.takeUnless { it == Int.MIN_VALUE }
-        val max = episodes
+        val max = episodes.asSequence()
             .filter { it.season == maxSeason }
             .maxOfOrNull { it.episode ?: Int.MIN_VALUE }
             .takeUnless { it == Int.MIN_VALUE }

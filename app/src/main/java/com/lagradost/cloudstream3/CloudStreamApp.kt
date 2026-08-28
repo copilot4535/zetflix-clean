@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Build
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import coil3.ImageLoader
@@ -39,7 +38,7 @@ import kotlin.system.exitProcess
 
 class ExceptionHandler(
     val errorFile: File,
-    val onError: (() -> Unit)
+    val onError: (() -> Unit),
 ) : Thread.UncaughtExceptionHandler {
 
     override fun uncaughtException(thread: Thread, error: Throwable) {
