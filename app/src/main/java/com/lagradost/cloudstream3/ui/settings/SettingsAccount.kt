@@ -7,36 +7,18 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import android.content.SharedPreferences
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setUpToolbar
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
+import com.lagradost.cloudstream3.utils.ZetFlixCryptoUtils
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import kotlin.math.absoluteValue
 
 class SettingsAccount : Fragment() {
-
-    private val mainKey: MasterKey by lazy {
-        MasterKey.Builder(requireContext())
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-    }
-
-    private val sharedPreferences: SharedPreferences by lazy {
-        EncryptedSharedPreferences.create(
-            requireContext(),
-            "zetflix_secure_prefs",
-            mainKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,9 +39,10 @@ class SettingsAccount : Fragment() {
         val context = context ?: return
         ioSafe {
             try {
-                val email = sharedPreferences.getString("email", "") ?: ""
-                val countryCode = sharedPreferences.getString("phoneCountryCode", "") ?: ""
-                val phone = sharedPreferences.getString("phoneNationalNumber", "") ?: ""
+                val prefs = ZetFlixCryptoUtils.getEncryptedPrefs(context)
+                val email = prefs.getString("email", "") ?: ""
+                val countryCode = prefs.getString("phoneCountryCode", "") ?: ""
+                val phone = prefs.getString("phoneNationalNumber", "") ?: ""
 
                 val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
 

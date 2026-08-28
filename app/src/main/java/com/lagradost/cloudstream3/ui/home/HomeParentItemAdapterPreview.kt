@@ -29,8 +29,6 @@ import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.WatchType
-import com.lagradost.cloudstream3.ui.account.AccountHelper.showAccountEditDialog
-import com.lagradost.cloudstream3.ui.account.AccountHelper.showAccountSelectLinear
 import com.lagradost.cloudstream3.ui.account.AccountViewModel
 import com.lagradost.cloudstream3.ui.result.FOCUS_SELF
 import com.lagradost.cloudstream3.ui.result.ResultViewModel2
@@ -49,8 +47,7 @@ import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarMargin
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarView
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import com.lagradost.cloudstream3.utils.ZetFlixCryptoUtils
 import android.content.SharedPreferences
 import kotlin.math.absoluteValue
 
@@ -384,17 +381,7 @@ class HomeParentItemAdapterPreview(
             alternateHeadProfilePicCard?.isGone = false
 
             val context = itemView.context
-            val mainKey = MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-
-            val sharedPreferences = EncryptedSharedPreferences.create(
-                context,
-                "zetflix_secure_prefs",
-                mainKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
+            val sharedPreferences = ZetFlixCryptoUtils.getEncryptedPrefs(context)
 
             val email = sharedPreferences.getString("email", "") ?: ""
             val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
@@ -418,19 +405,19 @@ class HomeParentItemAdapterPreview(
             alternateHeadProfilePic?.setImageResource(avatarRes)
 
             headProfilePicCard?.setOnClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.action_navigation_global_to_navigation_settings_account)
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
             }
 
             alternateHeadProfilePicCard?.setOnClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.action_navigation_global_to_navigation_settings_account)
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
             }
 
             headProfilePicCard?.setOnLongClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.action_navigation_global_to_navigation_settings_account)
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
                 true
             }
             alternateHeadProfilePicCard?.setOnLongClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.action_navigation_global_to_navigation_settings_account)
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
                 true
             }
 

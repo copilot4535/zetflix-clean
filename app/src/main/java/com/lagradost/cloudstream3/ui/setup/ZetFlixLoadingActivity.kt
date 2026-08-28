@@ -10,6 +10,7 @@ import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.plugins.PluginManager
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 class ZetFlixLoadingActivity : AppCompatActivity() {
 
@@ -20,8 +21,10 @@ class ZetFlixLoadingActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Update and load all online plugins from the allowlisted repositories
-                PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(this@ZetFlixLoadingActivity)
+                // Update and load all online plugins from the allowlisted repositories with a 30s timeout
+                withTimeoutOrNull(30000L) {
+                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(this@ZetFlixLoadingActivity)
+                }
             } catch (e: Exception) {
                 Log.e("ZetFlixPluginSetup", "Failed to setup plugins", e)
             } finally {

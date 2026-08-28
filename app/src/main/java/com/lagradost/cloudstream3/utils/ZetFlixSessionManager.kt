@@ -4,26 +4,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
 
 object ZetFlixSessionManager {
-    private const val PREFS_FILE = "zetflix_secure_prefs"
     private const val LOGIN_TIMESTAMP_KEY = "zetflix_login_timestamp"
     private const val SESSION_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000L
 
-    private var _encryptedPrefs: SharedPreferences? = null
     private fun getEncryptedPrefs(context: Context): SharedPreferences {
-        return _encryptedPrefs ?: EncryptedSharedPreferences.create(
-            context,
-            PREFS_FILE,
-            MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        ).also { _encryptedPrefs = it }
+        return ZetFlixCryptoUtils.getEncryptedPrefs(context)
     }
 
     fun setLoginTimestamp(context: Context) {
@@ -31,6 +21,8 @@ object ZetFlixSessionManager {
     }
 
     fun isSessionValid(context: Context): Boolean {
+        if (!ZetFlixAuthPrefs.isZetFlixAuthenticated(context)) return false
+        
         val timestamp = getEncryptedPrefs(context).getLong(LOGIN_TIMESTAMP_KEY, -1L)
         if (timestamp == -1L) return false
         

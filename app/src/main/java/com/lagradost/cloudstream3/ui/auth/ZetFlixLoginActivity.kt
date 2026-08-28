@@ -11,9 +11,8 @@ import android.widget.*
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 import com.google.android.gms.auth.api.identity.GetPhoneNumberHintIntentRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
@@ -22,6 +21,10 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
+import com.lagradost.cloudstream3.utils.ZetFlixCryptoUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.BiometricCallback {
@@ -160,74 +163,97 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                 return@setOnClickListener
             }
 
-            val storedEmail = sharedPreferences.getString("email", null)
-            val storedPassword = sharedPreferences.getString("password", null)
+            if (isRegisterMode && password != confirmPassword) {
+                Toast.makeText(this, R.string.zetflix_password_mismatch, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-            if (isRegisterMode) {
-                if (password != confirmPassword) {
-                    Toast.makeText(this, R.string.zetflix_password_mismatch, Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
+            if (isRegisterMode && !privacyCheckbox.isChecked) {
+                Toast.makeText(this, "Please agree to the privacy policy", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-                if (storedEmail != null && storedEmail.equals(email, ignoreCase = true)) {
-                    Toast.makeText(this, "Account already exists. Please login.", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val prefs = ZetFlixCryptoUtils.getEncryptedPrefs(this@ZetFlixLoginActivity)
+                    val storedEmail = prefs.getString("email", null)
+                    val storedPassword = prefs.getString("password", null)
 
-                if (!privacyCheckbox.isChecked) {
-                    Toast.makeText(this, "Please agree to the privacy policy", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
+                    withContext(Dispatchers.Main) {
+                        if (isRegisterMode) {
+                            if (storedEmail != null && storedEmail.equals(email, ignoreCase = true)) {
+                                Toast.makeText(this@ZetFlixLoginActivity, "Account already exists. Please login.", Toast.LENGTH_SHORT).show()
+                                return@withContext
+                            }
 
-                saveAuthData(country.code, phone, email, password)
-                ZetFlixAuthPrefs.setZetFlixAuthenticated(this, true)
-                ZetFlixSessionManager.setLoginTimestamp(this)
-                setKey("HAS_DONE_SETUP", true)
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                saveAuthData(prefs, country.code, phone, email, password)
+                                ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixLoginActivity, true)
+                                ZetFlixSessionManager.setLoginTimestamp(this@ZetFlixLoginActivity)
+                                
+                                withContext(Dispatchers.Main) {
+                                    setKey("HAS_DONE_SETUP", true)
+                                    if (BiometricAuthenticator.deviceHasPasswordPinLock(this@ZetFlixLoginActivity)) {
+                                        isBiometricSetupMode = true
+                                        BiometricSetupDialog.show(
+                                            this@ZetFlixLoginActivity,
+                                            onEnable = {
+                                                BiometricAuthenticator.startBiometricAuthentication(
+                                                    this@ZetFlixLoginActivity,
+                                                    R.string.fingerprint_setup_title,
+                                                    false
+                                                )
+                                            },
+                                            onSkip = {
+                                                navigateToLoading()
+                                            }
+                                        )
+                                    } else {
+                                        navigateToLoading()
+                                    }
+                                }
+                            }
+                        } else {
+                            // Login Mode
+                            if (storedEmail == null || !storedEmail.equals(email, ignoreCase = true) || storedPassword != password) {
+                                Toast.makeText(this@ZetFlixLoginActivity, "Invalid email or password", Toast.LENGTH_SHORT).show()
+                                return@withContext
+                            }
 
-                if (BiometricAuthenticator.deviceHasPasswordPinLock(this)) {
-                    isBiometricSetupMode = true
-                    BiometricSetupDialog.show(
-                        this,
-                        onEnable = {
-                            BiometricAuthenticator.startBiometricAuthentication(
-                                this,
-                                R.string.fingerprint_setup_title,
-                                false
-                            )
-                        },
-                        onSkip = {
+                            ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixLoginActivity, true)
+                            ZetFlixSessionManager.setLoginTimestamp(this@ZetFlixLoginActivity)
+                            setKey("HAS_DONE_SETUP", true)
                             navigateToLoading()
                         }
-                    )
-                } else {
-                    navigateToLoading()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@ZetFlixLoginActivity, "Error accessing secure storage", Toast.LENGTH_SHORT).show()
+                    }
                 }
-
-            } else {
-                // Login Mode
-                if (storedEmail == null || !storedEmail.equals(email, ignoreCase = true) || storedPassword != password) {
-                    Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-
-                ZetFlixAuthPrefs.setZetFlixAuthenticated(this, true)
-                ZetFlixSessionManager.setLoginTimestamp(this)
-                setKey("HAS_DONE_SETUP", true)
-                navigateToLoading()
             }
         }
     }
 
     override fun onAuthenticationSuccess() {
-        if (isBiometricSetupMode) {
-            PreferenceManager.getDefaultSharedPreferences(this)
-                .edit()
-                .putBoolean(getString(R.string.biometric_key), true)
-                .apply()
+        lifecycleScope.launch(Dispatchers.IO) {
+            if (isBiometricSetupMode) {
+                PreferenceManager.getDefaultSharedPreferences(this@ZetFlixLoginActivity)
+                    .edit()
+                    .putBoolean(getString(R.string.biometric_key), true)
+                    .apply()
 
-            Toast.makeText(this, R.string.fingerprint_setup_success, Toast.LENGTH_SHORT).show()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@ZetFlixLoginActivity, R.string.fingerprint_setup_success, Toast.LENGTH_SHORT).show()
+                    navigateToLoading()
+                }
+            } else {
+                ZetFlixSessionManager.setLoginTimestamp(this@ZetFlixLoginActivity)
+                withContext(Dispatchers.Main) {
+                    navigateToLoading()
+                }
+            }
         }
-        navigateToLoading()
     }
 
     override fun onAuthenticationError() {
@@ -244,28 +270,12 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
         finish()
     }
 
-    private val mainKey: MasterKey by lazy {
-        MasterKey.Builder(this)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-    }
-
-    private val sharedPreferences: SharedPreferences by lazy {
-        EncryptedSharedPreferences.create(
-            this,
-            "zetflix_secure_prefs",
-            mainKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-    }
-
-    private fun saveAuthData(countryCode: String, phone: String, email: String, password: String) {
+    private fun saveAuthData(prefs: SharedPreferences, countryCode: String, phone: String, email: String, password: String) {
         try {
-            val deviceId = sharedPreferences.getString("device_id", null) ?: UUID.randomUUID().toString()
-            val deviceSecret = sharedPreferences.getString("device_secret", null) ?: (UUID.randomUUID().toString() + UUID.randomUUID().toString())
+            val deviceId = prefs.getString("device_id", null) ?: UUID.randomUUID().toString()
+            val deviceSecret = prefs.getString("device_secret", null) ?: (UUID.randomUUID().toString() + UUID.randomUUID().toString())
 
-            sharedPreferences.edit().apply {
+            prefs.edit().apply {
                 putString("phoneCountryCode", countryCode)
                 putString("phoneNationalNumber", phone)
                 putString("email", email)
@@ -276,7 +286,6 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error saving auth data", Toast.LENGTH_SHORT).show()
         }
     }
 
