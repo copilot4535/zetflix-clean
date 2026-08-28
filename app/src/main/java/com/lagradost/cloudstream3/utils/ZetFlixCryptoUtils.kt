@@ -11,18 +11,19 @@ object ZetFlixCryptoUtils {
     private const val PREFS_FILE = "zetflix_secure_prefs"
     private const val TAG = "ZetFlixCryptoUtils"
 
+    @Volatile
     private var cachedPrefs: SharedPreferences? = null
 
     fun getEncryptedPrefs(context: Context): SharedPreferences {
-        cachedPrefs?.let { return it }
-
-        return try {
-            createPrefs(context)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error creating EncryptedSharedPreferences, resetting...", e)
-            resetPrefs(context)
-            createPrefs(context)
-        }.also { cachedPrefs = it }
+        return cachedPrefs ?: synchronized(this) {
+            cachedPrefs ?: try {
+                createPrefs(context)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating EncryptedSharedPreferences, resetting...", e)
+                resetPrefs(context)
+                createPrefs(context)
+            }.also { cachedPrefs = it }
+        }
     }
 
     private fun createPrefs(context: Context): SharedPreferences {

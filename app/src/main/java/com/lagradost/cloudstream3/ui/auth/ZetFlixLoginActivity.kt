@@ -159,8 +159,8 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
             val phone = phoneEdit.text.toString()
             val emailRaw = emailEdit.text.toString()
             val identifierRaw = identifierEdit.text.toString()
-            val password = passwordEdit.text.toString()
-            val confirmPassword = confirmPasswordEdit.text.toString()
+            val password = passwordEdit.text.toString().trim()
+            val confirmPassword = confirmPasswordEdit.text.toString().trim()
 
             if (isRegisterMode) {
                 if (phone.trim().isEmpty()) {
@@ -260,8 +260,8 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                             Log.d("ZetFlixAuthDebug", "Entered Identifier: $inputIdentifier")
                             
                             val normalizedStoredEmail = storedEmail?.trim()?.lowercase()
-                            val normalizedStoredPhone = storedPhone?.filter { it.isDigit() } ?: ""
-                            val normalizedStoredCountryCode = storedCountryCode?.filter { it.isDigit() } ?: ""
+                            val normalizedStoredPhone = storedPhone?.filter { it.isDigit() }.orEmpty().removePrefix("0")
+                            val normalizedStoredCountryCode = storedCountryCode?.filter { it.isDigit() }.orEmpty().removePrefix("0")
 
                             if (inputIdentifier.contains("@")) {
                                 Log.d("ZetFlixAuthDebug", "Classification: Email")
@@ -279,11 +279,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                                 if (normalizedStoredPhone.isNotEmpty()) {
                                     val matchA = normalizedInputPhone == normalizedStoredPhone
                                     val matchB = normalizedInputPhone == (normalizedStoredCountryCode + normalizedStoredPhone)
-                                    
-                                    // Handle leading zeros
-                                    val inputNoLeadingZero = normalizedInputPhone.removePrefix("0")
-                                    val storedNoLeadingZero = normalizedStoredPhone.removePrefix("0")
-                                    val matchC = inputNoLeadingZero == storedNoLeadingZero
+                                    val matchC = normalizedInputPhone.removePrefix("0") == normalizedStoredPhone
                                     
                                     isMatch = matchA || matchB || matchC
                                 }
@@ -295,6 +291,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                             
                             val passwordMatch = storedPassword == inputPassword
                             Log.d("ZetFlixAuthDebug", "Entered Password Length: ${inputPassword.length}")
+                            Log.d("ZetFlixAuthDebug", "Stored Password Length: ${storedPassword?.length ?: 0}")
                             Log.d("ZetFlixAuthDebug", "Password Match: $passwordMatch")
 
                             if (isMatch && passwordMatch) {

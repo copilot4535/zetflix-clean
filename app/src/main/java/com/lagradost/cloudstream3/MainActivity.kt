@@ -1131,12 +1131,14 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         APIRepository.dubStatusActive = getApiDubstatusSettings()
 
-        try {
-            loadCache()
-            File(filesDir, "exoplayer").deleteRecursively() // old cache
-            deleteFileOnExit(File(cacheDir, "exoplayer"))   // current cache
-        } catch (e: Exception) {
-            logError(e)
+        ioSafe {
+            try {
+                loadCache()
+                File(filesDir, "exoplayer").deleteRecursively() // old cache
+                deleteFileOnExit(File(cacheDir, "exoplayer"))   // current cache
+            } catch (e: Exception) {
+                logError(e)
+            }
         }
         println("Loaded everything")
 

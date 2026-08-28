@@ -160,15 +160,7 @@ object BiometricAuthenticator {
     }
 
     fun canSetupBiometrics(context: Context): Boolean {
-        val manager = BiometricManager.from(context)
-        val authenticators = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            BIOMETRIC_STRONG or DEVICE_CREDENTIAL
-        } else {
-            BIOMETRIC_STRONG
-        }
-        return manager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS || 
-               manager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ||
-               deviceHasPasswordPinLock(context)
+        return deviceHasPasswordPinLock(context)
     }
 
     fun isBiometricHardwareAvailable(context: Context): Boolean {
