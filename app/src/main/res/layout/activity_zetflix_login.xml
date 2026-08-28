@@ -82,18 +82,62 @@
                 android:textColor="#ffffff"
                 android:textColorHint="#80ffffff" />
 
-            <EditText
-                android:id="@+id/password_edit"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/zetflix_input_bg"
-                android:hint="@string/zetflix_password_hint"
-                android:inputType="textPassword"
-                android:paddingEnd="12dp"
-                android:paddingStart="12dp"
-                android:textColor="#ffffff"
-                android:textColorHint="#80ffffff" />
+                android:layout_marginTop="16dp">
+
+                <EditText
+                    android:id="@+id/password_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/zetflix_input_bg"
+                    android:hint="@string/zetflix_password_hint"
+                    android:inputType="textPassword"
+                    android:paddingEnd="44dp"
+                    android:paddingStart="12dp"
+                    android:textColor="#ffffff"
+                    android:textColorHint="#80ffffff" />
+
+                <ImageView
+                    android:id="@+id/password_visibility_toggle"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/ic_baseline_visibility_off_24"
+                    app:tint="#a0a0b0" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/confirm_password_layout"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp">
+
+                <EditText
+                    android:id="@+id/confirm_password_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/zetflix_input_bg"
+                    android:hint="@string/zetflix_confirm_password_hint"
+                    android:inputType="textPassword"
+                    android:paddingEnd="44dp"
+                    android:paddingStart="12dp"
+                    android:textColor="#ffffff"
+                    android:textColorHint="#80ffffff" />
+
+                <ImageView
+                    android:id="@+id/confirm_password_visibility_toggle"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/ic_baseline_visibility_off_24"
+                    app:tint="#a0a0b0" />
+            </RelativeLayout>
 
             <CheckBox
                 android:id="@+id/privacy_checkbox"
@@ -116,14 +160,14 @@
                 app:backgroundTint="@null" />
 
             <TextView
-                android:id="@+id/google_signin_link"
+                android:id="@+id/mode_switch_link"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:text="@string/zetflix_google_link"
+                android:text="@string/zetflix_register_toggle"
                 android:textColor="#ffffff"
                 android:textSize="14sp" />
 

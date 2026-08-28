@@ -775,11 +775,16 @@
     <string name="zetflix_login_subtitle">Login to continue</string>
     <string name="zetflix_phone_hint">Enter phone number</string>
     <string name="zetflix_email_hint">Enter Gmail address</string>
-    <string name="zetflix_password_hint">Enter local password</string>
+    <string name="zetflix_password_hint">Password (min 8 characters)</string>
+    <string name="zetflix_confirm_password_hint">Confirm Password</string>
     <string name="zetflix_agree_privacy">I agree to the privacy policy</string>
     <string name="zetflix_login_button">Login</string>
     <string name="zetflix_google_link">Sign in with Google</string>
+    <string name="zetflix_register_toggle">Don\'t have an account? Register</string>
+    <string name="zetflix_login_toggle">Already have an account? Login</string>
+    <string name="zetflix_register_button">Register</string>
     <string name="zetflix_email_error">Enter the Gmail Address</string>
-    <string name="zetflix_password_error">Password must be at least 4 characters</string>
+    <string name="zetflix_password_error">Password must be at least 8 characters</string>
+    <string name="zetflix_password_mismatch">Passwords do not match</string>
     <string name="zetflix_phone_error">Please enter a valid phone number</string>
 </resources>

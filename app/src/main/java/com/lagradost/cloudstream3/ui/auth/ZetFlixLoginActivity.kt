@@ -3,6 +3,9 @@ package com.lagradost.cloudstream3.ui.auth
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
+import android.view.View
 import android.widget.*
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,6 +17,7 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.R
+import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
 import java.util.*
 
 class ZetFlixLoginActivity : AppCompatActivity() {
@@ -32,6 +36,8 @@ class ZetFlixLoginActivity : AppCompatActivity() {
         Country("🇧🇹", "Bhutan", "+975", 8),
         Country("🇦🇫", "Afghanistan", "+93", 9)
     )
+
+    private var isRegisterMode = false
 
     private val phoneHintLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
@@ -74,9 +80,16 @@ class ZetFlixLoginActivity : AppCompatActivity() {
         val phoneEdit = findViewById<EditText>(R.id.phone_number_edit)
         val emailEdit = findViewById<EditText>(R.id.email_edit)
         val passwordEdit = findViewById<EditText>(R.id.password_edit)
+        val passwordToggle = findViewById<ImageView>(R.id.password_visibility_toggle)
+        val confirmPasswordLayout = findViewById<View>(R.id.confirm_password_layout)
+        val confirmPasswordEdit = findViewById<EditText>(R.id.confirm_password_edit)
+        val confirmPasswordToggle = findViewById<ImageView>(R.id.confirm_password_visibility_toggle)
         val privacyCheckbox = findViewById<CheckBox>(R.id.privacy_checkbox)
         val loginButton = findViewById<Button>(R.id.login_button)
-        val googleSigninLink = findViewById<TextView>(R.id.google_signin_link)
+        val modeSwitchLink = findViewById<TextView>(R.id.mode_switch_link)
+
+        setupPasswordToggle(passwordEdit, passwordToggle)
+        setupPasswordToggle(confirmPasswordEdit, confirmPasswordToggle)
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, countries)
         countrySpinner.adapter = adapter
@@ -87,11 +100,31 @@ class ZetFlixLoginActivity : AppCompatActivity() {
             }
         }
 
+        fun updateUI() {
+            if (isRegisterMode) {
+                loginButton.setText(R.string.zetflix_register_button)
+                modeSwitchLink.setText(R.string.zetflix_login_toggle)
+                confirmPasswordLayout.visibility = View.VISIBLE
+            } else {
+                loginButton.setText(R.string.zetflix_login_button)
+                modeSwitchLink.setText(R.string.zetflix_register_toggle)
+                confirmPasswordLayout.visibility = View.GONE
+            }
+        }
+
+        updateUI()
+
+        modeSwitchLink.setOnClickListener {
+            isRegisterMode = !isRegisterMode
+            updateUI()
+        }
+
         loginButton.setOnClickListener {
             val country = countrySpinner.selectedItem as Country
             val phone = phoneEdit.text.toString().trim()
             val email = emailEdit.text.toString().trim().lowercase()
             val password = passwordEdit.text.toString()
+            val confirmPassword = confirmPasswordEdit.text.toString()
 
             if (phone.length != country.length) {
                 Toast.makeText(this, R.string.zetflix_phone_error, Toast.LENGTH_SHORT).show()
@@ -103,8 +136,13 @@ class ZetFlixLoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (password.length < 4) {
+            if (password.length < 8) {
                 Toast.makeText(this, R.string.zetflix_password_error, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (isRegisterMode && password != confirmPassword) {
+                Toast.makeText(this, R.string.zetflix_password_mismatch, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -115,14 +153,11 @@ class ZetFlixLoginActivity : AppCompatActivity() {
 
             saveAuthData(country.code, phone, email, password)
             ZetFlixAuthPrefs.setZetFlixAuthenticated(this, true)
+            ZetFlixSessionManager.setLoginTimestamp(this)
             setKey("HAS_DONE_SETUP", true)
             
             startActivity(Intent(this, com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity::class.java))
             finish()
-        }
-
-        googleSigninLink.setOnClickListener {
-            // No action yet
         }
     }
 
@@ -155,6 +190,21 @@ class ZetFlixLoginActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Error saving auth data", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupPasswordToggle(editText: EditText, toggle: ImageView) {
+        var isVisible = false
+        toggle.setOnClickListener {
+            isVisible = !isVisible
+            if (isVisible) {
+                editText.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                toggle.setImageResource(R.drawable.ic_baseline_visibility_24)
+            } else {
+                editText.transformationMethod = PasswordTransformationMethod.getInstance()
+                toggle.setImageResource(R.drawable.ic_baseline_visibility_off_24)
+            }
+            editText.setSelection(editText.text.length)
         }
     }
 }
