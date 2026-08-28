@@ -20,7 +20,6 @@ import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
 import android.content.Intent
 import com.lagradost.cloudstream3.ui.account.AccountAdapter.Companion.VIEW_TYPE_EDIT_ACCOUNT
 import com.lagradost.cloudstream3.ui.account.AccountAdapter.Companion.VIEW_TYPE_SELECT_ACCOUNT
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.BiometricCallback
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.biometricPrompt
@@ -56,7 +55,7 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
 
         val isEditingFromMainActivity = intent.getBooleanExtra(
             "isEditingFromMainActivity",
-            false
+            false,
         )
 
         if (hasLoggedIn && !isEditingFromMainActivity) {
@@ -70,9 +69,9 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
         setNavigationBarColorCompat(R.attr.primaryBlackBackground)
 
         val settingsManager = PreferenceManager.getDefaultSharedPreferences(this)
-        val skipStartup = settingsManager.getBoolean(
+        val skipStartup = (settingsManager.getBoolean(
             getString(R.string.skip_startup_account_select_key), false
-        ) || accounts.count() <= 1
+        )) || (accounts.count() <= 1)
 
         fun askBiometricAuth() {
 
@@ -81,7 +80,7 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
                     startBiometricAuthentication(
                         this,
                         R.string.biometric_authentication_title,
-                        false
+                        setDeviceCred = false
                     )
 
                     promptInfo?.let { prompt ->

@@ -29,7 +29,7 @@ const val PLUGINS_BUNDLE_DATA = "data"
 const val PLUGINS_BUNDLE_LOCAL = "isLocal"
 
 class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
-    BaseFragment.BindingCreator.Inflate(FragmentPluginsBinding::inflate)
+    BindingCreator.Inflate(FragmentPluginsBinding::inflate),
 ) {
     private lateinit var pluginViewModel: PluginsViewModel
 
@@ -78,6 +78,7 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
 
                     R.id.lang_filter -> {
                         val languagesTagName = pluginViewModel.pluginLanguages
+                            .asSequence()
                             .map { langTag ->
                                 Pair(
                                     langTag,
@@ -125,8 +126,9 @@ class PluginsFragment : BaseFragment<FragmentPluginsBinding>(
                 }
             }
 
-            searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean {
+            searchView?.setOnQueryTextListener(
+                object : SearchView.OnQueryTextListener {
+                    override fun onQueryTextSubmit(query: String?): Boolean {
                     pluginViewModel.search(query)
                     return true
                 }

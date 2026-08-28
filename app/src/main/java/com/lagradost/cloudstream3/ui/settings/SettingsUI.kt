@@ -53,19 +53,19 @@ class SettingsUI : BasePreferenceFragmentCompat() {
         getPref(R.string.poster_ui_key)?.setOnPreferenceClickListener {
             val prefNames = resources.getStringArray(R.array.poster_ui_options)
             val keys = resources.getStringArray(R.array.poster_ui_options_values)
-            val prefValues = keys.map {
-                settingsManager.getBoolean(it, true)
+            val prefValues = keys.asSequence().map { key ->
+                settingsManager.getBoolean(key, true)
             }.mapIndexedNotNull { index, b ->
                 if (b) {
                     index
                 } else null
-            }
+            }.toList()
 
             activity?.showMultiDialog(
                 prefNames.toList(),
                 prefValues,
                 getString(R.string.poster_ui_settings),
-                {}
+                {},
             ) { list ->
                 settingsManager.edit {
                     for ((i, key) in keys.withIndex()) {
@@ -80,7 +80,7 @@ class SettingsUI : BasePreferenceFragmentCompat() {
 
 
         getPref(R.string.pref_filter_search_quality_key)?.setOnPreferenceClickListener {
-            val names = enumValues<SearchQuality>().sorted().map { it.name }
+            val names = SearchQuality.entries.sortedBy { it.name }.map { it.name }
             val currentList = settingsManager.getStringSet(
                 getString(R.string.pref_filter_search_quality_key),
                 setOf()
@@ -117,12 +117,11 @@ class SettingsUI : BasePreferenceFragmentCompat() {
                 name = getString(R.string.confirm_before_exiting_title),
                 showApply = true,
                 dismissCallback = {},
-                callback = { selectedOption ->
-                    settingsManager.edit {
-                        putInt(getString(R.string.confirm_exit_key), prefValues[selectedOption])
-                    }
+            ) { selectedOption ->
+                settingsManager.edit {
+                    putInt(getString(R.string.confirm_exit_key), prefValues[selectedOption])
                 }
-            )
+            }
             return@setOnPreferenceClickListener true
         }
     }

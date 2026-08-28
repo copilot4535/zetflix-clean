@@ -262,7 +262,7 @@ class PlayerView @JvmOverloads constructor(
      */
     fun initialize() {
         resizeMode = DataStoreHelper.resizeMode
-        resize(resizeMode, false)
+        resize(resizeMode, showToast = false)
 
         player.releaseCallbacks()
         player.initCallbacks(
@@ -283,7 +283,7 @@ class PlayerView @JvmOverloads constructor(
             val previewFrameLayout: FrameLayout? =
                 exoPlayerView?.findViewById(R.id.previewFrameLayout)
 
-            if (progressBar != null && previewImageView != null && previewFrameLayout != null) {
+            if ((progressBar != null) && (previewImageView != null) && (previewFrameLayout != null)) {
                 var resume = false
                 progressBar.addOnScrubListener(object : PreviewBar.OnScrubListener {
                     override fun onScrubStart(previewBar: PreviewBar?) {
@@ -302,18 +302,19 @@ class PlayerView @JvmOverloads constructor(
                         val cs3 = player as? CS3IPlayer ?: return
                         if (resume) cs3.handleEvent(CSPlayerEvent.Play, PlayerEventSource.Player)
                         // Delay to prevent the small flicker of subtitle before seeking.
-                        subView?.postDelayed({
+                        subView?.postDelayed(
+                            {
                             // If we are not scrubbing then show subtitles again.
                             if (previewBar == null || !previewBar.isPreviewEnabled || !previewBar.isShowingPreview) {
                                 subView?.isVisible = true
                             }
-                        }, 200)
+                        }, 200,)
                     }
                 })
                 progressBar.attachPreviewView(previewFrameLayout)
                 progressBar.setPreviewLoader { currentPosition, max ->
                     val cs3 = player as? CS3IPlayer ?: return@setPreviewLoader
-                    val bitmap = cs3.getPreview(currentPosition.toFloat().div(max.toFloat()))
+                    val bitmap = cs3.getPreview(currentPosition.toFloat() / max.toFloat())
                     previewImageView.isGone = bitmap == null
                     previewImageView.setImageBitmap(bitmap)
                 }

@@ -50,7 +50,7 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(currentPrefSize),
                 getString(R.string.video_buffer_length_settings),
-                true,
+                showApply = true,
                 {}
             ) {
                 settingsManager.edit {
@@ -69,7 +69,7 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(current),
                 getString(R.string.limit_title),
-                true,
+                showApply = true,
                 {}
             ) {
                 settingsManager.edit {
@@ -88,7 +88,7 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(current),
                 getString(R.string.software_decoding),
-                true,
+                showApply = true,
                 {}
             ) {
                 settingsManager.edit {
@@ -111,11 +111,11 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 ctx.getString(R.string.show_media_info_key) to false
             )
 
-            val selectedIndices = keys.map { key ->
+            val selectedIndices = keys.asSequence().map { key ->
                 settingsManager.getBoolean(key, playerDefaults[key] ?: false)
             }.mapIndexedNotNull { index, enabled ->
                 if (enabled) index else null
-            }
+            }.toList()
 
             activity?.showMultiDialog(
                 prefNames.toList(),
@@ -149,8 +149,8 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(currentQuality),
                 getString(R.string.watch_quality_pref),
-                true,
-                {}
+                showApply = true,
+                {},
             ) {
                 settingsManager.edit {
                     putInt(getString(R.string.quality_pref_key), prefValues[it])
@@ -175,8 +175,8 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(currentQuality),
                 getString(R.string.watch_quality_pref_data),
-                true,
-                {}
+                showApply = true,
+                {},
             ) {
                 settingsManager.edit {
                     putInt(getString(R.string.quality_pref_mobile_data_key), prefValues[it])
@@ -207,7 +207,7 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(current), // finds index of currently selected player
                 getString(R.string.player_pref),
-                true,
+                showApply = true,
                 {},
             ) {
                 settingsManager.edit {
@@ -254,8 +254,8 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(currentPrefSize),
                 getString(R.string.video_buffer_disk_settings),
-                true,
-                {}
+                showApply = true,
+                {},
             ) {
                 settingsManager.edit {
                     putInt(getString(R.string.video_buffer_disk_key), prefValues[it])
@@ -274,8 +274,8 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(currentPrefSize),
                 getString(R.string.video_buffer_size_settings),
-                true,
-                {}
+                showApply = true,
+                {},
             ) {
                 settingsManager.edit {
                     putInt(getString(R.string.video_buffer_size_key), prefValues[it])

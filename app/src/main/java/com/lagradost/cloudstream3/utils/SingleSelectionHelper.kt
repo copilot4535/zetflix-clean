@@ -20,18 +20,16 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.BottomInputDialogBinding
 import com.lagradost.cloudstream3.databinding.BottomSelectionDialogBinding
 import com.lagradost.cloudstream3.databinding.BottomTextDialogBinding
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
 import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
 
 object SingleSelectionHelper {
     fun Activity?.showOptionSelectStringRes(
         view: View?,
-        poster: String?,
+        @Suppress("UNUSED_PARAMETER") poster: String?,
         options: List<Int>,
-        tvOptions: List<Int> = listOf(),
-        callback: (Pair<Boolean, Int>) -> Unit
+        @Suppress("UNUSED_PARAMETER") tvOptions: List<Int> = listOf(),
+        callback: (Pair<Boolean, Int>) -> Unit,
     ) {
         if (this == null) return
 
@@ -46,19 +44,21 @@ object SingleSelectionHelper {
 
     private fun Activity?.showOptionSelect(
         view: View?,
-        poster: String?,
+        @Suppress("UNUSED_PARAMETER") poster: String?,
         options: List<String>,
-        tvOptions: List<String>,
+        @Suppress("UNUSED_PARAMETER") tvOptions: List<String>,
         callback: (Pair<Boolean, Int>) -> Unit
     ) {
         if (this == null) return
 
-        view?.popupMenuNoIconsAndNoStringRes(options.mapIndexed { index, s ->
-            Pair(
-                index,
-                s
-            )
-        }) {
+        view?.popupMenuNoIconsAndNoStringRes(
+            options.mapIndexed { index, s ->
+                Pair(
+                    index,
+                    s
+                )
+            },
+        ) {
             callback(Pair(false, this.itemId))
         }
     }
@@ -167,9 +167,7 @@ object SingleSelectionHelper {
         applyHolder.isVisible = true
         textView.text = name
 
-        if (textInputType != null) {
-            inputView.inputType = textInputType
-        }
+        textInputType?.let { inputView.inputType = it }
         inputView.setText(value, TextView.BufferType.EDITABLE)
 
 
@@ -247,7 +245,7 @@ object SingleSelectionHelper {
             listOf(selectedIndex),
             name,
             showApply,
-            false,
+            isMultiSelect = false,
             { if (it.isNotEmpty()) callback.invoke(it.first()) },
             dismissCallback
         )
@@ -279,7 +277,7 @@ object SingleSelectionHelper {
             listOf(selectedIndex),
             name,
             showApply,
-            false,
+            isMultiSelect = false,
             { if (it.isNotEmpty()) callback.invoke(it.first()) },
             dismissCallback
         )
@@ -315,6 +313,7 @@ object SingleSelectionHelper {
         return builder
     }
 
+    @Suppress("UNUSED")
     fun Activity.showNginxTextInputDialog(
         name: String,
         value: String,

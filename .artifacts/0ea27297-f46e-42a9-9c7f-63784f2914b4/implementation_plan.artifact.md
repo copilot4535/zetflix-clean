@@ -1,48 +1,74 @@
-# Implementation Plan - Fix IDE Warnings
+# Implementation Plan - Fix IDE Warnings (Post-TV Cleanup)
 
-This plan aims to resolve various IDE-level warnings identified in key files of the `CloudStream` project. The warnings range from unused imports and redundant code to stylistic improvements recommended by the Kotlin compiler and IDE inspections.
+This plan addresses several IDE warnings introduced or revealed by the recent cleanup of TV/Emulator specific logic. The fixes include removing unused imports, addressing unused parameters, and improving performance by using sequences.
 
 ## User Review Required
 
 > [!NOTE]
-> The fixes are primarily focused on code health and style. They should not change the functionality of the application.
+> Most changes are purely stylistic or related to code health. No functional changes are expected.
 
 ## Proposed Changes
 
 ### App Module
 
-#### [MODIFY] [PlayerView.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/player/PlayerView.kt)
-- Fix boolean literal arguments by adding parameter names.
-- Add clarifying parentheses in complex boolean expressions.
-- Replace `div` calls with binary operators where applicable.
-- Clean up stylistic issues like missing trailing commas and line breaks.
+#### [MODIFY] [SettingsGeneral.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/settings/SettingsGeneral.kt)
+- Remove unused import: `android.content.Context`.
+- Remove unused exception parameter `e` in `catch` block.
 
-#### [MODIFY] [HomeFragment.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/home/HomeFragment.kt)
-- Remove unused imports (e.g., `android.widget.Toast`).
-- Remove or comment out unused functions (`validateChips`, `selectHomepage`).
-- Inline variables that are identical to their source.
-- Convert collection call chains to sequences where performance improvement is suggested.
-- Fix boolean literal arguments.
+#### [MODIFY] [AccountSelectActivity.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/account/AccountSelectActivity.kt)
+- Remove unused import: `com.lagradost.cloudstream3.ui.settings.Globals.isLayout`.
+- Add missing trailing comma.
+- Add clarifying parentheses to a complex boolean expression in `skipStartup` initialization.
+- Use named parameter for boolean literal.
 
-#### [MODIFY] [CloudStreamApp.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/CloudStreamApp.kt)
-- Remove unused imports.
-- Add missing trailing commas.
+#### [MODIFY] [HomeChildItemAdapter.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/home/HomeChildItemAdapter.kt)
+- Remove unused import: `com.lagradost.cloudstream3.ui.settings.Globals.isLayout`.
+- Annotate unused parameter `isFirstItem` with `@Suppress("UNUSED_PARAMETER")`.
+
+#### [MODIFY] [HomeParentItemAdapter.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/home/HomeParentItemAdapter.kt)
+- Remove unused import: `com.lagradost.cloudstream3.ui.settings.Globals.PHONE`.
+
+#### [MODIFY] [LibraryFragment.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/library/LibraryFragment.kt)
+- Remove unused import: `android.app.Activity`.
+- Remove redundant qualifier `BaseFragment`.
+
+#### [MODIFY] [PluginsFragment.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/settings/extensions/PluginsFragment.kt)
+- Remove redundant qualifier `BaseFragment`.
+- Add missing trailing comma.
+- Convert collection call chain to `Sequence`.
+- Add line break before `object : SearchView.OnQueryTextListener`.
+
+#### [MODIFY] [SettingsPlayer.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/settings/SettingsPlayer.kt)
+- Use named parameter for boolean literal.
+- Add missing trailing comma.
+- Convert collection call chain to `Sequence`.
+
+#### [MODIFY] [SettingsUI.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/settings/SettingsUI.kt)
+- Replace `enumValues` with `enumEntries`.
+- Convert collection call chain to `Sequence`.
+- Rename shadowed `it` parameter.
+- Add missing trailing comma.
+- Move lambda out of parentheses.
+
+#### [MODIFY] [SingleSelectionHelper.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/utils/SingleSelectionHelper.kt)
+- Remove unused import: `com.lagradost.cloudstream3.ui.settings.Globals.PHONE`.
+- Suppress unused parameters `poster` and `tvOptions`.
+- Annotate unused function `showNginxTextInputDialog` with `@Suppress("UNUSED")` (or remove if preferred).
+- Add missing trailing comma.
+- Add line break before `o`.
+- Use foldable `if-then` (replace with `?.let`).
+- Use named parameter for boolean literal.
 
 ### Library Module
 
 #### [MODIFY] [MainAPI.kt](file:///home/user/zetflix-clean/library/src/commonMain/kotlin/com/lagradost/cloudstream3/MainAPI.kt)
-- Remove unused imports (`kotlinx.datetime.LocalTime`).
-- Remove redundant `return` keywords.
-- Replace operator-assignment (`apis = apis + plugin`) with `+=`.
-- Convert double comparisons to range checks (`value in 0..10000`).
-- Use property access syntax instead of setter methods where appropriate.
-- Lift `return` out of `if` blocks.
-- Convert collection call chains to sequences.
+- Fix redundant qualifier for `Score`.
+- Remove unused imports (will check manually).
 
 ## Verification Plan
 
 ### Automated Tests
-- Since direct Gradle build is currently restricted by toolchain environment issues, verification will rely on `analyze_file` to ensure warnings are gone.
+- Run `analyze_file` on modified files to ensure warnings are resolved.
 
 ### Manual Verification
-- Review the diffs to ensure no logic was inadvertently changed.
+- Review diffs for logic consistency.

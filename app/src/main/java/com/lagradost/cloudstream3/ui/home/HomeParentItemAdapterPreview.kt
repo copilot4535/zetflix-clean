@@ -40,9 +40,6 @@ import com.lagradost.cloudstream3.ui.result.setLinearListLayout
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_LOAD
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_SHOW_METADATA
 import com.lagradost.cloudstream3.ui.search.SearchClickCallback
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
-import com.lagradost.cloudstream3.utils.AppContextUtils.html
 import com.lagradost.cloudstream3.utils.AppContextUtils.setDefaultFocus
 import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
@@ -54,16 +51,18 @@ import com.lagradost.cloudstream3.ui.setRecycledViewPool
 
 class HomeParentItemAdapterPreview(
     private val viewModel: HomeViewModel,
-    private val accountViewModel: AccountViewModel
+    private val accountViewModel: AccountViewModel,
 ) : ParentItemAdapter(
     id = "HomeParentItemAdapterPreview".hashCode(),
     clickCallback = {
         viewModel.click(it)
     }, moreInfoClickCallback = {
         viewModel.popup(it)
-    }, expandCallback = {
+    },
+    expandCallback = {
         viewModel.expand(it)
-    }) {
+    },
+) {
     override val headers = 1
     override fun onCreateHeader(parent: ViewGroup): ViewHolderState<Bundle> {
         val inflater = LayoutInflater.from(parent.context)
@@ -103,7 +102,7 @@ class HomeParentItemAdapterPreview(
             Bundle().apply {
                 putParcelable(
                     "resumeRecyclerView",
-                    resumeRecyclerView.layoutManager?.onSaveInstanceState()
+                    resumeRecyclerView.layoutManager?.onSaveInstanceState(),
                 )
                 putParcelable(
                     "bookmarkRecyclerView",
@@ -320,7 +319,7 @@ class HomeParentItemAdapterPreview(
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     previewAdapter.apply {
-                        if (position >= itemCount - 1 && hasMoreItems) {
+                        if ((position >= (itemCount - 1)) && hasMoreItems) {
                             hasMoreItems = false
                             viewModel.loadMoreHomeScrollResponses()
                         }
@@ -398,13 +397,12 @@ class HomeParentItemAdapterPreview(
                         account = currentAccount,
                         isNewAccount = false,
                         accountEditCallback = { accountViewModel.handleAccountUpdate(it, context) },
-                        accountDeleteCallback = {
-                            accountViewModel.handleAccountDelete(
-                                it,
-                                context
-                            )
-                        }
-                    )
+                    ) {
+                        accountViewModel.handleAccountDelete(
+                            it,
+                            context
+                        )
+                    }
                     true
                 } else false
             }
@@ -442,8 +440,8 @@ class HomeParentItemAdapterPreview(
                     alternativeAccountPadding?.isVisible = false
                     val currentPos = previewViewpager.currentItem
                     val item = preview.value.second.getOrNull(currentPos)
-                    if (item != null) {
-                        onSelect(item, currentPos)
+                    item?.let {
+                        onSelect(it, currentPos)
                     }
                 }
 
@@ -464,14 +462,14 @@ class HomeParentItemAdapterPreview(
             if (binding is FragmentHomeHeadBinding) {
                 val title = binding.homeWatchParentItemTitle
 
-                title?.setOnClickListener {
+                title.setOnClickListener {
                     viewModel.popup(
                         HomeViewModel.ExpandableHomepageList(
                             HomePageList(
                                 title.text.toString(),
                                 resumeWatching,
-                                false
-                            ), 1, false
+                                isHorizontalImages = false
+                            ), currentPage = 1, hasNext = false
                         ),
                         deleteCallback = {
                             viewModel.deleteResumeWatching()
@@ -489,10 +487,10 @@ class HomeParentItemAdapterPreview(
             if (binding is FragmentHomeHeadBinding) {
                 val title = binding.homeBookmarkParentItemTitle
 
-                title?.setOnClickListener {
-                    val items = toggleList.map { it.first }.filter { it.isChecked }
+                title.setOnClickListener {
+                    val items = toggleList.asSequence().map { it.first }.filter { it.isChecked }.toList()
                     if (items.isEmpty()) return@setOnClickListener
-                    val textSum = items
+                    val textSum = items.asSequence()
                         .mapNotNull { it.text }.joinToString()
 
                     viewModel.popup(

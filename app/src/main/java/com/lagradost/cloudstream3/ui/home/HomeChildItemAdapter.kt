@@ -20,7 +20,6 @@ import com.lagradost.cloudstream3.ui.newSharedPool
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_LOAD
 import com.lagradost.cloudstream3.ui.search.SearchClickCallback
 import com.lagradost.cloudstream3.ui.search.SearchResultBuilder
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.UIHelper.isBottomLayout
 import com.lagradost.cloudstream3.utils.UIHelper.toPx
 
@@ -169,7 +168,7 @@ open class HomeChildItemAdapter(
         }
     }
 
-    protected fun applyBinding(holder: ViewHolderState<Boolean>, isFirstItem: Boolean) {
+    protected fun applyBinding(holder: ViewHolderState<Boolean>, @Suppress("UNUSED_PARAMETER") isFirstItem: Boolean) {
         when (val binding = holder.view) {
             is HomeResultGridBinding -> {
                 updateLayoutParms(binding.backgroundCard, setWidth, setHeight)

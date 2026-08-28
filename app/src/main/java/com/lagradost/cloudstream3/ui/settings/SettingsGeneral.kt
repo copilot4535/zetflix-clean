@@ -1,6 +1,5 @@
 package com.lagradost.cloudstream3.ui.settings
 
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -124,7 +123,7 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
                 {}) { selection ->
                 val provider = providers.getOrNull(selection) ?: return@showDialog
 
-                val binding : AddSiteInputBinding = AddSiteInputBinding.inflate(layoutInflater,null,false)
+                val binding : AddSiteInputBinding = AddSiteInputBinding.inflate(layoutInflater, null, false)
 
                 val builder =
                     AlertDialog.Builder(context ?: return@showDialog, R.style.AlertDialogCustom)
@@ -173,7 +172,7 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
         }
 
         fun showAddOrDelete() {
-            val binding : AddRemoveSitesBinding = AddRemoveSitesBinding.inflate(layoutInflater,null,false)
+            val binding : AddRemoveSitesBinding = AddRemoveSitesBinding.inflate(layoutInflater, null, false)
             val builder =
                 AlertDialog.Builder(context ?: return, R.style.AlertDialogCustom)
                     .setView(binding.root)
@@ -214,7 +213,7 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
                 prefNames.toList(),
                 prefValues.indexOf(currentDns),
                 getString(R.string.dns_pref),
-                true,
+                showApply = true,
                 {}) {
                 settingsManager.edit { putInt(getString(R.string.dns_pref), prefValues[it]) }
                 (context ?: CloudStreamApp.context)?.let { ctx -> app.initClient(ctx) }
@@ -263,7 +262,7 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
                 dirs + listOf(getString(R.string.custom)),
                 dirs.indexOf(currentDir),
                 getString(R.string.download_path_pref),
-                true,
+                showApply = true,
                 {}) {
                 if (it == dirs.size) {
                     try {
@@ -312,8 +311,7 @@ class SettingsGeneral : BasePreferenceFragmentCompat() {
                     return@setOnPreferenceClickListener true
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
     }
 }

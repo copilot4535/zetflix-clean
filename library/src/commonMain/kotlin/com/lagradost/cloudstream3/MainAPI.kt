@@ -73,7 +73,7 @@ annotation class InternalAPI
 @Retention(AnnotationRetention.BINARY) // This is only an IDE hint, and will not be used in the runtime
 @RequiresOptIn(
     message = "Only use this if you know what you are doing and you need to bypass the SSL certificate checks. Never use this for sensitive network requests such as logins.",
-    level = RequiresOptIn.Level.WARNING
+    level = RequiresOptIn.Level.WARNING,
 )
 annotation class UnsafeSSL
 
@@ -194,7 +194,7 @@ object APIHolder {
                 app.get(
                     "https://www.google.com/recaptcha/api.js?render=$key",
                     referer = referer,
-                    cacheTime = 0
+                    cacheTime = 0,
                 )
                     .text
                     .substringAfter("releases/")
@@ -212,8 +212,9 @@ object APIHolder {
                         "c" to token,
                         "co" to domain,
                         "sa" to "",
-                        "reason" to "q"
-                    ), cacheTime = 0
+                        "reason" to "q",
+                    ),
+                    cacheTime = 0,
                 ).text
                     .substringAfter("rresp\",\"")
                     .substringBefore("\"")
@@ -246,7 +247,7 @@ object APIHolder {
         titles: List<String>,
         types: Set<TrackerType>?,
         year: Int?,
-        lessAccurate: Boolean
+        lessAccurate: Boolean,
     ): Tracker? {
         return try {
             require(titles.isNotEmpty()) { "titles must no be empty when calling getTracker" }
@@ -267,7 +268,7 @@ object APIHolder {
                 } ?: false
 
                 val matchingTypes = types?.any { it.name.equals(media.format, ignoreCase = true) } == true
-                if (lessAccurate) matchingTitles || matchingTypes && matchingYears else matchingTitles && matchingTypes && matchingYears
+                if (lessAccurate) (matchingTitles || (matchingTypes && matchingYears)) else (matchingTitles && matchingTypes && matchingYears)
             } ?: return null
 
             Tracker(
@@ -505,7 +506,7 @@ abstract class MainAPI {
     fun overrideWithNewData(data: ProvidersInfoJson) {
         if (!canBeOverridden) return
         this.name = data.name
-        if (data.url.isNotBlank() && data.url != "NONE")
+        if ((data.url.isNotBlank()) && (data.url != "NONE"))
             this.mainUrl = data.url
         this.storedCredentials = data.credentials
     }
@@ -626,7 +627,7 @@ abstract class MainAPI {
     open val providerType = ProviderType.DirectProvider
 
     //emptyList<MainPageData>() //
-    open val mainPage = listOf(MainPageData("", "", false))
+    open val mainPage = listOf(MainPageData("", "", horizontalImages = false))
 
     // @WorkerThread
     open suspend fun getMainPage(
@@ -642,7 +643,7 @@ abstract class MainAPI {
 
         return newSearchResponseList(
             searchResults,
-            false
+            hasNext = false
         )
     }
 
@@ -853,6 +854,7 @@ suspend fun getRhinoContext(): org.mozilla.javascript.Context {
     return Coroutines.mainWork {
         val rhino = org.mozilla.javascript.Context.enter()
         rhino.initSafeStandardObjects()
+        @Suppress("DEPRECATION")
         rhino.optimizationLevel = -1
         rhino
     }
@@ -921,7 +923,7 @@ class Score private constructor(
     @JsonProperty("data") @SerialName("data") private val data: Int,
 ) {
     override fun hashCode(): Int = this.data.hashCode()
-    override fun equals(other: Any?): Boolean = other is Score && this.data == other.data
+    override fun equals(other: Any?): Boolean = (other is Score) && (this.data == other.data)
 
     @Deprecated(
         "toOld() is deprecated. Use other Score methods instead.",
@@ -968,7 +970,7 @@ class Score private constructor(
         removeTrailingZeros: Boolean = true,
         decimalChar: Char = '.'
     ): String {
-        require(maxScore in 1..1000) {
+        require((maxScore in 1..1000)) {
             "maxScore ∈ [1,1000]"
         }
         require(decimals in 0..MAX_ZEROS) {
@@ -1162,7 +1164,9 @@ fun TvType.isMovieType(): Boolean {
         TvType.Live,
         TvType.Movie,
         TvType.Torrent,
-        TvType.Video -> true
+        TvType.Video -> {
+            true
+        }
 
         else -> false
     }
@@ -1212,7 +1216,7 @@ data class SubtitleFile private constructor(
 
     /** Language code to properly filter auto select / download subtitles */
     val langTag: String?
-        get() = fromCodeToLangTagIETF(lang) ?: fromLanguageToTagIETF(lang, true)
+        get() = fromCodeToLangTagIETF(lang) ?: fromLanguageToTagIETF(lang, halfMatch = true)
 
     /** Backwards compatible copy */
     fun copy(
@@ -2794,7 +2798,7 @@ data class AniSearch(
                 ) {
                     fun isMatchingTitles(title: String?): Boolean {
                         if (title == null) return false
-                        return english.equals(title, true) || romaji.equals(title, true)
+                        return english.equals(title, ignoreCase = true) || romaji.equals(title, ignoreCase = true)
                     }
                 }
             }

@@ -1,7 +1,6 @@
 package com.lagradost.cloudstream3.ui.library
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -59,7 +58,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.abs
 
 class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
-    BaseFragment.BindingCreator.Bind(FragmentLibraryBinding::bind)
+    BindingCreator.Bind(FragmentLibraryBinding::bind)
 ) {
     companion object {
         fun newInstance() = LibraryFragment()
