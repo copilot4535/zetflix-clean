@@ -52,8 +52,6 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.ui.player.live.LivePreviewTimeBar
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.ui.subtitles.SaveCaptionStyle
 import com.lagradost.cloudstream3.ui.subtitles.SubtitlesFragment
 import com.lagradost.cloudstream3.utils.AppContextUtils
@@ -367,7 +365,7 @@ class PlayerView @JvmOverloads constructor(
 
             playerPausePlay?.setOnClickListener {
                 scheduleAutoHide()
-                if (currentPlayerStatus == CSPlayerLoading.IsEnded && isLayout(PHONE)) {
+                if (currentPlayerStatus == CSPlayerLoading.IsEnded) {
                     player.handleEvent(CSPlayerEvent.Restart, PlayerEventSource.UI)
                 } else {
                     player.handleEvent(CSPlayerEvent.PlayPauseToggle, PlayerEventSource.UI)
@@ -535,7 +533,7 @@ class PlayerView @JvmOverloads constructor(
             playerPausePlayHolderHolder?.isVisible = true
             playerBuffering?.isVisible = false
 
-            if (isPlaying == CSPlayerLoading.IsEnded && isLayout(PHONE)) {
+            if (isPlaying == CSPlayerLoading.IsEnded) {
                 playerPausePlay?.setImageResource(R.drawable.ic_baseline_replay_24)
             } else if (wasPlaying != isPlaying) {
                 playerPausePlay?.setImageResource(

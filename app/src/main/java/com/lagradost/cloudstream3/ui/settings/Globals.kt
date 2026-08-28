@@ -19,7 +19,7 @@ object Globals {
     /** Returns true if the layout is PHONE.
      * Valid flag is: PHONE
      * */
-    fun isLayout(@Suppress("UNUSED_PARAMETER") flags: Int) : Boolean {
-        return true
+    fun isLayout(flags: Int) : Boolean {
+        return flags == PHONE
     }
 }

@@ -1,74 +1,68 @@
-# Implementation Plan - Fix IDE Warnings (Post-TV Cleanup)
+# Implementation Plan - TV Remnants Cleanup
 
-This plan addresses several IDE warnings introduced or revealed by the recent cleanup of TV/Emulator specific logic. The fixes include removing unused imports, addressing unused parameters, and improving performance by using sequences.
-
-## User Review Required
-
-> [!NOTE]
-> Most changes are purely stylistic or related to code health. No functional changes are expected.
+This plan outlines the steps to remove all TV and Emulator specific logic and resources from the ZetFlix project, making it mobile/smartphone-only.
 
 ## Proposed Changes
 
-### App Module
+### Step 1: Delete TV Layout Files
+- [ ] Delete `app/src/main/res/layout/activity_main_tv.xml`
+- [ ] Delete `app/src/main/res/layout/fragment_home_tv.xml`
+- [ ] Delete `app/src/main/res/layout/fragment_library_tv.xml`
+- [ ] Delete `app/src/main/res/layout/fragment_player_tv.xml`
+- [ ] Delete `app/src/main/res/layout/fragment_result_tv.xml`
+- [ ] Delete `app/src/main/res/layout/fragment_search_tv.xml`
+- [ ] Delete `app/src/main/res/layout/home_scroll_view_tv.xml`
+- [ ] Delete `app/src/main/res/layout/bottom_resultview_preview_tv.xml`
+- [ ] Delete `app/src/main/res/layout/player_custom_layout_tv.xml`
+- [ ] Delete `app/src/main/res/layout/repository_item_tv.xml`
+- [ ] Delete `app/src/main/res/layout/homepage_parent_tv.xml`
+- [ ] Delete `app/src/main/res/layout/homepage_parent_emulator.xml`
 
-#### [MODIFY] [SettingsGeneral.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/settings/SettingsGeneral.kt)
-- Remove unused import: `android.content.Context`.
-- Remove unused exception parameter `e` in `catch` block.
+### Step 2: Delete TV Resource Files
+- [ ] Delete `app/src/main/res/color/item_select_color_tv.xml`
+- [ ] Delete `app/src/main/res/color/player_button_tv.xml`
+- [ ] Delete `app/src/main/res/color/player_on_button_tv.xml`
+- [ ] Delete `app/src/main/res/color/player_on_button_tv_attr.xml`
+- [ ] Delete `app/src/main/res/drawable/player_button_tv.xml`
+- [ ] Delete `app/src/main/res/drawable/player_button_tv_attr.xml`
+- [ ] Delete `app/src/main/res/drawable/player_button_tv_attr_no_bg.xml`
+- [ ] Delete `app/src/main/res/drawable/player_gradient_tv.xml`
 
-#### [MODIFY] [AccountSelectActivity.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/account/AccountSelectActivity.kt)
-- Remove unused import: `com.lagradost.cloudstream3.ui.settings.Globals.isLayout`.
-- Add missing trailing comma.
-- Add clarifying parentheses to a complex boolean expression in `skipStartup` initialization.
-- Use named parameter for boolean literal.
+### Step 3: Update Adapters
+- [ ] `HomeScrollAdapter.kt`: Remove `HomeScrollViewTvBinding` and TV conditional logic.
+- [ ] `PluginAdapter.kt`: Use `R.layout.repository_item` and remove TV conditional logic.
+- [ ] `SearchHistoryAdaptor.kt`: Remove `isLayout(TV or EMULATOR)` logic.
+- [ ] `SearchSuggestionAdapter.kt`: Remove `isLayout(TV or EMULATOR)` logic.
 
-#### [MODIFY] [HomeChildItemAdapter.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/home/HomeChildItemAdapter.kt)
-- Remove unused import: `com.lagradost.cloudstream3.ui.settings.Globals.isLayout`.
-- Annotate unused parameter `isFirstItem` with `@Suppress("UNUSED_PARAMETER")`.
+### Step 4: Simplify Globals.kt
+- [ ] Remove `TV` and `EMULATOR` constants.
+- [ ] Simplify `layoutIntCorrected` to return `PHONE`.
+- [ ] Simplify `isLayout` to only check for `PHONE`.
+- [ ] Simplify `isLandscape`.
 
-#### [MODIFY] [HomeParentItemAdapter.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/home/HomeParentItemAdapter.kt)
-- Remove unused import: `com.lagradost.cloudstream3.ui.settings.Globals.PHONE`.
+### Step 5: Clean up Conditional UI Logic
+- [ ] `EpisodeAdapter.kt`: Remove TV branches.
+- [ ] `UIHelper.kt`: Remove TV/EMULATOR system UI logic.
+- [ ] `MainActivity.kt`: Remove TV exit logic and nav rail focus logic.
+- [ ] `GeneratorPlayer.kt`: Remove TV episode size logic.
+- [ ] `HomeFragment.kt`: Remove `saveHomepageToTV()` and TV layout checks.
+- [ ] `SettingsPlayer.kt`: Remove TV/EMULATOR preference hiding.
+- [ ] `DownloadQueueFragment.kt`: Remove TV layout padding logic.
+- [ ] `CS3IPlayer.kt`: Remove TV audio/subtitle priority logic.
+- [ ] `AppContextUtils.kt`: Simplify alert dialog focus logic.
+- [ ] `PlayerView.kt` / `PlayerGestureHelper.kt`: Remove TV orientation and gesture logic.
 
-#### [MODIFY] [LibraryFragment.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/library/LibraryFragment.kt)
-- Remove unused import: `android.app.Activity`.
-- Remove redundant qualifier `BaseFragment`.
+### Step 6: Update Instrumented Tests
+- [ ] `ExampleInstrumentedTest.kt`: Remove TV binding imports and TV-specific tests.
 
-#### [MODIFY] [PluginsFragment.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/settings/extensions/PluginsFragment.kt)
-- Remove redundant qualifier `BaseFragment`.
-- Add missing trailing comma.
-- Convert collection call chain to `Sequence`.
-- Add line break before `object : SearchView.OnQueryTextListener`.
-
-#### [MODIFY] [SettingsPlayer.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/settings/SettingsPlayer.kt)
-- Use named parameter for boolean literal.
-- Add missing trailing comma.
-- Convert collection call chain to `Sequence`.
-
-#### [MODIFY] [SettingsUI.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/ui/settings/SettingsUI.kt)
-- Replace `enumValues` with `enumEntries`.
-- Convert collection call chain to `Sequence`.
-- Rename shadowed `it` parameter.
-- Add missing trailing comma.
-- Move lambda out of parentheses.
-
-#### [MODIFY] [SingleSelectionHelper.kt](file:///home/user/zetflix-clean/app/src/main/java/com/lagradost/cloudstream3/utils/SingleSelectionHelper.kt)
-- Remove unused import: `com.lagradost.cloudstream3.ui.settings.Globals.PHONE`.
-- Suppress unused parameters `poster` and `tvOptions`.
-- Annotate unused function `showNginxTextInputDialog` with `@Suppress("UNUSED")` (or remove if preferred).
-- Add missing trailing comma.
-- Add line break before `o`.
-- Use foldable `if-then` (replace with `?.let`).
-- Use named parameter for boolean literal.
-
-### Library Module
-
-#### [MODIFY] [MainAPI.kt](file:///home/user/zetflix-clean/library/src/commonMain/kotlin/com/lagradost/cloudstream3/MainAPI.kt)
-- Fix redundant qualifier for `Score`.
-- Remove unused imports (will check manually).
+### Step 7: Build and Verify
+- [ ] Build app: `./gradlew :app:assembleDebug`
+- [ ] Verify no TV/EMULATOR references: `grep -r "TV\|EMULATOR\|TvBinding" app/src/main/java`
 
 ## Verification Plan
-
 ### Automated Tests
-- Run `analyze_file` on modified files to ensure warnings are resolved.
+- Build success confirms no broken references to deleted files.
+- Instrumented tests (after cleanup) should pass.
 
 ### Manual Verification
-- Review diffs for logic consistency.
+- Grep for TV remnants.

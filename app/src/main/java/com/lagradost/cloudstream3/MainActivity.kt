@@ -89,7 +89,6 @@ import com.lagradost.cloudstream3.utils.TvChannelUtils
 import androidx.core.content.edit
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
-import com.lagradost.cloudstream3.ui.settings.Globals.updateTv
 import com.lagradost.cloudstream3.ui.setup.HAS_DONE_SETUP_KEY
 import com.lagradost.cloudstream3.ui.setup.SetupFragmentExtensions
 import com.lagradost.cloudstream3.utils.ApkInstaller
@@ -451,7 +450,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
     private fun showConfirmExitDialog(settingsManager: SharedPreferences) {
         val confirmBeforeExit = settingsManager.getInt(getString(R.string.confirm_exit_key), -1)
 
-        if (confirmBeforeExit == 1 || (confirmBeforeExit == -1 && isLayout(PHONE))) {
+        if (confirmBeforeExit == 1 || (confirmBeforeExit == -1)) {
             finish()
             return
         }
@@ -661,7 +660,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         }
 
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
-        updateTv()
 
         // backup when we update the app, I don't trust myself to not boot lock users, might want to make this a setting?
         safe {
@@ -1073,24 +1071,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         if (rail != null) {
             binding?.navRailView?.labelVisibilityMode =
                 NavigationRailView.LABEL_VISIBILITY_UNLABELED
-
-            var prevId: Int? = null
-            var prevView: View? = null
-
-            for (id in arrayOf(
-                R.id.navigation_home,
-                R.id.navigation_search,
-                R.id.navigation_library,
-                R.id.navigation_downloads,
-                R.id.navigation_settings
-            )) {
-                val view = rail.findViewById<View?>(id) ?: continue
-                prevId?.let { view.nextFocusUpId = it }
-                prevView?.nextFocusDownId = id
-
-                prevView = view
-                prevId = id
-            }
         }
 
         for (view in listOf(binding?.navView, binding?.navRailView)) {
@@ -1163,17 +1143,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         ioSafe {
             migrateResumeWatching()
-        }
-
-        main {
-            val channelId =
-                TvChannelUtils.getChannelId(this@MainActivity, getString(R.string.app_name))
-            if (channelId == null) {
-                Log.d("TvChannel", "Channel not found, creating")
-                TvChannelUtils.createTvChannel(this@MainActivity)
-            } else {
-                Log.d("TvChannel", "Channel ID: $channelId")
-            }
         }
 
         getKey<String>(USER_SELECTED_HOMEPAGE_API)?.let { homepage ->

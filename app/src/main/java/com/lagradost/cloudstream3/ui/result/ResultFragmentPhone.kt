@@ -138,7 +138,7 @@ open class ResultFragmentPhone : BaseFragment<FragmentResultSwipeBinding>(
                 pathPicker.launch(Uri.EMPTY)
             } catch (t: Throwable) {
                 logError(t)
-                /** Something went wrong, TV Device?
+                /** Something went wrong.
                  * Use the fallback behavior of just downloading it even if no path is selected,
                  * and hope it works */
                 processPendingActions()
