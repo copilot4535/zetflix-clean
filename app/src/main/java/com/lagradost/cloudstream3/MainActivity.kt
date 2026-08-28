@@ -87,6 +87,8 @@ import com.lagradost.cloudstream3.utils.BackupUtils.backup
 import com.lagradost.cloudstream3.utils.BackupUtils.setUpBackup
 import com.lagradost.cloudstream3.utils.TvChannelUtils
 import androidx.core.content.edit
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.ui.setup.HAS_DONE_SETUP_KEY
@@ -142,6 +144,7 @@ import java.nio.charset.Charset
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPressedCallback
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPressedCallback
+import com.lagradost.cloudstream3.utils.AvatarDrawableGenerator
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import kotlin.reflect.full.createInstance
 
@@ -408,6 +411,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         super.onResume()
         afterPluginsLoadedEvent += ::onAllPluginsLoaded
         setActivityInstance(this)
+        updateAvatarInNavigation()
         try {
             if (isCastApiAvailable()) {
                 mSessionManager?.addSessionManagerListener(mSessionManagerListener)
@@ -1174,6 +1178,36 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         }
 
         DownloadQueueManager.init(this)
+        updateAvatarInNavigation()
+    }
+
+    private fun loadEmailFromEncryptedPrefs(): String? {
+        return try {
+            val mainKey = MasterKey.Builder(this)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val sharedPreferences = EncryptedSharedPreferences.create(
+                this,
+                "zetflix_secure_prefs",
+                mainKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
+            sharedPreferences.getString("email", null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun updateAvatarInNavigation() {
+        val email = loadEmailFromEncryptedPrefs() ?: return
+        val drawable = AvatarDrawableGenerator.generateMonogramDrawable(this, email)
+
+        binding?.navView?.menu?.findItem(R.id.navigation_settings)?.icon = drawable
+        binding?.navRailView?.menu?.findItem(R.id.navigation_settings)?.icon = drawable
     }
 
     /** Biometric stuff **/
