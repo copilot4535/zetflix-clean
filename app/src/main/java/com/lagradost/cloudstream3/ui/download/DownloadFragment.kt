@@ -49,15 +49,6 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
     private val downloadViewModel: DownloadViewModel by activityViewModels()
     private val downloadQueueViewModel: DownloadQueueViewModel by activityViewModels()
 
-    private fun View.setLayoutWidth(weight: Long) {
-        val param = LinearLayout.LayoutParams(
-            0,
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            maxOf((weight / 1000000000f), 0.1f)
-        )
-        this.layoutParams = param
-    }
-
     override fun onDestroyView() {
         activity?.detachBackPressedCallback("Downloads")
         super.onDestroyView()
@@ -94,41 +85,6 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
             }
         }
 
-        observe(downloadViewModel.availableBytes) {
-            updateStorageInfo(
-                binding.root.context,
-                it,
-                R.string.free_storage,
-                binding.downloadFreeTxt,
-                binding.downloadFree
-            )
-        }
-        observe(downloadViewModel.usedBytes) {
-            updateStorageInfo(
-                binding.root.context,
-                it,
-                R.string.used_storage,
-                binding.downloadUsedTxt,
-                binding.downloadUsed
-            )
-
-            val hasBytes = it > 0
-            if (hasBytes) {
-                binding.downloadLoadingBytes.stopShimmer()
-            } else binding.downloadLoadingBytes.startShimmer()
-
-            binding.downloadBytesBar.isVisible = hasBytes
-            binding.downloadLoadingBytes.isGone = hasBytes
-        }
-        observe(downloadViewModel.downloadBytes) {
-            updateStorageInfo(
-                binding.root.context,
-                it,
-                R.string.app_storage,
-                binding.downloadAppTxt,
-                binding.downloadApp
-            )
-        }
         observe(downloadQueueViewModel.childCards) { cards ->
             val size = cards.currentDownloads.size + cards.queue.size
             val context = binding.root.context
@@ -168,7 +124,6 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
             val adapter = binding.downloadList.adapter as? DownloadAdapter
             adapter?.setIsMultiDeleteState(isMultiDeleteState)
             binding.downloadDeleteAppbar.isVisible = isMultiDeleteState
-            binding.downloadAppbar.isGone = isMultiDeleteState
 
             if (selection == null) {
                 activity?.detachBackPressedCallback("Downloads")
@@ -249,20 +204,6 @@ class DownloadFragment : BaseFragment<FragmentDownloadsBinding>(
         val formattedSize = formatShortFileSize(context, selectedBytes)
         binding?.btnDelete?.text =
             getString(R.string.delete_format).format(count, formattedSize)
-    }
-
-    private fun updateStorageInfo(
-        context: Context,
-        bytes: Long,
-        @StringRes stringRes: Int,
-        textView: TextView?,
-        view: View?
-    ) {
-        textView?.text = getString(R.string.storage_size_format).format(
-            getString(stringRes),
-            formatShortFileSize(context, bytes)
-        )
-        view?.setLayoutWidth(bytes)
     }
 
     private fun openLocalVideo() {
