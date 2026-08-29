@@ -2,28 +2,52 @@ package com.lagradost.cloudstream3.ui.auth
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.lagradost.cloudstream3.utils.ZetFlixCryptoUtils
+import android.util.Log
+import java.util.UUID
 
 object ZetFlixAuthPrefs {
-    private const val ZETFLIX_AUTH_COMPLETE = "zetflix_auth_complete"
-    private const val KEY_EMAIL = "email"
-    private const val KEY_PHONE_COUNTRY_CODE = "phoneCountryCode"
-    private const val KEY_PHONE_NATIONAL_NUMBER = "phoneNationalNumber"
-    private const val KEY_PASSWORD = "password"
-    private const val KEY_DEVICE_ID = "device_id"
-    private const val KEY_DEVICE_SECRET = "device_secret"
+    const val PREFS_FILE = "zetflix_auth_prefs"
+    private const val TAG = "ZetFlixAuthDebug"
 
     private fun getPrefs(context: Context): SharedPreferences {
-        return ZetFlixCryptoUtils.getEncryptedPrefs(context)
+        return context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+    }
+
+    fun getString(context: Context, key: String, defaultValue: String? = null): String? {
+        val value = getPrefs(context).getString(key, defaultValue)
+        Log.d(TAG, "Prefs Read: file=$PREFS_FILE, key=$key, value=${if (key == "password") "****" else value}")
+        return value
+    }
+
+    fun putString(context: Context, key: String, value: String?) {
+        Log.d(TAG, "Prefs Write: file=$PREFS_FILE, key=$key, value=${if (key == "password") "****" else value}")
+        getPrefs(context).edit().putString(key, value).apply()
+    }
+
+    fun getBoolean(context: Context, key: String, defaultValue: Boolean = false): Boolean {
+        val value = getPrefs(context).getBoolean(key, defaultValue)
+        Log.d(TAG, "Prefs Read: file=$PREFS_FILE, key=$key, value=$value")
+        return value
+    }
+
+    fun putBoolean(context: Context, key: String, value: Boolean) {
+        Log.d(TAG, "Prefs Write: file=$PREFS_FILE, key=$key, value=$value")
+        getPrefs(context).edit().putBoolean(key, value).apply()
     }
 
     fun isZetFlixAuthenticated(context: Context): Boolean {
-        return getPrefs(context).getBoolean(ZETFLIX_AUTH_COMPLETE, false)
+        return getBoolean(context, "zetflix_auth_complete", false)
     }
 
     fun setZetFlixAuthenticated(context: Context, value: Boolean) {
-        getPrefs(context).edit().putBoolean(ZETFLIX_AUTH_COMPLETE, value).apply()
+        putBoolean(context, "zetflix_auth_complete", value)
     }
+
+    // Specific helpers for consistent keys
+    fun getStoredEmail(context: Context): String? = getString(context, "email")
+    fun getStoredPhoneNationalNumber(context: Context): String? = getString(context, "phoneNationalNumber")
+    fun getStoredPhoneCountryCode(context: Context): String? = getString(context, "phoneCountryCode")
+    fun getStoredPassword(context: Context): String? = getString(context, "password")
 
     fun saveCredentials(
         context: Context,
@@ -32,33 +56,26 @@ object ZetFlixAuthPrefs {
         phoneNationalNumber: String,
         password: String
     ) {
-        val deviceId = getPrefs(context).getString(KEY_DEVICE_ID, null) ?: java.util.UUID.randomUUID().toString()
-        val deviceSecret = getPrefs(context).getString(KEY_DEVICE_SECRET, null) ?: (java.util.UUID.randomUUID().toString() + java.util.UUID.randomUUID().toString())
+        val deviceId = getString(context, "device_id") ?: UUID.randomUUID().toString()
+        val deviceSecret = getString(context, "device_secret") ?: UUID.randomUUID().toString()
 
-        getPrefs(context).edit().apply {
-            putString(KEY_EMAIL, email.trim().lowercase())
-            putString(KEY_PHONE_COUNTRY_CODE, phoneCountryCode.trim())
-            putString(KEY_PHONE_NATIONAL_NUMBER, phoneNationalNumber.filter { it.isDigit() })
-            putString(KEY_PASSWORD, password.trim())
-            putString(KEY_DEVICE_ID, deviceId)
-            putString(KEY_DEVICE_SECRET, deviceSecret)
-            apply()
-        }
+        putString(context, "email", email.trim().lowercase())
+        putString(context, "phoneCountryCode", phoneCountryCode.trim())
+        putString(context, "phoneNationalNumber", phoneNationalNumber.filter { it.isDigit() })
+        putString(context, "password", password.trim())
+        putString(context, "device_id", deviceId)
+        putString(context, "device_secret", deviceSecret)
     }
 
-    fun getStoredEmail(context: Context): String? = getPrefs(context).getString(KEY_EMAIL, null)
-    fun getStoredPhoneNationalNumber(context: Context): String? = getPrefs(context).getString(KEY_PHONE_NATIONAL_NUMBER, null)
-    fun getStoredPhoneCountryCode(context: Context): String? = getPrefs(context).getString(KEY_PHONE_COUNTRY_CODE, null)
-    fun getStoredPassword(context: Context): String? = getPrefs(context).getString(KEY_PASSWORD, null)
-
     fun clearCredentials(context: Context) {
+        Log.d(TAG, "Prefs Clear Credentials: file=$PREFS_FILE")
         getPrefs(context).edit().apply {
-            remove(KEY_EMAIL)
-            remove(KEY_PHONE_COUNTRY_CODE)
-            remove(KEY_PHONE_NATIONAL_NUMBER)
-            remove(KEY_PASSWORD)
-            remove(KEY_DEVICE_ID)
-            remove(KEY_DEVICE_SECRET)
+            remove("email")
+            remove("phoneCountryCode")
+            remove("phoneNationalNumber")
+            remove("password")
+            remove("device_id")
+            remove("device_secret")
             apply()
         }
     }

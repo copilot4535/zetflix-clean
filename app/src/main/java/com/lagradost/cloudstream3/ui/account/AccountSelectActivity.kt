@@ -6,10 +6,8 @@ import androidx.fragment.app.FragmentActivity
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
-import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
 import android.content.Intent
 import androidx.activity.viewModels
-import com.lagradost.cloudstream3.ui.account.AccountViewModel
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.BiometricCallback
 import com.lagradost.cloudstream3.utils.UIHelper.openActivity
 
@@ -28,14 +26,7 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
             return
         }
 
-        // Check session validity synchronously
-        if (!ZetFlixSessionManager.isSessionValid(this)) {
-            ZetFlixSessionManager.logout(this)
-            finish() // Explicitly finish here
-            return
-        }
-
-        // If authenticated and session valid, go to MainActivity
+        // If authenticated, go to MainActivity
         navigateToMainActivity()
     }
 

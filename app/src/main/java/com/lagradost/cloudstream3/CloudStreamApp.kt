@@ -27,7 +27,6 @@ import com.lagradost.cloudstream3.utils.DataStore.removeKey
 import com.lagradost.cloudstream3.utils.DataStore.removeKeys
 import com.lagradost.cloudstream3.utils.DataStore.setKey
 import com.lagradost.cloudstream3.utils.ImageLoader.buildImageLoader
-import com.lagradost.cloudstream3.utils.ZetFlixCryptoUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -83,14 +82,6 @@ class CloudStreamApp : Application(), SingletonImageLoader.Factory {
         }
 
         AppDebug.isDebug = BuildConfig.DEBUG
-
-        GlobalScope.launch(Dispatchers.IO) {
-            try {
-                ZetFlixCryptoUtils.getEncryptedPrefs(this@CloudStreamApp)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
     }
 
     override fun attachBaseContext(base: Context?) {

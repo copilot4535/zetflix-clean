@@ -47,7 +47,7 @@ import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarMargin
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarView
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
-import com.lagradost.cloudstream3.utils.ZetFlixCryptoUtils
+import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import android.content.SharedPreferences
 import kotlin.math.absoluteValue
 
@@ -381,9 +381,7 @@ class HomeParentItemAdapterPreview(
             alternateHeadProfilePicCard?.isGone = false
 
             val context = itemView.context
-            val sharedPreferences = ZetFlixCryptoUtils.getEncryptedPrefs(context)
-
-            val email = sharedPreferences.getString("email", "") ?: ""
+            val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
             val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
 
             val backgrounds = listOf(

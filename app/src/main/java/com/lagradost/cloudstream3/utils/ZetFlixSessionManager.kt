@@ -2,38 +2,19 @@ package com.lagradost.cloudstream3.utils
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
+import android.util.Log
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
 
 object ZetFlixSessionManager {
-    private const val LOGIN_TIMESTAMP_KEY = "zetflix_login_timestamp"
-    private const val SESSION_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000L
-
-    private fun getEncryptedPrefs(context: Context): SharedPreferences {
-        return ZetFlixCryptoUtils.getEncryptedPrefs(context)
-    }
-
-    fun setLoginTimestamp(context: Context) {
-        getEncryptedPrefs(context).edit().putLong(LOGIN_TIMESTAMP_KEY, System.currentTimeMillis()).apply()
-    }
-
-    fun isSessionValid(context: Context): Boolean {
-        if (!ZetFlixAuthPrefs.isZetFlixAuthenticated(context)) return false
-        
-        val timestamp = getEncryptedPrefs(context).getLong(LOGIN_TIMESTAMP_KEY, -1L)
-        if (timestamp == -1L) return false
-        
-        val elapsed = System.currentTimeMillis() - timestamp
-        return elapsed <= SESSION_EXPIRY_MS
-    }
+    private const val TAG = "ZetFlixAuthDebug"
 
     fun logout(context: Context) {
+        Log.d(TAG, "Logout initiated")
         ZetFlixAuthPrefs.setZetFlixAuthenticated(context, false)
-        ZetFlixAuthPrefs.clearCredentials(context)
+        // We do NOT clear credentials here so the user can log back in locally.
+        // ZetFlixAuthPrefs.clearCredentials(context)
         
-        getEncryptedPrefs(context).edit().remove(LOGIN_TIMESTAMP_KEY).apply()
-
         BiometricAuthenticator.setFingerprintEnabled(context, false)
 
         val intent = Intent(context, ZetFlixLoginActivity::class.java).apply {

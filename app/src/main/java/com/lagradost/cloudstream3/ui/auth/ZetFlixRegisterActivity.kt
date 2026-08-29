@@ -26,6 +26,10 @@ import kotlinx.coroutines.withContext
 
 class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.BiometricCallback {
 
+    companion object {
+        private const val TAG = "ZetFlixAuthDebug"
+    }
+
     private data class Country(val flag: String, val name: String, val code: String, val length: Int) {
         override fun toString(): String = "$flag $code"
     }
@@ -153,6 +157,8 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
+                    Log.d(TAG, "Registration Attempt initiated. Using file: ${ZetFlixAuthPrefs.PREFS_FILE}")
+                    
                     val normalizedEmail = emailRaw.trim().lowercase()
                     val existingEmail = ZetFlixAuthPrefs.getStoredEmail(this@ZetFlixRegisterActivity)
                     
@@ -179,14 +185,13 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
                         password
                     )
 
-                    Log.d("ZetFlixAuthDebug", "Registration successful")
-                    Log.d("ZetFlixAuthDebug", "Stored email: $normalizedEmail")
-                    Log.d("ZetFlixAuthDebug", "Stored country code: ${country.code}")
-                    Log.d("ZetFlixAuthDebug", "Stored national number: $nationalNumber")
-                    Log.d("ZetFlixAuthDebug", "Stored password length: ${password.length}")
+                    Log.d(TAG, "Registration successful")
+                    Log.d(TAG, "Stored Email: $normalizedEmail")
+                    Log.d(TAG, "Stored Country Code: ${country.code}")
+                    Log.d(TAG, "Stored National Number: $nationalNumber")
+                    Log.d(TAG, "Stored Password Length: ${password.trim().length}")
 
                     ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixRegisterActivity, true)
-                    ZetFlixSessionManager.setLoginTimestamp(this@ZetFlixRegisterActivity)
 
                     withContext(Dispatchers.Main) {
                         setKey("HAS_DONE_SETUP", true)
@@ -209,7 +214,7 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("ZetFlixAuthDebug", "Error during registration", e)
+                    Log.e(TAG, "Error during registration", e)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@ZetFlixRegisterActivity, "Error saving credentials", Toast.LENGTH_SHORT).show()
                     }
