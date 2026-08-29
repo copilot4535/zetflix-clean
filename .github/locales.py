@@ -4,7 +4,7 @@ import requests
 import lxml.etree as ET  # builtin library doesn't preserve comments
 
 
-SETTINGS_PATH = "app/src/main/java/com/lagradost/cloudstream3/ui/settings/SettingsGeneral.kt"
+SETTINGS_PATH = "app/src/main/java/com/lagradost/cloudstream3/ui/settings/SettingsFragment.kt"
 START_MARKER = "/* begin language list */"
 END_MARKER = "/* end language list */"
 XML_NAME = "app/src/main/res/values-b+"

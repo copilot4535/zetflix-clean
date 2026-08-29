@@ -80,7 +80,7 @@ import com.lagradost.cloudstream3.ui.result.SyncViewModel
 import com.lagradost.cloudstream3.ui.search.SearchFragment
 import com.lagradost.cloudstream3.ui.search.SearchResultBuilder
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
-import com.lagradost.cloudstream3.ui.settings.SettingsGeneral
+import com.lagradost.cloudstream3.ui.settings.SettingsFragment
 import com.google.android.material.navigationrail.NavigationRailView
 import com.google.android.material.snackbar.Snackbar
 import com.lagradost.cloudstream3.utils.BackupUtils.backup
@@ -318,10 +318,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             R.id.navigation_download_queue,
             R.id.navigation_subtitles,
             R.id.navigation_chrome_subtitles,
-            R.id.navigation_settings_player,
-            R.id.navigation_settings_ui,
-            R.id.navigation_settings_account,
-            R.id.navigation_settings_general,
             R.id.navigation_test_providers,
         ).contains(destination.id)
 
@@ -348,10 +344,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     R.id.navigation_settings,
                     R.id.navigation_subtitles,
                     R.id.navigation_chrome_subtitles,
-                    R.id.navigation_settings_player,
-                    R.id.navigation_settings_ui,
-                    R.id.navigation_settings_account,
-                    R.id.navigation_settings_general,
                     R.id.navigation_test_providers
                 ) -> {
                     navRailView.menu.findItem(R.id.navigation_settings).isChecked = true
@@ -539,7 +531,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 allProviders.withLock {
                     // Load cloned sites after plugins have been loaded since clones depend on plugins.
                     try {
-                        getKey<Array<SettingsGeneral.CustomSite>>(USER_PROVIDER_API)?.let { list ->
+                        getKey<Array<SettingsFragment.CustomSite>>(USER_PROVIDER_API)?.let { list ->
                             list.forEach { custom ->
                                 allProviders.firstOrNull {
                                     it::class.simpleName == custom.parentClassName

@@ -392,11 +392,11 @@ class HomeParentItemAdapterPreview(
             headProfilePic?.setImageResource(avatarRes)
 
             headProfilePicCard?.setOnClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings)
             }
 
             headProfilePicCard?.setOnLongClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
+                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings)
                 true
             }
         }
