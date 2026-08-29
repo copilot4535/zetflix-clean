@@ -231,10 +231,6 @@ class HomeParentItemAdapterPreview(
         private val bookmarkRecyclerView: RecyclerView =
             itemView.findViewById(R.id.home_bookmarked_child_recyclerview)
 
-        private val headProfilePic: ImageView? = itemView.findViewById(R.id.home_head_profile_pic)
-        private val headProfilePicCard: View? =
-            itemView.findViewById(R.id.home_head_profile_padding)
-
         private val topPadding: View? = itemView.findViewById(R.id.home_padding)
 
         private val homeNonePadding: View = itemView.findViewById(R.id.home_none_padding)
@@ -367,37 +363,6 @@ class HomeParentItemAdapterPreview(
                         viewModel.loadStoredData(emptySet())
                     }
                 }
-            }
-
-            headProfilePicCard?.isGone = false
-
-            val context = itemView.context
-            val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
-            val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
-
-            val backgrounds = listOf(
-                R.drawable.profile_bg_blue,
-                R.drawable.profile_bg_dark_blue,
-                R.drawable.profile_bg_orange,
-                R.drawable.profile_bg_pink,
-                R.drawable.profile_bg_purple,
-                R.drawable.profile_bg_red,
-                R.drawable.profile_bg_teal
-            )
-            val bgIndex = if (username.isNotEmpty()) username.hashCode().absoluteValue % backgrounds.size else 0
-            
-            val avatarRes = R.drawable.ic_outline_account_circle_24
-            
-            headProfilePic?.setBackgroundResource(backgrounds[bgIndex])
-            headProfilePic?.setImageResource(avatarRes)
-
-            headProfilePicCard?.setOnClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings)
-            }
-
-            headProfilePicCard?.setOnLongClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings)
-                true
             }
         }
 

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/zetflix_background"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/settings_header_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="12dp"
+        android:text="@string/title_settings"
+        android:textColor="#ffffff"
+        android:textSize="26sp"
+        android:textStyle="bold" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="32dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Account & Security Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_account"
+                style="@style/ZetFlixSettingsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/ZetFlixSettingsCategoryHeader"
+                        android:text="@string/zetflix_account_title" />
+
+                    <!-- We'll add custom rows here or just bind to existing ones -->
+                    <include
+                        android:id="@+id/row_account_header"
+                        layout="@layout/preference_account_header" />
+
+                    <include
+                        android:id="@+id/row_biometric"
+                        layout="@layout/preference_zetflix_switch" />
+
+                    <include
+                        android:id="@+id/row_logout"
+                        layout="@layout/preference_logout_button" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- General Settings Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_general"
+                style="@style/ZetFlixSettingsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/ZetFlixSettingsCategoryHeader"
+                        android:text="@string/category_general" />
+
+                    <include android:id="@+id/row_download_path" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_download_parallel" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_download_concurrent" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_battery" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_override_site" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_dns" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_jsdelivr" layout="@layout/preference_zetflix_switch" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Player Settings Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_player"
+                style="@style/ZetFlixSettingsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/ZetFlixSettingsCategoryHeader"
+                        android:text="@string/category_player" />
+
+                    <include android:id="@+id/row_sync" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_player_default" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_limit_title" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_limit_rez" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_hide_controls" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_subtitles" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_subtitles_chromecast" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_source_priority" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_pip" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_resize" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_speed" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_speedup" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_autoplay" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_skip_op" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_rotate" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_auto_rotate" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_preview" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_software_decoding" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_extra_brightness" layout="@layout/preference_zetflix_switch" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Gestures Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_gestures"
+                style="@style/ZetFlixSettingsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/ZetFlixSettingsCategoryHeader"
+                        android:text="@string/pref_category_gestures" />
+
+                    <include android:id="@+id/row_swipe_seek" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_swipe_change" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_double_tap_seek" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_double_tap_pause" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_seek_time" layout="@layout/preference_zetflix_row" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Layout Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_layout"
+                style="@style/ZetFlixSettingsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/ZetFlixSettingsCategoryHeader"
+                        android:text="@string/category_ui" />
+
+                    <include android:id="@+id/row_bottom_title" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_poster_size" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_poster_ui" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_advanced_search" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_suggestions" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_trailers" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_cast" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_filler" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_metadata" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_random" layout="@layout/preference_zetflix_switch" />
+                    <include android:id="@+id/row_confirm_exit" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_filter_quality" layout="@layout/preference_zetflix_row" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Cache Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_cache"
+                style="@style/ZetFlixSettingsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/ZetFlixSettingsCategoryHeader"
+                        android:text="@string/pref_category_cache" />
+
+                    <include android:id="@+id/row_cache_disk" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_cache_size" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_cache_length" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_cache_clear" layout="@layout/preference_zetflix_row" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Updates Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_updates"
+                style="@style/ZetFlixSettingsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/ZetFlixSettingsCategoryHeader"
+                        android:text="@string/category_updates" />
+
+                    <include android:id="@+id/row_check_update" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_apk_installer" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_auto_update" layout="@layout/preference_zetflix_switch" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

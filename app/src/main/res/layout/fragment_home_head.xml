@@ -48,7 +48,8 @@
             android:foreground="@drawable/rounded_select_ripple"
             android:gravity="center"
             android:nextFocusLeft="@id/home_zetflix_logo"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/home_head_profile_card"

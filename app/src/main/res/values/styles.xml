@@ -711,4 +711,24 @@
         <item name="android:src">@drawable/ic_play_red_circle</item>
         <item name="android:layout_gravity">center</item>
     </style>
+
+    <style name="ZetFlixSettingsCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">#1a1a24</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">#2c2c3a</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">16dp</item>
+    </style>
+
+    <style name="ZetFlixSettingsCategoryHeader">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_marginBottom">12dp</item>
+    </style>
 </resources>
