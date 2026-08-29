@@ -1,4 +1,7 @@
-# Add project specific ProGuard rules here.
+# Rhino/Mozilla Javascript engine missing classes
+-dontwarn java.beans.**
+-dontwarn org.mozilla.javascript.JavaToJSONConverters
+
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.kts.
 #

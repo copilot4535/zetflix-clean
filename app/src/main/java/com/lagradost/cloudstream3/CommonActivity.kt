@@ -293,7 +293,7 @@ object CommonActivity {
             val currentNightMode =
                 act.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
             return when (currentNightMode) {
-                Configuration.UI_MODE_NIGHT_NO -> R.style.LightMode
+                Configuration.UI_MODE_NIGHT_NO -> R.style.AppTheme
                 else -> R.style.AppTheme
             }
         } else {

@@ -339,7 +339,6 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
         if (nextStep != curStep) am.setStreamVolume(AudioManager.STREAM_MUSIC, nextStep, 0)
 
-        var hasBoostError = false
         if (next > 1.0f) {
             val boost = ((next - 1.0f) * 1000).toInt()
             val existing = loudnessEnhancer
@@ -352,7 +351,7 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
                         loudnessEnhancer = LoudnessEnhancer(sessionId).apply {
                             setTargetGain(boost); enabled = true
                         }
-                    } catch (t: Throwable) { logError(t); hasBoostError = true }
+                    } catch (t: Throwable) { logError(t) }
                 }
             }
         } else {
@@ -368,7 +367,7 @@ class PlayerGestureHelper(private val playerView: PlayerView) {
 
         if (next > 1.0f) {
             level2.progressTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(context, if (hasBoostError) R.color.colorPrimaryRed else R.color.colorPrimaryOrange)
+                ContextCompat.getColor(context, R.color.zetflix_accent)
             )
         }
         level1.max = 100_000

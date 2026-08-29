@@ -986,7 +986,7 @@
                 android:max="100"
                 android:progress="0"
                 android:progressDrawable="@drawable/progress_drawable_vertical"
-                android:progressTint="@color/colorPrimaryOrange"
+                android:progressTint="@color/zetflix_accent"
                 android:progressTintMode="src_in"
                 tools:progress="0"
                 style="@android:style/Widget.Material.ProgressBar.Horizontal" />
@@ -1048,7 +1048,7 @@
                 android:max="100"
                 android:progress="0"
                 android:progressDrawable="@drawable/progress_drawable_vertical"
-                android:progressTint="@color/colorPrimaryOrange"
+                android:progressTint="@color/zetflix_accent"
                 android:progressTintMode="src_in" />
         </RelativeLayout>
     </LinearLayout>
