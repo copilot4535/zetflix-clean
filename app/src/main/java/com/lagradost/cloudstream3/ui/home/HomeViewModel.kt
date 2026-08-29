@@ -62,11 +62,11 @@ import java.util.concurrent.CopyOnWriteArrayList
 class HomeViewModel : ViewModel() {
     companion object {
         private const val STAGE1_PLUGIN_COUNT = 3
-        private const val STAGE1_TOTAL_TIMEOUT_MS = 8_000L
-        private const val STAGE2_TOTAL_TIMEOUT_MS = 15_000L
-        private const val TOTAL_LOAD_TIMEOUT_MS = 20_000L
-        private const val PER_PLUGIN_TIMEOUT_MS = 5_000L
-        private const val MAX_CONCURRENT_PLUGIN_LOADS = 2
+        private const val STAGE1_TOTAL_TIMEOUT_MS = 15_000L
+        private const val STAGE2_TOTAL_TIMEOUT_MS = 30_000L
+        private const val TOTAL_LOAD_TIMEOUT_MS = 45_000L
+        private const val PER_PLUGIN_TIMEOUT_MS = 10_000L
+        private const val MAX_CONCURRENT_PLUGIN_LOADS = 3
 
         suspend fun getResumeWatching(): List<DataStoreHelper.ResumeWatchingResult>? {
             val resumeWatching = withContext(Dispatchers.IO) {

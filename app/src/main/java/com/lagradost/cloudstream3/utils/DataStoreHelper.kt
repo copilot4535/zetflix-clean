@@ -65,7 +65,7 @@ const val USER_PINNED_PROVIDERS = "user_pinned_providers" // Key for pinned user
 
 const val HOME_CACHE_KEY = "home_cache"
 const val HOME_CACHE_TIME_KEY = "home_cache_time"
-const val HOME_CACHE_TTL_HOURS = 4L
+const val HOME_CACHE_TTL_HOURS = 6L
 
 class UserPreferenceDelegate<T : Any>(
     private val key: String,

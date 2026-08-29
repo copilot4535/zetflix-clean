@@ -21,8 +21,8 @@ class ZetFlixLoadingActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Update and load all online plugins from the allowlisted repositories with a 30s timeout
-                withTimeoutOrNull(30000L) {
+                // Update and load all online plugins from the allowlisted repositories with a 60s timeout
+                withTimeoutOrNull(60000L) {
                     PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(this@ZetFlixLoadingActivity)
                 }
             } catch (e: Exception) {
