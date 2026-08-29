@@ -160,14 +160,22 @@ object BiometricAuthenticator {
     }
 
     fun canSetupBiometrics(context: Context): Boolean {
-        return deviceHasPasswordPinLock(context)
+        return deviceHasPasswordPinLock(context) && isBiometricHardwareAvailable(context)
+    }
+
+    fun isBiometricAvailable(context: Context): Boolean {
+        return isBiometricHardwareAvailable(context)
     }
 
     fun isBiometricHardwareAvailable(context: Context): Boolean {
         val manager = BiometricManager.from(context)
-        val result = manager.canAuthenticate(BIOMETRIC_STRONG)
-        return result != BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE && 
-               result != BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE
+        val result = try {
+            manager.canAuthenticate(BIOMETRIC_STRONG)
+        } catch (e: Exception) {
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE
+        }
+        return result == BiometricManager.BIOMETRIC_SUCCESS || 
+               result == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
     }
 
     // function to start authentication in any fragment or activity
@@ -180,26 +188,34 @@ object BiometricAuthenticator {
         initializeBiometrics(activity)
         authCallback = callback ?: (activity as? BiometricCallback)
         if (isBiometricHardWareAvailable()) {
-            authCallback = activity as? BiometricCallback
             authenticationDialog(activity, title, setDeviceCred)
             promptInfo?.let { biometricPrompt?.authenticate(it) }
         } else {
             if (deviceHasPasswordPinLock(activity)) {
-                authCallback = activity as? BiometricCallback
                 authenticationDialog(activity, R.string.password_pin_authentication_title, true)
                 promptInfo?.let { biometricPrompt?.authenticate(it) }
 
             } else {
                 showToast(R.string.biometric_unsupported)
+                authCallback?.onAuthenticationError()
             }
         }
     }
 
-    fun isAuthEnabled(ctx: Context):Boolean {
-        return ctx.let {
-            PreferenceManager.getDefaultSharedPreferences(ctx)
-                .getBoolean(getString(ctx, R.string.biometric_key), false)
-        }
+    fun isFingerprintEnabled(context: Context): Boolean {
+        return isAuthEnabled(context)
+    }
+
+    fun isAuthEnabled(ctx: Context): Boolean {
+        return PreferenceManager.getDefaultSharedPreferences(ctx)
+            .getBoolean(getString(ctx, R.string.biometric_key), false)
+    }
+
+    fun setFingerprintEnabled(context: Context, enabled: Boolean) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+            .edit()
+            .putBoolean(getString(context, R.string.biometric_key), enabled)
+            .apply()
     }
 
     interface BiometricCallback {

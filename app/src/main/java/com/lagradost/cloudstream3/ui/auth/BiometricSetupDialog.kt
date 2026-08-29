@@ -1,25 +1,19 @@
 package com.lagradost.cloudstream3.ui.auth
 
 import android.content.Context
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.appcompat.app.AlertDialog
 import com.lagradost.cloudstream3.R
 
 object BiometricSetupDialog {
-    fun show(
-        context: Context,
-        onEnable: () -> Unit,
-        onSkip: () -> Unit
-    ) {
-        MaterialAlertDialogBuilder(context)
+    fun show(context: Context, onEnable: () -> Unit, onSkip: () -> Unit) {
+        AlertDialog.Builder(context, R.style.AlertDialogCustom)
             .setTitle(R.string.fingerprint_setup_title)
             .setMessage(R.string.fingerprint_setup_description)
-            .setPositiveButton(R.string.fingerprint_setup_enable) { dialog, _ ->
+            .setPositiveButton(R.string.fingerprint_setup_enable) { _, _ ->
                 onEnable()
-                dialog.dismiss()
             }
-            .setNegativeButton(R.string.fingerprint_setup_skip) { dialog, _ ->
+            .setNegativeButton(R.string.fingerprint_setup_skip) { _, _ ->
                 onSkip()
-                dialog.dismiss()
             }
             .setCancelable(false)
             .show()

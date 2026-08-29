@@ -3,8 +3,6 @@ package com.lagradost.cloudstream3.utils
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import androidx.preference.PreferenceManager
-import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
 
@@ -32,22 +30,11 @@ object ZetFlixSessionManager {
 
     fun logout(context: Context) {
         ZetFlixAuthPrefs.setZetFlixAuthenticated(context, false)
+        ZetFlixAuthPrefs.clearCredentials(context)
         
-        getEncryptedPrefs(context).edit().apply {
-            remove("phoneCountryCode")
-            remove("phoneNationalNumber")
-            remove("email")
-            remove("password")
-            remove("device_id")
-            remove("device_secret")
-            remove(LOGIN_TIMESTAMP_KEY)
-            apply()
-        }
+        getEncryptedPrefs(context).edit().remove(LOGIN_TIMESTAMP_KEY).apply()
 
-        PreferenceManager.getDefaultSharedPreferences(context)
-            .edit()
-            .putBoolean(context.getString(R.string.biometric_key), false)
-            .apply()
+        BiometricAuthenticator.setFingerprintEnabled(context, false)
 
         val intent = Intent(context, ZetFlixLoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

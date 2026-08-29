@@ -8,15 +8,13 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import com.lagradost.cloudstream3.R
+import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment.Companion.setUpToolbar
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
-import com.lagradost.cloudstream3.utils.ZetFlixCryptoUtils
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import kotlinx.coroutines.Dispatchers
@@ -45,23 +43,24 @@ class SettingsAccount : Fragment(), BiometricAuthenticator.BiometricCallback {
         val context = context ?: return
         ioSafe {
             try {
-                val prefs = ZetFlixCryptoUtils.getEncryptedPrefs(context)
-                val email = prefs.getString("email", "") ?: ""
-                val countryCode = prefs.getString("phoneCountryCode", "") ?: ""
-                val phone = prefs.getString("phoneNationalNumber", "") ?: ""
+                val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
+                val countryCode = ZetFlixAuthPrefs.getStoredPhoneCountryCode(context) ?: ""
+                val phone = ZetFlixAuthPrefs.getStoredPhoneNationalNumber(context) ?: ""
 
                 val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
 
-                val maskedPhone = if (phone.length >= 4) {
+                val maskedPhone = if (phone.length >= 6) {
                     val first2 = phone.take(2)
                     val last4 = phone.takeLast(4)
                     "$countryCode $first2****$last4"
-                } else {
+                } else if (phone.isNotEmpty()) {
                     "$countryCode $phone"
+                } else {
+                    ""
                 }
 
-                val canSetup = BiometricAuthenticator.canSetupBiometrics(context)
-                val isBiometricEnabled = BiometricAuthenticator.isAuthEnabled(context)
+                val isBiometricAvailable = BiometricAuthenticator.isBiometricAvailable(context)
+                val isBiometricEnabled = BiometricAuthenticator.isFingerprintEnabled(context)
 
                 main {
                     view.findViewById<TextView>(R.id.account_username).text = username
@@ -72,7 +71,7 @@ class SettingsAccount : Fragment(), BiometricAuthenticator.BiometricCallback {
                     val fingerprintLayout = view.findViewById<View>(R.id.account_fingerprint_layout)
                     val statusText = view.findViewById<TextView>(R.id.account_fingerprint_status)
                     
-                    if (canSetup) {
+                    if (isBiometricAvailable) {
                         fingerprintLayout.visibility = View.VISIBLE
                         statusText.text = if (isBiometricEnabled) {
                             getString(R.string.zetflix_account_fingerprint_enabled)
@@ -83,9 +82,7 @@ class SettingsAccount : Fragment(), BiometricAuthenticator.BiometricCallback {
                         fingerprintLayout.setOnClickListener {
                             if (isBiometricEnabled) {
                                 // Disable it
-                                PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
-                                    putBoolean(getString(R.string.biometric_key), false)
-                                }
+                                BiometricAuthenticator.setFingerprintEnabled(requireContext(), false)
                                 statusText.text = getString(R.string.zetflix_account_fingerprint_disabled)
                             } else {
                                 // Enable it
@@ -102,7 +99,7 @@ class SettingsAccount : Fragment(), BiometricAuthenticator.BiometricCallback {
                         fingerprintLayout.isClickable = false
                     }
 
-                    // Avatar logic: monogram for now
+                    // Avatar logic: monogram
                     val avatarView = view.findViewById<ImageView>(R.id.account_avatar)
                     val backgrounds = listOf(
                         R.drawable.profile_bg_blue,
@@ -126,10 +123,7 @@ class SettingsAccount : Fragment(), BiometricAuthenticator.BiometricCallback {
 
     override fun onAuthenticationSuccess() {
         lifecycleScope.launch(Dispatchers.IO) {
-            PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
-                putBoolean(getString(R.string.biometric_key), true)
-            }
-            
+            BiometricAuthenticator.setFingerprintEnabled(requireContext(), true)
             withContext(Dispatchers.Main) {
                 view?.let { loadUserData(it) }
             }

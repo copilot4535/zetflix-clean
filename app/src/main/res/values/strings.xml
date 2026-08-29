@@ -773,6 +773,8 @@
 
     <string name="zetflix_login_title">ZetFlix</string>
     <string name="zetflix_login_subtitle">Login to continue</string>
+    <string name="zetflix_identifier_hint">Email or phone number</string>
+    <string name="zetflix_register_subtitle">Create a new account</string>
     <string name="zetflix_phone_hint">Enter phone number</string>
     <string name="zetflix_email_hint">Enter Gmail address</string>
     <string name="zetflix_password_hint">Password (min 8 characters)</string>
