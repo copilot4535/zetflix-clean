@@ -3,19 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0b0b0f"
+    android:background="@color/zetflix_background"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#0b0b0f">
+        android:background="@color/zetflix_background">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/settings_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:titleTextColor="#ffffff" />
+            app:titleTextColor="@color/zetflix_text_primary" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -53,7 +53,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:textColor="#ffffff"
+                    android:textColor="@color/zetflix_text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -62,14 +62,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textColor="#a0a0b0"
+                    android:textColor="@color/zetflix_text_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="#1a1a24"
+                app:cardBackgroundColor="@color/zetflix_surface"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp">
 
@@ -88,20 +88,20 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/zetflix_account_email_label"
-                            android:textColor="#a0a0b0"
+                            android:textColor="@color/zetflix_text_secondary"
                             android:textSize="12sp" />
                         <TextView
                             android:id="@+id/account_email"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#ffffff"
+                            android:textColor="@color/zetflix_text_primary"
                             android:textSize="16sp" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#2c2c3a"
+                        android:background="@color/zetflix_border"
                         android:layout_marginBottom="16dp" />
 
                     <LinearLayout
@@ -113,20 +113,20 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/zetflix_account_phone_label"
-                            android:textColor="#a0a0b0"
+                            android:textColor="@color/zetflix_text_secondary"
                             android:textSize="12sp" />
                         <TextView
                             android:id="@+id/account_phone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#ffffff"
+                            android:textColor="@color/zetflix_text_primary"
                             android:textSize="16sp" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#2c2c3a"
+                        android:background="@color/zetflix_border"
                         android:layout_marginBottom="16dp" />
 
                     <LinearLayout
@@ -141,13 +141,13 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/zetflix_account_fingerprint_label"
-                            android:textColor="#a0a0b0"
+                            android:textColor="@color/zetflix_text_secondary"
                             android:textSize="12sp" />
                         <TextView
                             android:id="@+id/account_fingerprint_status"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#ffffff"
+                            android:textColor="@color/zetflix_text_primary"
                             android:textSize="16sp" />
                     </LinearLayout>
 
@@ -164,10 +164,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="32dp"
-                android:backgroundTint="#e50914"
+                android:backgroundTint="@color/zetflix_accent"
                 android:text="@string/logout_button"
                 android:textAllCaps="false"
-                android:textColor="#ffffff"
+                android:textColor="@color/zetflix_text_primary"
                 android:textSize="18sp"
                 app:cornerRadius="12dp" />
 

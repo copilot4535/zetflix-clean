@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0b0b0f">
+    android:background="@color/zetflix_background">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -18,7 +18,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="100dp"
             android:layout_height="100dp"
-            app:cardBackgroundColor="#e50914"
+            app:cardBackgroundColor="@color/zetflix_accent"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp">
 
@@ -27,7 +27,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="Z"
-                android:textColor="#ffffff"
+                android:textColor="@color/zetflix_text_primary"
                 android:textSize="64sp"
                 android:textStyle="bold" />
         </androidx.cardview.widget.CardView>
@@ -37,15 +37,15 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:indeterminate="true"
-            app:indicatorColor="#e50914"
-            app:trackColor="#2c2c3a" />
+            app:indicatorColor="@color/zetflix_accent"
+            app:trackColor="@color/zetflix_border" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Configuring your movie library"
-            android:textColor="#a0a0b0"
+            android:textColor="@color/zetflix_text_secondary"
             android:textSize="16sp" />
 
     </LinearLayout>

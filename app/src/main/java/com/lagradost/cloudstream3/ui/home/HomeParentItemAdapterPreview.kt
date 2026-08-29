@@ -235,15 +235,7 @@ class HomeParentItemAdapterPreview(
         private val headProfilePicCard: View? =
             itemView.findViewById(R.id.home_head_profile_padding)
 
-        private val alternateHeadProfilePic: ImageView? =
-            itemView.findViewById(R.id.alternate_home_head_profile_pic)
-        private val alternateHeadProfilePicCard: View? =
-            itemView.findViewById(R.id.alternate_home_head_profile_padding)
-
         private val topPadding: View? = itemView.findViewById(R.id.home_padding)
-
-        private val alternativeAccountPadding: View? =
-            itemView.findViewById(R.id.alternative_account_padding)
 
         private val homeNonePadding: View = itemView.findViewById(R.id.home_none_padding)
 
@@ -378,7 +370,7 @@ class HomeParentItemAdapterPreview(
             }
 
             headProfilePicCard?.isGone = false
-            alternateHeadProfilePicCard?.isGone = false
+            // alternateHeadProfilePicCard?.isGone = false
 
             val context = itemView.context
             val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
@@ -399,25 +391,25 @@ class HomeParentItemAdapterPreview(
             
             headProfilePic?.setBackgroundResource(backgrounds[bgIndex])
             headProfilePic?.setImageResource(avatarRes)
-            alternateHeadProfilePic?.setBackgroundResource(backgrounds[bgIndex])
-            alternateHeadProfilePic?.setImageResource(avatarRes)
+            // alternateHeadProfilePic?.setBackgroundResource(backgrounds[bgIndex])
+            // alternateHeadProfilePic?.setImageResource(avatarRes)
 
             headProfilePicCard?.setOnClickListener {
                 (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
             }
 
-            alternateHeadProfilePicCard?.setOnClickListener {
+            /*alternateHeadProfilePicCard?.setOnClickListener {
                 (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
-            }
+            }*/
 
             headProfilePicCard?.setOnLongClickListener {
                 (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
                 true
             }
-            alternateHeadProfilePicCard?.setOnLongClickListener {
+            /*alternateHeadProfilePicCard?.setOnLongClickListener {
                 (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
                 true
-            }
+            }*/
 
 
         }
@@ -438,7 +430,7 @@ class HomeParentItemAdapterPreview(
 
                     previewViewpager.isVisible = true
                     previewViewpagerText.isVisible = true
-                    alternativeAccountPadding?.isVisible = false
+                    // alternativeAccountPadding?.isVisible = false
                     val currentPos = previewViewpager.currentItem
                     val item = preview.value.second.getOrNull(currentPos)
                     item?.let {
@@ -451,7 +443,7 @@ class HomeParentItemAdapterPreview(
                     previewViewpager.setCurrentItem(0, false)
                     previewViewpager.isVisible = false
                     previewViewpagerText.isVisible = false
-                    alternativeAccountPadding?.isVisible = true
+                    // alternativeAccountPadding?.isVisible = true
                 }
             }
         }

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0b0b0f"
+    android:background="@color/zetflix_background"
     android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -27,7 +27,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="@string/zetflix_login_title"
-                android:textColor="#ffffff"
+                android:textColor="@color/zetflix_text_primary"
                 android:textSize="28sp"
                 android:textStyle="bold" />
 
@@ -37,7 +37,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp"
                 android:text="@string/zetflix_login_subtitle"
-                android:textColor="#a0a0b0"
+                android:textColor="@color/zetflix_text_secondary"
                 android:textSize="16sp" />
 
             <com.google.android.material.button.MaterialButton
@@ -45,13 +45,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="16dp"
-                android:backgroundTint="#1a1a24"
+                android:backgroundTint="@color/zetflix_surface_light"
                 android:text="@string/fingerprint_login_button"
                 android:textAllCaps="false"
-                android:textColor="#ffffff"
+                android:textColor="@color/zetflix_text_primary"
                 android:textSize="18sp"
                 android:visibility="gone"
-                app:strokeColor="#2c2c3a"
+                app:strokeColor="@color/zetflix_border"
                 app:strokeWidth="1dp" />
 
             <EditText
@@ -92,7 +92,7 @@
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="12dp"
                     android:src="@drawable/ic_baseline_visibility_off_24"
-                    app:tint="#a0a0b0" />
+                    app:tint="@color/zetflix_text_secondary" />
             </RelativeLayout>
 
             <Button
@@ -128,7 +128,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:text="@string/zetflix_google_link"
-                android:textColor="#a0a0b0"
+                android:textColor="@color/zetflix_text_secondary"
                 android:textSize="14sp" />
 
         </LinearLayout>
