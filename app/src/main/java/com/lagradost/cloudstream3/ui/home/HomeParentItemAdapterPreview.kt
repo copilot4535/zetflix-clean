@@ -370,7 +370,6 @@ class HomeParentItemAdapterPreview(
             }
 
             headProfilePicCard?.isGone = false
-            // alternateHeadProfilePicCard?.isGone = false
 
             val context = itemView.context
             val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
@@ -391,27 +390,15 @@ class HomeParentItemAdapterPreview(
             
             headProfilePic?.setBackgroundResource(backgrounds[bgIndex])
             headProfilePic?.setImageResource(avatarRes)
-            // alternateHeadProfilePic?.setBackgroundResource(backgrounds[bgIndex])
-            // alternateHeadProfilePic?.setImageResource(avatarRes)
 
             headProfilePicCard?.setOnClickListener {
                 (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
             }
 
-            /*alternateHeadProfilePicCard?.setOnClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
-            }*/
-
             headProfilePicCard?.setOnLongClickListener {
                 (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
                 true
             }
-            /*alternateHeadProfilePicCard?.setOnLongClickListener {
-                (it.context.getActivity() as? MainActivity)?.navigate(R.id.navigation_settings_account)
-                true
-            }*/
-
-
         }
 
         private fun updatePreview(preview: Resource<Pair<Boolean, List<LoadResponse>>>) {
@@ -430,7 +417,6 @@ class HomeParentItemAdapterPreview(
 
                     previewViewpager.isVisible = true
                     previewViewpagerText.isVisible = true
-                    // alternativeAccountPadding?.isVisible = false
                     val currentPos = previewViewpager.currentItem
                     val item = preview.value.second.getOrNull(currentPos)
                     item?.let {
@@ -443,7 +429,6 @@ class HomeParentItemAdapterPreview(
                     previewViewpager.setCurrentItem(0, false)
                     previewViewpager.isVisible = false
                     previewViewpagerText.isVisible = false
-                    // alternativeAccountPadding?.isVisible = true
                 }
             }
         }
