@@ -189,7 +189,7 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
                     Log.d(TAG, "Stored Email: $normalizedEmail")
                     Log.d(TAG, "Stored Country Code: ${country.code}")
                     Log.d(TAG, "Stored National Number: $nationalNumber")
-                    Log.d(TAG, "Stored Password Length: ${password.trim().length}")
+                    Log.d(TAG, "Stored Password Length: " + password.trim().length.toString())
 
                     ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixRegisterActivity, true)
 

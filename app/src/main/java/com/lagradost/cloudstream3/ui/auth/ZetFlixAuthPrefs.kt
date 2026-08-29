@@ -15,23 +15,23 @@ object ZetFlixAuthPrefs {
 
     fun getString(context: Context, key: String, defaultValue: String? = null): String? {
         val value = getPrefs(context).getString(key, defaultValue)
-        Log.d(TAG, "Prefs Read: file=$PREFS_FILE, key=$key, value=${if (key == "password") "****" else value}")
+        Log.d(TAG, "Prefs Read: file=$PREFS_FILE, key=$key, value=" + (if (key == "password") "****" else value.toString()))
         return value
     }
 
     fun putString(context: Context, key: String, value: String?) {
-        Log.d(TAG, "Prefs Write: file=$PREFS_FILE, key=$key, value=${if (key == "password") "****" else value}")
+        Log.d(TAG, "Prefs Write: file=$PREFS_FILE, key=$key, value=" + (if (key == "password") "****" else value.toString()))
         getPrefs(context).edit().putString(key, value).apply()
     }
 
     fun getBoolean(context: Context, key: String, defaultValue: Boolean = false): Boolean {
         val value = getPrefs(context).getBoolean(key, defaultValue)
-        Log.d(TAG, "Prefs Read: file=$PREFS_FILE, key=$key, value=$value")
+        Log.d(TAG, "Prefs Read: file=$PREFS_FILE, key=$key, value=" + value.toString())
         return value
     }
 
     fun putBoolean(context: Context, key: String, value: Boolean) {
-        Log.d(TAG, "Prefs Write: file=$PREFS_FILE, key=$key, value=$value")
+        Log.d(TAG, "Prefs Write: file=$PREFS_FILE, key=$key, value=" + value.toString())
         getPrefs(context).edit().putBoolean(key, value).apply()
     }
 
@@ -54,7 +54,7 @@ object ZetFlixAuthPrefs {
         email: String,
         phoneCountryCode: String,
         phoneNationalNumber: String,
-        password: String
+        password: String,
     ) {
         val deviceId = getString(context, "device_id") ?: UUID.randomUUID().toString()
         val deviceSecret = getString(context, "device_secret") ?: UUID.randomUUID().toString()

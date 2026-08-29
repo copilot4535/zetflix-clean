@@ -101,18 +101,18 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                     Log.d(TAG, "Stored Phone: $storedPhone")
                     Log.d(TAG, "Stored Country Code: $storedCountryCode")
 
-                    var emailMatch = false
-                    var phoneMatch = false
+                    var emailMatch: Boolean = false
+                    var phoneMatch: Boolean = false
 
                     if (identifierType == "Email") {
                         emailMatch = storedEmail != null && normalizedIdentifier == storedEmail.lowercase()
                         Log.d(TAG, "Email Match Result: $emailMatch")
                     } else {
-                        val storedNational = storedPhone?.filter { it.isDigit() } ?: ""
-                        val storedCountryDigits = storedCountryCode?.filter { it.isDigit() } ?: ""
+                        val storedNational: String = storedPhone?.filter { it.isDigit() } ?: ""
+                        val storedCountryDigits: String = storedCountryCode?.filter { it.isDigit() } ?: ""
 
-                        val inputWithoutLeadingZero = normalizedIdentifier.removePrefix("0")
-                        val storedWithoutLeadingZero = storedNational.removePrefix("0")
+                        val inputWithoutLeadingZero: String = normalizedIdentifier.removePrefix("0")
+                        val storedWithoutLeadingZero: String = storedNational.removePrefix("0")
 
                         phoneMatch = (
                                 normalizedIdentifier == storedNational ||
@@ -122,10 +122,10 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                         Log.d(TAG, "Phone Match Result: $phoneMatch")
                     }
 
-                    val passwordMatch = storedPassword != null && passwordInput == storedPassword.trim()
+                    val passwordMatch: Boolean = storedPassword != null && passwordInput == storedPassword.trim()
                     Log.d(TAG, "Password Match Result: $passwordMatch")
                     
-                    val loginSuccess = (emailMatch || phoneMatch) && passwordMatch
+                    val loginSuccess: Boolean = (emailMatch || phoneMatch) && passwordMatch
                     Log.d(TAG, "Final Login Result: $loginSuccess")
 
                     if (loginSuccess) {

@@ -178,9 +178,7 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
                 settingsPlayer to R.id.action_navigation_global_to_navigation_settings_player,
                 settingsCredits to R.id.action_navigation_global_to_navigation_settings_account,
                 settingsUi to R.id.action_navigation_global_to_navigation_settings_ui,
-                settingsProviders to R.id.action_navigation_global_to_navigation_settings_providers,
                 settingsUpdates to R.id.action_navigation_global_to_navigation_settings_updates,
-                settingsExtensions to R.id.action_navigation_global_to_navigation_settings_extensions,
             ).forEach { (view, navigationId) ->
                 view.apply {
                     setOnClickListener {
@@ -190,7 +188,7 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
             }
         }
 
-        val appVersion = BuildConfig.VERSION_NAME
+        /*val appVersion = BuildConfig.VERSION_NAME
         val commitHash = activity?.currentCommitHash() ?: ""
         val buildTimestamp = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM,
             Locale.getDefault()
@@ -203,6 +201,6 @@ class SettingsFragment : BaseFragment<MainSettingsBinding>(
         binding.appVersionInfo.setOnLongClickListener {
             clipboardHelper(txt(R.string.extension_version), "$appVersion $commitHash $buildTimestamp")
             true
-        }
+        }*/
     }
 }

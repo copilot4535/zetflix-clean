@@ -322,10 +322,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             R.id.navigation_settings_updates,
             R.id.navigation_settings_ui,
             R.id.navigation_settings_account,
-            R.id.navigation_settings_providers,
             R.id.navigation_settings_general,
-            R.id.navigation_settings_extensions,
-            R.id.navigation_settings_plugins,
             R.id.navigation_test_providers,
         ).contains(destination.id)
 
@@ -356,10 +353,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     R.id.navigation_settings_updates,
                     R.id.navigation_settings_ui,
                     R.id.navigation_settings_account,
-                    R.id.navigation_settings_providers,
                     R.id.navigation_settings_general,
-                    R.id.navigation_settings_extensions,
-                    R.id.navigation_settings_plugins,
                     R.id.navigation_test_providers
                 ) -> {
                     navRailView.menu.findItem(R.id.navigation_settings).isChecked = true

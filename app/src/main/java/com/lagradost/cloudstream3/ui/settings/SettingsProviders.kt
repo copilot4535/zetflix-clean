@@ -3,8 +3,6 @@ package com.lagradost.cloudstream3.ui.settings
 import android.os.Bundle
 import android.view.View
 import androidx.core.content.edit
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.NavOptions
 import androidx.preference.PreferenceManager
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.ui.APIRepository
@@ -60,20 +58,6 @@ class SettingsProviders : BasePreferenceFragmentCompat() {
             }
 
             return@setOnPreferenceClickListener true
-        }
-
-        getPref(R.string.test_providers_key)?.setOnPreferenceClickListener {
-            // Somehow animations do not work without this.
-            val options = NavOptions.Builder()
-                .setEnterAnim(R.anim.enter_anim)
-                .setExitAnim(R.anim.exit_anim)
-                .setPopEnterAnim(R.anim.pop_enter)
-                .setPopExitAnim(R.anim.pop_exit)
-                .build()
-
-            this@SettingsProviders.findNavController()
-                .navigate(R.id.navigation_test_providers, null, options)
-            true
         }
 
         getPref(R.string.prefer_media_type_key)?.setOnPreferenceClickListener {

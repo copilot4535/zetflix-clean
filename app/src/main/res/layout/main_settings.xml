@@ -68,22 +68,14 @@
                 style="@style/SettingsItem"
 
                 android:nextFocusUp="@id/settings_general"
-                android:nextFocusDown="@id/settings_providers"
-                android:text="@string/category_player" />
-
-            <TextView
-                android:id="@+id/settings_providers"
-                style="@style/SettingsItem"
-
-                android:nextFocusUp="@id/settings_player"
                 android:nextFocusDown="@id/settings_ui"
-                android:text="@string/category_providers" />
+                android:text="@string/category_player" />
 
             <TextView
                 android:id="@+id/settings_ui"
                 style="@style/SettingsItem"
 
-                android:nextFocusUp="@id/settings_providers"
+                android:nextFocusUp="@id/settings_player"
                 android:nextFocusDown="@id/settings_updates"
                 android:text="@string/category_ui" />
 
@@ -101,18 +93,13 @@
                 android:nextFocusUp="@id/settings_updates"
                 android:text="@string/category_account" />
 
-            <TextView
-                android:id="@+id/settings_extensions"
-                style="@style/SettingsItem"
-                android:nextFocusUp="@id/settings_credits"
-                android:text="@string/extensions" />
-
             <LinearLayout
                 android:id="@+id/app_version_info"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <TextView
                     android:id="@+id/app_version"
