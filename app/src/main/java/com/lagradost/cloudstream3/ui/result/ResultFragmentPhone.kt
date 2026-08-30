@@ -1267,14 +1267,19 @@ open class ResultFragmentPhone : BaseFragment<FragmentResultSwipeBinding>(
         observe(viewModel.watchStatus) { watchType ->
             binding.resultBookmarkFab.apply {
                 setText(watchType.stringRes)
+                setIconResource(watchType.iconRes)
                 if (watchType == WatchType.NONE) {
-                    context?.colorFromAttribute(R.attr.white)
+                    val darkColor = context?.colorFromAttribute(R.attr.grayTextColor) ?: 0xFF888888.toInt()
+                    val darkBg = context?.colorFromAttribute(R.attr.boxItemBackground) ?: 0xFF1A1A24.toInt()
+                    iconTint = ColorStateList.valueOf(darkColor)
+                    setTextColor(darkColor)
+                    backgroundTintList = ColorStateList.valueOf(darkBg)
                 } else {
-                    context?.colorFromAttribute(R.attr.colorPrimary)
-                }?.let {
-                    val colorState = ColorStateList.valueOf(it)
-                    iconTint = colorState
-                    setTextColor(colorState)
+                    val whiteColor = context?.colorFromAttribute(R.attr.white) ?: 0xFFFFFFFF.toInt()
+                    val redColor = context?.colorFromAttribute(R.attr.colorPrimary) ?: 0xFFE50914.toInt()
+                    iconTint = ColorStateList.valueOf(whiteColor)
+                    setTextColor(whiteColor)
+                    backgroundTintList = ColorStateList.valueOf(redColor)
                 }
 
                 setOnClickListener { fab ->

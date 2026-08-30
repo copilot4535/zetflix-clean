@@ -101,9 +101,10 @@ import com.lagradost.cloudstream3.utils.AppContextUtils.loadSearchResult
 import com.lagradost.cloudstream3.utils.AppContextUtils.updateHasTrailers
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.BiometricCallback
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.biometricPrompt
-import com.lagradost.cloudstream3.utils.BiometricAuthenticator.deviceHasPasswordPinLock
+import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.isAuthEnabled
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.promptInfo
+import com.lagradost.cloudstream3.utils.BiometricAuthenticator.biometricPrompt
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.startBiometricAuthentication
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Coroutines.main
@@ -125,6 +126,7 @@ import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
 import com.lagradost.cloudstream3.utils.UIHelper.requestRW
 import com.lagradost.cloudstream3.utils.UIHelper.setNavigationBarColorCompat
 import com.lagradost.cloudstream3.utils.UIHelper.showProgress
+import com.lagradost.cloudstream3.utils.smoothScrollToTop
 import com.lagradost.cloudstream3.utils.UIHelper.toPx
 import com.lagradost.cloudstream3.utils.USER_PROVIDER_API
 import com.lagradost.cloudstream3.utils.USER_SELECTED_HOMEPAGE_API
@@ -505,7 +507,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             when (destinationId) {
                 R.id.navigation_home -> {
                     binding?.root?.findViewById<RecyclerView>(R.id.home_master_recycler)
-                        ?.smoothScrollToPosition(0)
+                        ?.smoothScrollToTop()
                 }
 
                 R.id.navigation_search -> {
@@ -515,7 +517,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                         R.id.search_history_recycler
                     )) {
                         binding?.root?.findViewById<RecyclerView>(recyclerId)
-                            ?.smoothScrollToPosition(0)
+                            ?.smoothScrollToTop()
                     }
                 }
 
@@ -525,7 +527,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                         R.id.download_child_list
                     )) {
                         binding?.root?.findViewById<RecyclerView>(recyclerId)
-                            ?.smoothScrollToPosition(0)
+                            ?.smoothScrollToTop()
                     }
                 }
             }
@@ -652,9 +654,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         setLastError(this)
 
         val settingsForProvider = SettingsJson()
-        settingsForProvider.enableAdult =
-            settingsManager.getBoolean(getString(R.string.enable_nsfw_on_providers_key), false)
-
         MainAPI.settingsForProvider = settingsForProvider
 
         loadThemes(this)
@@ -730,7 +729,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         ) || accounts.count() <= 1
 
         if (isAuthEnabled(this) && noAccounts) {
-            if (deviceHasPasswordPinLock(this)) {
+            if (BiometricAuthenticator.isBiometricHardwareAvailable(this)) {
                 startBiometricAuthentication(this, R.string.biometric_authentication_title, false)
 
                 promptInfo?.let { prompt ->

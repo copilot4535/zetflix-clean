@@ -153,11 +153,52 @@
         android:id="@+id/home_master_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingTop="@dimen/home_header_height"
+        android:clipToPadding="false"
         android:descendantFocusability="afterDescendants"
         android:nextFocusLeft="@id/nav_rail_view"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/homepage_parent"
         tools:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/sticky_header"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/home_header_height"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp"
+        android:background="@android:color/transparent">
+
+        <ImageView
+            android:id="@+id/home_sticky_logo"
+            android:layout_width="215dp"
+            android:layout_height="55dp"
+            android:scaleType="fitStart"
+            android:src="@drawable/ic_zetflix_logo_text"
+            android:contentDescription="@string/app_name" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/home_avatar"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:padding="2dp"
+            app:strokeColor="#e50914"
+            app:strokeWidth="1.5dp"
+            app:shapeAppearanceOverlay="@style/RoundedImageView"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_outline_account_circle_24"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/account" />
+    </LinearLayout>
 
     <TextClock
             android:id="@+id/home_clock"

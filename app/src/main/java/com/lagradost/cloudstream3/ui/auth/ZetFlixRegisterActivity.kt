@@ -17,7 +17,7 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.R
-import com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity
+import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
 import kotlinx.coroutines.Dispatchers
@@ -195,7 +195,7 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
 
                     withContext(Dispatchers.Main) {
                         setKey("HAS_DONE_SETUP", true)
-                        if (BiometricAuthenticator.isBiometricAvailable(this@ZetFlixRegisterActivity)) {
+                        if (BiometricAuthenticator.isBiometricHardwareAvailable(this@ZetFlixRegisterActivity)) {
                             BiometricSetupDialog.show(
                                 this@ZetFlixRegisterActivity,
                                 onEnable = {
@@ -206,11 +206,11 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
                                     )
                                 },
                                 onSkip = {
-                                    navigateToLoading()
+                                    navigateToMain()
                                 }
                             )
                         } else {
-                            navigateToLoading()
+                            navigateToMain()
                         }
                     }
                 } catch (e: Exception) {
@@ -226,16 +226,16 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
     override fun onAuthenticationSuccess() {
         BiometricAuthenticator.setFingerprintEnabled(this, true)
         Toast.makeText(this, R.string.fingerprint_setup_success, Toast.LENGTH_SHORT).show()
-        navigateToLoading()
+        navigateToMain()
     }
 
     override fun onAuthenticationError() {
         Toast.makeText(this, R.string.fingerprint_setup_failed, Toast.LENGTH_SHORT).show()
-        navigateToLoading()
+        navigateToMain()
     }
 
-    private fun navigateToLoading() {
-        val intent = Intent(this, ZetFlixLoadingActivity::class.java)
+    private fun navigateToMain() {
+        val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

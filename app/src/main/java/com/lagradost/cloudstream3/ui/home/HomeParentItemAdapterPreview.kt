@@ -43,11 +43,13 @@ import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showBottomDialog
 import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showOptionSelectStringRes
+import com.lagradost.cloudstream3.utils.UIHelper.colorFromAttribute
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarMargin
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarView
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
+import android.widget.TextView
 import android.content.SharedPreferences
 import kotlin.math.absoluteValue
 
@@ -231,9 +233,24 @@ class HomeParentItemAdapterPreview(
         private val bookmarkRecyclerView: RecyclerView =
             itemView.findViewById(R.id.home_bookmarked_child_recyclerview)
 
-        private val topPadding: View? = itemView.findViewById(R.id.home_padding)
-
         private val homeNonePadding: View = itemView.findViewById(R.id.home_none_padding)
+
+        private fun setBookmarkUI(textView: TextView, watchType: WatchType) {
+            val isBookmarked = watchType != WatchType.NONE
+            val colorAttr = if (isBookmarked) R.attr.colorPrimary else R.attr.grayTextColor
+            val color = textView.context.colorFromAttribute(colorAttr)
+
+            textView.setTextColor(color)
+            textView.setText(watchType.stringRes)
+            textView.setCompoundDrawablesWithIntrinsicBounds(
+                null,
+                ContextCompat.getDrawable(textView.context, watchType.iconRes)?.mutate()?.apply {
+                    setTint(color)
+                },
+                null,
+                null
+            )
+        }
 
         fun onSelect(item: LoadResponse, position: Int) {
             (binding as? FragmentHomeHeadBinding)?.apply {
@@ -258,16 +275,7 @@ class HomeParentItemAdapterPreview(
                 val id = item.getId()
                 val watchType =
                     DataStoreHelper.getResultWatchState(id)
-                homePreviewBookmark.setText(watchType.stringRes)
-                homePreviewBookmark.setCompoundDrawablesWithIntrinsicBounds(
-                    null,
-                    ContextCompat.getDrawable(
-                        homePreviewBookmark.context,
-                        watchType.iconRes
-                    ),
-                    null,
-                    null
-                )
+                setBookmarkUI(homePreviewBookmark, watchType)
 
                 homePreviewBookmark.setOnClickListener { fab ->
                     fab.context.getActivity()?.showBottomDialog(
@@ -286,17 +294,7 @@ class HomeParentItemAdapterPreview(
                             item
                         ) { statusChanged: Boolean ->
                             if (!statusChanged) return@updateWatchStatus
-
-                            homePreviewBookmark.setCompoundDrawablesWithIntrinsicBounds(
-                                null,
-                                ContextCompat.getDrawable(
-                                    homePreviewBookmark.context,
-                                    newValue.iconRes
-                                ),
-                                null,
-                                null
-                            )
-                            homePreviewBookmark.setText(newValue.stringRes)
+                            setBookmarkUI(homePreviewBookmark, newValue)
                         }
                     }
                 }
@@ -350,8 +348,6 @@ class HomeParentItemAdapterPreview(
                 nextLeft = R.id.nav_rail_view,
                 nextRight = FOCUS_SELF
             )
-
-            fixPaddingStatusbarMargin(topPadding)
 
             for ((chip, watch) in toggleList) {
                 chip.isChecked = false

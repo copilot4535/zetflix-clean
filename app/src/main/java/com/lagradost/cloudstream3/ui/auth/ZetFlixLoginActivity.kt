@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.R
-import com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity
+import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -133,7 +133,7 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
                         ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixLoginActivity, true)
                         withContext(Dispatchers.Main) {
                             setKey("HAS_DONE_SETUP", true)
-                            navigateToLoading()
+                            navigateToMain()
                         }
                     } else {
                         Log.d(TAG, "Login Result: Failure")
@@ -152,15 +152,15 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
     }
 
     override fun onAuthenticationSuccess() {
-        navigateToLoading()
+        navigateToMain()
     }
 
     override fun onAuthenticationError() {
         Toast.makeText(this, R.string.fingerprint_login_failed, Toast.LENGTH_SHORT).show()
     }
 
-    private fun navigateToLoading() {
-        val intent = Intent(this, ZetFlixLoadingActivity::class.java)
+    private fun navigateToMain() {
+        val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

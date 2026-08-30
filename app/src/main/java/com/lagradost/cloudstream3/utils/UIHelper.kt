@@ -69,6 +69,8 @@ import com.google.android.material.chip.ChipDrawable
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
 import com.google.android.material.progressindicator.IndeterminateDrawable
+import androidx.recyclerview.widget.LinearSmoothScroller
+import androidx.recyclerview.widget.RecyclerView
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.context
 import com.lagradost.cloudstream3.CommonActivity.activity
 import com.lagradost.cloudstream3.CommonActivity.showToast
@@ -80,6 +82,26 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.disableBackPressedCallback
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.enableBackPressedCallback
+
+/**
+ * Smoothly scrolls to the top of the RecyclerView with a custom speed.
+ * @param speedFactor Higher value = slower scroll. Default is 2f.
+ */
+fun RecyclerView.smoothScrollToTop(speedFactor: Float = 2f) {
+    try {
+        val scroller = object : LinearSmoothScroller(this.context) {
+            override fun getVerticalSnapPreference(): Int = SNAP_TO_START
+            override fun calculateSpeedPerPixel(displayMetrics: android.util.DisplayMetrics): Float {
+                return super.calculateSpeedPerPixel(displayMetrics) * speedFactor
+            }
+        }
+        scroller.targetPosition = 0
+        this.layoutManager?.startSmoothScroll(scroller)
+    } catch (t: Throwable) {
+        logError(t)
+        this.smoothScrollToPosition(0)
+    }
+}
 
 object UIHelper {
     val Int.toPx: Int get() = (this * Resources.getSystem().displayMetrics.density).toInt()
@@ -413,12 +435,17 @@ object UIHelper {
         overlayCutout: Boolean = true,
         fixIme: Boolean = false
     ) {
+        val initialPaddingLeft = v.paddingLeft
+        val initialPaddingTop = v.paddingTop
+        val initialPaddingRight = v.paddingRight
+        val initialPaddingBottom = v.paddingBottom
+
         // edge-to-edge is very buggy on earlier versions so we just
         // handle the status bar here instead.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             if (padTop) {
                 val ctx = v.context ?: return
-                v.updatePadding(top = ctx.getStatusBarHeight())
+                v.updatePadding(top = initialPaddingTop + ctx.getStatusBarHeight())
             }
             return
         }
@@ -434,16 +461,16 @@ object UIHelper {
             val insets = windowInsets.getInsets(insetTypes)
 
             view.updatePadding(
-                left = if (leftCheck) insets.left else view.paddingLeft,
-                right = if (rightCheck) insets.right else view.paddingRight,
-                bottom = if (padBottom) insets.bottom else view.paddingBottom,
-                top = if (padTop) insets.top else view.paddingTop
+                left = initialPaddingLeft + if (leftCheck) insets.left else 0,
+                right = initialPaddingRight + if (rightCheck) insets.right else 0,
+                bottom = initialPaddingBottom + if (padBottom) insets.bottom else 0,
+                top = initialPaddingTop + if (padTop) insets.top else 0
             )
 
             heightResId?.let {
                 val heightPx = view.resources.getDimensionPixelSize(it)
                 view.updateLayoutParams {
-                    height = heightPx + insets.bottom
+                    height = heightPx + (if (padTop) insets.top else 0) + (if (padBottom) insets.bottom else 0)
                 }
             }
 

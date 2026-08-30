@@ -108,7 +108,7 @@
                     android:nextFocusRight="@id/main_search"
                     android:nextFocusUp="@id/nav_rail_view"
                     android:nextFocusDown="@id/search_autofit_results"
-                    android:src="@drawable/ic_baseline_tune_24"
+                    android:src="@drawable/ic_settings_custom"
                     android:visibility="gone"
                     app:tint="?attr/textColor" />
             </FrameLayout>

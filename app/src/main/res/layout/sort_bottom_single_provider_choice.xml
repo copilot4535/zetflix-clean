@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_baseline_tune_24"
+            android:src="@drawable/ic_settings_custom"
             android:visibility="gone"
             tools:visibility="visible"
             android:contentDescription="@string/title_settings" />

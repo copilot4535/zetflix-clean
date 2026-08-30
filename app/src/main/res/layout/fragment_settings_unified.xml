@@ -31,36 +31,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Account & Security Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_account"
-                style="@style/ZetFlixSettingsCard">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        style="@style/ZetFlixSettingsCategoryHeader"
-                        android:text="@string/zetflix_account_title" />
-
-                    <!-- We'll add custom rows here or just bind to existing ones -->
-                    <include
-                        android:id="@+id/row_account_header"
-                        layout="@layout/preference_account_header" />
-
-                    <include
-                        android:id="@+id/row_biometric"
-                        layout="@layout/preference_zetflix_switch" />
-
-                    <include
-                        android:id="@+id/row_logout"
-                        layout="@layout/preference_logout_button" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
             <!-- General Settings Card -->
             <com.google.android.material.card.MaterialCardView

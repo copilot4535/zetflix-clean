@@ -17,6 +17,10 @@ import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.MovieSearchResponse
+import com.lagradost.cloudstream3.TvSeriesSearchResponse
+import com.lagradost.cloudstream3.AnimeSearchResponse
+import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.amap
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.debugAssert
@@ -410,7 +414,37 @@ class HomeViewModel : ViewModel() {
         val allItems = expandable.values.flatMap { it.list.list }.distinctBy { it.url }
 
         if (allItems.isNotEmpty()) {
-            val shuffledItems = allItems.shuffled()
+            val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+            val filteredItems = allItems.filter { item ->
+                val api = getApiFromNameNull(item.apiName)
+                val isEnglish = api?.lang == "en"
+                val isMovie = item.type == TvType.Movie || item is MovieSearchResponse
+
+                val year = when (item) {
+                    is MovieSearchResponse -> item.year
+                    is TvSeriesSearchResponse -> item.year
+                    is AnimeSearchResponse -> item.year
+                    else -> null
+                }
+                // Only show content from the last 2 years
+                val isRecent = year != null && year >= currentYear - 1
+
+                isEnglish && isMovie && isRecent
+            }
+
+            // Fallback to English movies if no recent ones, then any English, then all
+            val bannerPool = filteredItems.ifEmpty {
+                allItems.filter {
+                    val api = getApiFromNameNull(it.apiName)
+                    val isEnglish = api?.lang == "en"
+                    val isMovie = it.type == TvType.Movie || it is MovieSearchResponse
+                    isEnglish && isMovie
+                }
+            }.ifEmpty {
+                allItems.filter { getApiFromNameNull(it.apiName)?.lang == "en" }
+            }.ifEmpty { allItems }
+
+            val shuffledItems = bannerPool.shuffled()
             val randomItems = context?.filterSearchResultByFilmQuality(shuffledItems) ?: shuffledItems
 
             viewModelScope.launchSafe {

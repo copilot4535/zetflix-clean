@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/zetflix_text_secondary"
-            android:textSize="13sp"
+            android:textSize="11sp"
             android:visibility="gone"
             tools:text="Summary for switch" />
     </LinearLayout>
@@ -46,6 +46,8 @@
         android:id="@+id/row_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:thumbTint="@color/switch_thumb_selector"
+        app:trackTint="@color/switch_track_selector"
         android:clickable="false"
         android:focusable="false" />
 

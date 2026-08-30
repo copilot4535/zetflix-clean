@@ -12,7 +12,6 @@ import android.view.ViewGroup.FOCUS_BLOCK_DESCENDANTS
 import android.view.animation.AlphaAnimation
 import android.widget.TextView
 import androidx.annotation.StringRes
-import androidx.appcompat.widget.SearchView
 import androidx.core.view.allViews
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
@@ -106,39 +105,6 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     ) {
         binding.sortFab.setOnClickListener(sortChangeClickListener)
         binding.librarySort.setOnClickListener(sortChangeClickListener)
-
-        binding.libraryRoot.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
-            ?.apply {
-                setOnFocusChangeListener { _, _ ->
-                    binding.searchBar.setExpanded(true)
-                }
-            }
-
-        val searchCallback = Runnable {
-            val newText = binding.mainSearch.query.toString()
-            libraryViewModel.sort(ListSorting.Query, newText)
-        }
-
-        binding.mainSearch.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                libraryViewModel.sort(ListSorting.Query, query)
-                return true
-            }
-
-            var hasInitialized = false
-            override fun onQueryTextChange(newText: String?): Boolean {
-                if (!hasInitialized) {
-                    hasInitialized = true
-                    return true
-                }
-
-                binding.mainSearch.removeCallbacks(searchCallback)
-
-                binding.mainSearch.postDelayed(searchCallback, 1000)
-
-                return true
-            }
-        })
 
         libraryViewModel.reloadPages(false)
 
@@ -379,5 +345,3 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
             })
     }
 }
-
-class MenuSearchView(context: Context) : SearchView(context)

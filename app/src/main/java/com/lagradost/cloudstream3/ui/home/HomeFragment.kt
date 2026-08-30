@@ -67,6 +67,8 @@ import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPres
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPressedCallback
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.DataStoreHelper
+import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
+import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.EmptyEvent
 import com.lagradost.cloudstream3.utils.SubtitleHelper.getFlagFromIso
 import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
@@ -74,6 +76,7 @@ import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
 import com.lagradost.cloudstream3.utils.UIHelper.getSpanCount
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
+import kotlin.math.absoluteValue
 
 class HomeFragment : BaseFragment<FragmentHomeBinding>(
     BindingCreator.Bind(FragmentHomeBinding::bind)
@@ -218,7 +221,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             asian: Chip?,
             livestream: Chip?,
             torrent: Chip?,
-            nsfw: Chip?,
             others: Chip?,
         ): List<Pair<Chip?, List<TvType>>> {
             return listOf(
@@ -230,7 +232,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                 Pair(docs, listOf(TvType.Documentary)),
                 Pair(livestream, listOf(TvType.Live)),
                 Pair(torrent, listOf(TvType.Torrent)),
-                Pair(nsfw, listOf(TvType.NSFW)),
                 Pair(others, listOf(TvType.Others)),
             )
         }
@@ -244,7 +245,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             header.homeSelectAsian,
             header.homeSelectLivestreams,
             header.homeSelectTorrents,
-            header.homeSelectNsfw,
             header.homeSelectOthers
         )
 
@@ -410,10 +410,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                         .filter {
                             val isPinned = pinnedphashset.contains(it.name)
 
-                            if (isPinned && !preSelectedTypes.contains(TvType.NSFW)) {
-                                if (it.supportedTypes.all { type -> type == TvType.NSFW }) return@filter false
-                            }
-
                             it.hasMainPage && (isPinned || it.supportedTypes.any(
                                 preSelectedTypes::contains
                             ))
@@ -506,6 +502,25 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             padLeft = false
         )
 
+        binding?.stickyHeader?.let {
+            fixSystemBarsPadding(
+                it,
+                heightResId = R.dimen.home_header_height,
+                padBottom = false,
+                padLeft = false,
+                padRight = false
+            )
+        }
+
+        binding?.homeMasterRecycler?.let {
+            fixSystemBarsPadding(
+                it,
+                padBottom = false,
+                padLeft = false,
+                padRight = false
+            )
+        }
+
         configEvent.invoke()
     }
 
@@ -521,6 +536,29 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             )
             homeMasterRecycler.setRecycledViewPool(ParentItemAdapter.sharedPool)
             homeMasterRecycler.adapter = homeMasterAdapter
+
+            homeAvatar.setOnClickListener {
+                activity.navigate(R.id.navigation_account)
+            }
+
+            homeMasterRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    val offset = recyclerView.computeVerticalScrollOffset()
+                    val alpha = (offset / 200f).coerceIn(0f, 1f)
+                    val context = context ?: return
+                    _binding?.stickyHeader?.setBackgroundColor(
+                        com.lagradost.cloudstream3.utils.UIHelper.run {
+                            context.colorFromAttribute(R.attr.primaryBlackBackground).let { color ->
+                                androidx.core.graphics.ColorUtils.setAlphaComponent(
+                                    color,
+                                    (alpha * 220).toInt()
+                                )
+                            }
+                        }
+                    )
+                }
+            })
         }
 
         context?.let {
@@ -639,5 +677,36 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
 
         homeViewModel.reloadStored()
         homeViewModel.loadAndCancel(DataStoreHelper.currentHomePage, false)
+
+        loadAvatar(binding)
+    }
+
+    private fun loadAvatar(binding: FragmentHomeBinding) {
+        val context = context ?: return
+        ioSafe {
+            try {
+                val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
+                val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
+
+                main {
+                    val avatarView = binding.homeAvatar
+                    val backgrounds = listOf(
+                        R.drawable.profile_bg_blue,
+                        R.drawable.profile_bg_dark_blue,
+                        R.drawable.profile_bg_orange,
+                        R.drawable.profile_bg_pink,
+                        R.drawable.profile_bg_purple,
+                        R.drawable.profile_bg_red,
+                        R.drawable.profile_bg_teal
+                    )
+                    val bgIndex =
+                        if (username.isNotEmpty()) username.hashCode().absoluteValue % backgrounds.size else 0
+                    avatarView.setBackgroundResource(backgrounds[bgIndex])
+                    avatarView.setImageResource(R.drawable.ic_outline_account_circle_24)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }

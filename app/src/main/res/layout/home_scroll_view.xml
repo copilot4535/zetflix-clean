@@ -12,21 +12,13 @@
         android:scaleType="centerCrop"
         tools:src="@drawable/example_poster" />
 
-    <View
-        android:id="@+id/title_shadow_top"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:layout_gravity="top"
-        android:alpha="1"
-        android:background="@drawable/background_shadow"
-        android:rotation="180"
-        android:visibility="visible" />
 
     <View
         android:id="@+id/title_shadow"
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:layout_gravity="bottom"
+        android:visibility="gone"
         android:background="@drawable/background_shadow" />
 
     <LinearLayout

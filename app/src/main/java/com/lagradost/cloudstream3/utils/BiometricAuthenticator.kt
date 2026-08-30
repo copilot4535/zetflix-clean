@@ -91,65 +91,13 @@ object BiometricAuthenticator {
                     .build()
             }
         } else {
-            // fallback for A12+ when both fingerprint & Face unlock is absent but PIN is set
             promptInfo = BiometricPrompt.PromptInfo.Builder()
                 .setTitle(activity.getString(title))
                 .setDescription(description)
-                .setDeviceCredentialAllowed(true)
+                .setNegativeButtonText(activity.getString(R.string.zetflix_login_button)) // "Login" or "Use Password"
+                .setAllowedAuthenticators(BIOMETRIC_STRONG or BIOMETRIC_WEAK)
                 .build()
         }
-    }
-
-    private fun isBiometricHardWareAvailable(): Boolean {
-        // Authentication occurs only when this is true and device is truly capable.
-        var result = false
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA -> {
-                @SuppressLint("RestrictedApi")
-                when (biometricManager?.canAuthenticate(
-                    DEVICE_CREDENTIAL or BIOMETRIC_STRONG or BIOMETRIC_WEAK
-                )) {
-                    BiometricManager.BIOMETRIC_SUCCESS -> result = true
-                    BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_NOT_ENABLED_FOR_APPS -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED -> result = true
-                    BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED -> result = true
-                    BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> result = false
-                }
-            }
-
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                @Suppress("SwitchIntDef")
-                when (biometricManager?.canAuthenticate(
-                    DEVICE_CREDENTIAL or BIOMETRIC_STRONG or BIOMETRIC_WEAK
-                )) {
-                    BiometricManager.BIOMETRIC_SUCCESS -> result = true
-                    BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED -> result = true
-                    BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED -> result = true
-                    BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> result = false
-                }
-            }
-
-            else -> {
-                @Suppress("DEPRECATION", "SwitchIntDef")
-                when (biometricManager?.canAuthenticate()) {
-                    BiometricManager.BIOMETRIC_SUCCESS -> result = true
-                    BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> result = false
-                    BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED -> result = true
-                    BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED -> result = true
-                    BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> result = false
-                }
-            }
-        }
-
-        return result
     }
 
     // checks if device is secured i.e has at least some type of lock
@@ -170,12 +118,21 @@ object BiometricAuthenticator {
     fun isBiometricHardwareAvailable(context: Context): Boolean {
         val manager = BiometricManager.from(context)
         val result = try {
-            manager.canAuthenticate(BIOMETRIC_STRONG)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                manager.canAuthenticate(BIOMETRIC_STRONG or BIOMETRIC_WEAK)
+            } else {
+                @Suppress("DEPRECATION")
+                manager.canAuthenticate()
+            }
         } catch (e: Exception) {
+            Log.e(TAG, "isBiometricHardwareAvailable error", e)
             BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE
         }
-        return result == BiometricManager.BIOMETRIC_SUCCESS || 
-               result == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+        
+        // Permissive check: show if hardware isn't explicitly missing
+        return result != BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE && 
+               result != BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED &&
+               result != BiometricManager.BIOMETRIC_STATUS_UNKNOWN
     }
 
     // function to start authentication in any fragment or activity
@@ -187,14 +144,14 @@ object BiometricAuthenticator {
     ) {
         initializeBiometrics(activity)
         authCallback = callback ?: (activity as? BiometricCallback)
-        if (isBiometricHardWareAvailable()) {
+        
+        if (isBiometricHardwareAvailable(activity)) {
             authenticationDialog(activity, title, setDeviceCred)
             promptInfo?.let { biometricPrompt?.authenticate(it) }
         } else {
-            if (deviceHasPasswordPinLock(activity)) {
+            if (setDeviceCred && deviceHasPasswordPinLock(activity)) {
                 authenticationDialog(activity, R.string.password_pin_authentication_title, true)
                 promptInfo?.let { biometricPrompt?.authenticate(it) }
-
             } else {
                 showToast(R.string.biometric_unsupported)
                 authCallback?.onAuthenticationError()

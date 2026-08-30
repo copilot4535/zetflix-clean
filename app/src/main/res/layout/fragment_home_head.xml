@@ -13,60 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp" />
 
-    <LinearLayout
-        android:id="@+id/home_padding"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="0dp"
-        android:background="@android:color/transparent">
-
-
-        <ImageView
-            android:id="@+id/home_zetflix_logo"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:paddingStart="16dp"
-            android:paddingEnd="8dp"
-            android:scaleType="fitStart"
-            android:src="@drawable/ic_zetflix_logo_text"
-            android:nextFocusRight="@id/home_head_profile_padding"
-            android:contentDescription="@string/app_name" />
-
-        <LinearLayout
-            android:id="@+id/home_head_profile_padding"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="@drawable/rounded_select_ripple"
-            android:gravity="center"
-            android:nextFocusLeft="@id/home_zetflix_logo"
-            android:orientation="horizontal"
-            android:visibility="gone">
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/home_head_profile_card"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_gravity="center"
-                android:background="@color/transparent"
-                android:focusable="true"
-                android:foreground="@drawable/outline_big_15_gray"
-                app:cardCornerRadius="20dp">
-
-                <ImageView
-                    android:id="@+id/home_head_profile_pic"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@string/account"
-                    android:scaleType="centerCrop"
-                    tools:src="@drawable/profile_bg_orange" />
-            </androidx.cardview.widget.CardView>
-        </LinearLayout>
-    </LinearLayout>
 
     <FrameLayout
         android:id="@+id/home_preview_viewpager_text"

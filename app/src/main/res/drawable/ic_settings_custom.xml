@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/white">
+    <!-- Left track (positioned at x=4) -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M4.5,3.5c-0.41,0 -0.75,0.34 -0.75,0.75v15.5c0,0.41 0.34,0.75 0.75,0.75s0.75,-0.34 0.75,-0.75V4.25C5.25,3.84 4.91,3.5 4.5,3.5z" />
+    <!-- Left knob -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M1.5,7h6c0.55,0 1,0.45 1,1s-0.45,1 -1,1h-6c-0.55,0 -1,-0.45 -1,-1S0.95,7 1.5,7z" />
+
+    <!-- Middle track (positioned at x=12) -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,3.5c-0.41,0 -0.75,0.34 -0.75,0.75v4.5c0,0.41 0.34,0.75 0.75,0.75s0.75,-0.34 0.75,-0.75v-4.5C12.75,3.84 12.41,3.5 12,3.5z M12,15.25c-0.41,0 -0.75,0.34 -0.75,0.75v3.75c0,0.41 0.34,0.75 0.75,0.75s0.75,-0.34 0.75,-0.75v-3.75C12.75,15.59 12.41,15.25 12,15.25z" />
+    <!-- Middle knob (ring) -->
+    <path
+        android:fillColor="@android:color/white"
+        android:fillType="evenOdd"
+        android:pathData="M12,12m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0 M12,12m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0" />
+    <!-- Middle track dot inside ring -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M11.5,11.5h1v1h-1z" />
+
+    <!-- Right track (positioned at x=20) -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M19.5,3.5c-0.41,0 -0.75,0.34 -0.75,0.75v15.5c0,0.41 0.34,0.75 0.75,0.75s0.75,-0.34 0.75,-0.75V4.25C20.25,3.84 19.91,3.5 19.5,3.5z" />
+    <!-- Right knob -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M16.5,16h6c0.55,0 1,0.45 1,1s-0.45,1 -1,1h-6c-0.55,0 -1,-0.45 -1,-1S15.95,16 16.5,16z" />
+</vector>

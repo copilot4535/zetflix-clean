@@ -22,14 +22,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
+            <ImageView
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="72dp"
                 android:layout_gravity="center_horizontal"
-                android:text="@string/zetflix_login_title"
-                android:textColor="@color/zetflix_text_primary"
-                android:textSize="28sp"
-                android:textStyle="bold" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/ic_zetflix_logo_text" />
 
             <TextView
                 android:layout_width="wrap_content"

@@ -16,6 +16,7 @@ import com.lagradost.cloudstream3.fixUrl
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.safeApiCall
+import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newSearchResponseList
 import com.lagradost.cloudstream3.utils.Coroutines.atomicListOf
 import com.lagradost.cloudstream3.utils.ExtractorLink
@@ -103,6 +104,7 @@ class APIRepository(val api: MainAPI) {
 
                 if (cached != null) return@withTimeout cached
                 api.load(fixedUrl)?.also { response ->
+                    if (response.type == TvType.NSFW) throw ErrorLoadingException("Adult content is blocked")
                     // Remove all blank tags as early as possible
                     response.tags = response.tags?.filter { it.isNotBlank() }
                     val add = SavedLoadResponse(unixTime, response, lookingForHash)
@@ -126,9 +128,9 @@ class APIRepository(val api: MainAPI) {
 
         return safeApiCall {
             withTimeout(getTimeout(api.searchTimeoutMs)) {
-                (api.search(query, page)
+                val results = (api.search(query, page)
                     ?: throw ErrorLoadingException())
-                //                .filter { typesActive.contains(it.type) }
+                newSearchResponseList(results.items.filter { it.type != TvType.NSFW }, results.hasNext)
             }
         }
     }
@@ -140,7 +142,7 @@ class APIRepository(val api: MainAPI) {
         return safeApiCall {
             withTimeout(getTimeout(api.quickSearchTimeoutMs)) {
                 newSearchResponseList(
-                    api.quickSearch(query) ?: throw ErrorLoadingException(),
+                    (api.quickSearch(query) ?: throw ErrorLoadingException()).filter { it.type != TvType.NSFW },
                     false
                 )
             }
@@ -155,7 +157,7 @@ class APIRepository(val api: MainAPI) {
 
     suspend fun getMainPage(page: Int, nameIndex: Int? = null): Resource<List<HomePageResponse?>> {
         return safeApiCall {
-            withTimeout(getTimeout(api.getMainPageTimeoutMs)) {
+            val res = withTimeout(getTimeout(api.getMainPageTimeoutMs)) {
                 api.lastHomepageRequest = unixTimeMS
 
                 nameIndex?.let { api.mainPage.getOrNull(it) }?.let { data ->
@@ -190,6 +192,16 @@ class APIRepository(val api: MainAPI) {
                             }.map { it.await() }
                         }
                     }
+                }
+            }
+            res.map { home ->
+                home?.let {
+                    newHomePageResponse(
+                        it.items.map { list ->
+                            list.copy(list = list.list.filter { item -> item.type != TvType.NSFW })
+                        },
+                        it.hasNext
+                    )
                 }
             }
         }

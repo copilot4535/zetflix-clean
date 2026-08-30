@@ -404,7 +404,7 @@ data class ProvidersInfoJson(
 
 @Serializable
 data class SettingsJson(
-    @JsonProperty("enableAdult") @SerialName("enableAdult") var enableAdult: Boolean = false,
+    @JsonProperty("enableAdult") @SerialName("enableAdult") val enableAdult: Boolean = false,
 )
 
 data class MainPageData(

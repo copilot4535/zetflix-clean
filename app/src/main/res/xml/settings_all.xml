@@ -10,7 +10,7 @@
             android:key="@string/biometric_key"
             android:defaultValue="false"
             android:summary="@string/biometric_setting_summary"
-            android:icon="@drawable/ic_fingerprint"
+            android:icon="@drawable/video_locked"
             android:title="@string/biometric_setting" />
 
         <com.lagradost.cloudstream3.ui.settings.LogoutButtonPreference

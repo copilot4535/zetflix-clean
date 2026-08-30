@@ -1,0 +1,13 @@
+- [x] Modify `fragment_library.xml` to remove search bar and add "Library" label
+- [x] Modify `LibraryFragment.kt` to remove search logic
+- [x] Adjust Home Screen Header and Banner Alignment
+- [x] Refine ZetFlix Logo Size
+    - [x] Adjust `fragment_home.xml` for subtle logo increase (190x45)
+- [x] Improve Settings Toggle Button Styling
+- [x] Make System Bar Padding Additive
+    - [x] Modify `UIHelper.kt` to add insets to initial padding values
+- [x] Improve Home Header Vertical Centering
+    - [x] Fix `UIHelper.kt` height calculation with system insets
+    - [x] Define `home_header_height` dimen (75dp)
+    - [x] Update `HomeFragment.kt` to use dynamic height for header
+- [x] Verify build and functionality

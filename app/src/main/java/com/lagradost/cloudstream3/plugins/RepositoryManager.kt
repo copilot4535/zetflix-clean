@@ -117,6 +117,16 @@ object RepositoryManager {
             name = "Karma",
             url = "https://raw.githubusercontent.com/Kraptor123/cs-Karma/refs/heads/master/repo.json",
             iconUrl = null
+        ),
+        RepositoryData(
+            name = "CuxPlug",
+            url = "https://raw.githubusercontent.com/ycngmn/CuxPlug/refs/heads/main/repo.json",
+            iconUrl = null
+        ),
+        RepositoryData(
+            name = "doGiorsHadEnough",
+            url = "https://raw.githubusercontent.com/doGior/doGiorsHadEnough/refs/heads/builds/repo.json",
+            iconUrl = null
         )
     )
     private val GH_REGEX =
