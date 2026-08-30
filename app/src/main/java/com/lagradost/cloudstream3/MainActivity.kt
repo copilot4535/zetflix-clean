@@ -57,7 +57,7 @@ import com.lagradost.cloudstream3.CommonActivity.screenHeight
 import com.lagradost.cloudstream3.CommonActivity.setActivityInstance
 import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.CommonActivity.updateLocale
-import com.lagradost.cloudstream3.CommonActivity.updateTheme
+
 import com.lagradost.cloudstream3.databinding.ActivityMainBinding
 import com.lagradost.cloudstream3.databinding.BottomResultviewPreviewBinding
 import com.lagradost.cloudstream3.mvvm.Resource
@@ -291,7 +291,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         updateLocale() // android fucks me by chaining lang when rotating the phone
-        updateTheme(this) // Update if system theme
+
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -501,7 +501,36 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         val destinationId = item.itemId
 
         // Check if we are already at the selected destination
-        if (navController.currentDestination?.id == destinationId) return false
+        if (navController.currentDestination?.id == destinationId) {
+            when (destinationId) {
+                R.id.navigation_home -> {
+                    binding?.root?.findViewById<RecyclerView>(R.id.home_master_recycler)
+                        ?.smoothScrollToPosition(0)
+                }
+
+                R.id.navigation_search -> {
+                    for (recyclerId in arrayOf(
+                        R.id.search_master_recycler,
+                        R.id.search_autofit_results,
+                        R.id.search_history_recycler
+                    )) {
+                        binding?.root?.findViewById<RecyclerView>(recyclerId)
+                            ?.smoothScrollToPosition(0)
+                    }
+                }
+
+                R.id.navigation_downloads -> {
+                    for (recyclerId in arrayOf(
+                        R.id.download_list,
+                        R.id.download_child_list
+                    )) {
+                        binding?.root?.findViewById<RecyclerView>(recyclerId)
+                            ?.smoothScrollToPosition(0)
+                    }
+                }
+            }
+            return false
+        }
 
         val builder = NavOptions.Builder().setLaunchSingleTop(true).setRestoreState(true)
             .setEnterAnim(R.anim.enter_anim)

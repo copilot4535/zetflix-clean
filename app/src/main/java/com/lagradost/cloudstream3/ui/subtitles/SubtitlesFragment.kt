@@ -594,20 +594,7 @@ class SubtitlesFragment : BaseDialogFragment<SubtitleSettingsBinding>(
             subsFont.setOnClickListener { textView ->
                 val fontTypes = listOf(
                     null to textView.context.getString(R.string.normal),
-                    R.font.trebuchet_ms to "Trebuchet MS",
-                    R.font.netflix_sans to "Netflix Sans",
                     R.font.google_sans to "Google Sans",
-                    R.font.open_sans to "Open Sans",
-                    R.font.futura to "Futura",
-                    R.font.consola to "Consola",
-                    R.font.gotham to "Gotham",
-                    R.font.lucida_grande to "Lucida Grande",
-                    R.font.stix_general to "STIX General",
-                    R.font.times_new_roman to "Times New Roman",
-                    R.font.verdana to "Verdana",
-                    R.font.ubuntu_regular to "Ubuntu",
-                    R.font.comic_sans to "Comic Sans",
-                    R.font.poppins_regular to "Poppins",
                 )
                 val savedFontTypes = textView.context.getSavedFonts()
 

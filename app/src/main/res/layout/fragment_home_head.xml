@@ -23,19 +23,15 @@
         android:background="@android:color/transparent">
 
 
-        <TextView
+        <ImageView
             android:id="@+id/home_zetflix_logo"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center_vertical"
             android:paddingStart="16dp"
             android:paddingEnd="8dp"
-            android:text="@string/app_name"
-            android:textColor="@color/zetflix_accent"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-black"
+            android:scaleType="fitStart"
+            android:src="@drawable/ic_zetflix_logo_text"
             android:nextFocusRight="@id/home_head_profile_padding"
             android:contentDescription="@string/app_name" />
 

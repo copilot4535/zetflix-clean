@@ -144,10 +144,7 @@ class EpisodeAdapter(
                     episodeHolderLarge.layoutParams.width = setWidth
                     episodeHolder.layoutParams.width = setWidth
 
-                    if (CommonActivity.appliedTheme == R.style.AmoledMode) {
-                        episodeHolderLarge.radius = 0.0f
-                        episodeHolder.setPadding(0)
-                    }
+
 
                     downloadButton.isVisible = hasDownloadSupport
                     downloadButton.setDefaultClickListener(

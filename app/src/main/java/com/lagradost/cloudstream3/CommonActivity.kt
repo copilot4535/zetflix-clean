@@ -278,28 +278,7 @@ object CommonActivity {
         act.enterPIPMode()
     }
 
-    fun updateTheme(act: Activity) {
-        val settingsManager = PreferenceManager.getDefaultSharedPreferences(act)
-        if (settingsManager
-                .getString(act.getString(R.string.app_theme_key), "AmoledLight") == "System"
-            && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-        ) {
-            loadThemes(act)
-        }
-    }
 
-    private fun mapSystemTheme(act: Activity): Int {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val currentNightMode =
-                act.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-            return when (currentNightMode) {
-                Configuration.UI_MODE_NIGHT_NO -> R.style.AppTheme
-                else -> R.style.AppTheme
-            }
-        } else {
-            return R.style.AppTheme
-        }
-    }
 
     fun loadThemes(act: Activity?) {
         if (act == null) return
