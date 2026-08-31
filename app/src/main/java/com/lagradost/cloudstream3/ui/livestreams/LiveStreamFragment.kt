@@ -26,6 +26,8 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
 ) {
     private val liveStreamViewModel: LiveStreamViewModel by viewModels()
 
+    override fun pickLayout(): Int = R.layout.fragment_home
+
     override fun fixLayout(view: View) {
         fixSystemBarsPadding(
             view,
@@ -73,22 +75,38 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
             homeMasterRecycler.adapter = adapter
             homeMasterRecycler.setRecycledViewPool(ParentItemAdapter.sharedPool)
             
-            // Initial state for header
-            stickyHeader.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-            homeHeaderScrim.alpha = 1f
-            stickyHeader.elevation = 0f
+            // Solid header for Livestream since there is no hero banner
+            val color = requireContext().colorFromAttribute(R.attr.primaryBlackBackground)
+            stickyHeader.setBackgroundColor(color)
+            homeHeaderScrim.isVisible = false
+            stickyHeader.elevation = 4f
+            
+            // Show Livestream title and hide logo/avatar
+            homeStickyLogo.isVisible = false
+            homeAvatar.isVisible = false
+            homeStickyTitle.isVisible = true
+            homeStickyTitle.text = getString(R.string.livestreams)
+            
+            // Adjust shimmer for livestream (no banner or center line)
+            homeLoadingShimmerBanner.isVisible = false
+            binding.root.findViewById<View>(R.id.home_loading_shimmer_line)?.isVisible = false
             
             homeMasterRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     val offset = recyclerView.computeVerticalScrollOffset()
-                    val alpha = (offset / 200f).coerceIn(0f, 1f)
-                    val color = requireContext().colorFromAttribute(R.attr.primaryBlackBackground)
-                    stickyHeader.setBackgroundColor(
-                        androidx.core.graphics.ColorUtils.setAlphaComponent(color, (alpha * 255).toInt())
-                    )
-                    homeHeaderScrim.alpha = 1f - alpha
+                    stickyHeader.elevation = if (offset > 0) 4f else 0f
                 }
             })
+
+            homeReloadConnectionerror.setOnClickListener {
+                liveStreamViewModel.load(true)
+            }
+            
+            // Start shimmer immediately if we're going to load
+            homeLoadingShimmer.startShimmer()
+            homeLoading.isVisible = true
+            homeLoadingError.isVisible = false
+            homeMasterRecycler.isVisible = false
         }
         
         observe(liveStreamViewModel.page) { data ->
@@ -105,14 +123,19 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
                         homeLoading.isVisible = false
                         homeLoadingError.isVisible = false
                         homeMasterRecycler.isVisible = true
+                        homeLoadingShimmer.stopShimmer()
                     }
                     is Resource.Loading -> {
+                        homeLoadingShimmer.startShimmer()
                         homeLoading.isVisible = true
                         homeMasterRecycler.isVisible = false
+                        homeLoadingError.isVisible = false
                     }
                     is Resource.Failure -> {
+                        homeLoadingShimmer.stopShimmer()
                         homeLoading.isVisible = false
                         homeLoadingError.isVisible = true
+                        resultErrorText.text = data.errorString
                     }
                 }
             }

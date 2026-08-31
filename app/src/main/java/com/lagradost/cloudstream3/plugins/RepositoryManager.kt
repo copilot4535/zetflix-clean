@@ -99,13 +99,23 @@ object RepositoryManager {
     const val ONLINE_PLUGINS_FOLDER = "Extensions"
     val PREBUILT_REPOSITORIES: Array<RepositoryData> = arrayOf(
         RepositoryData(
-            name = "Phisher",
-            url = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/refs/heads/builds/repo.json",
+            name = "Mega Repository",
+            url = "https://raw.githubusercontent.com/self-similarity/MegaRepo/builds/repo.json",
             iconUrl = null
         ),
         RepositoryData(
             name = "Cloudstream Official",
             url = "https://raw.githubusercontent.com/recloudstream/extensions/master/repo.json",
+            iconUrl = null
+        ),
+        RepositoryData(
+            name = "Multilingual Extensions",
+            url = "https://codeberg.org/cloudstream/cloudstream-extensions-multilingual/raw/branch/builds/repo.json",
+            iconUrl = null
+        ),
+        RepositoryData(
+            name = "Phisher",
+            url = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/refs/heads/builds/repo.json",
             iconUrl = null
         ),
         RepositoryData(

@@ -338,6 +338,16 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
              * highlight the wrong one in UI.
              */
             when (destination.id) {
+                R.id.navigation_home -> {
+                    navRailView.menu.findItem(R.id.navigation_home).isChecked = true
+                    navView.menu.findItem(R.id.navigation_home).isChecked = true
+                }
+
+                R.id.navigation_livestreams -> {
+                    navRailView.menu.findItem(R.id.navigation_livestreams).isChecked = true
+                    navView.menu.findItem(R.id.navigation_livestreams).isChecked = true
+                }
+
                 in listOf(
                     R.id.navigation_downloads,
                     R.id.navigation_download_child,
@@ -558,13 +568,28 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             .setExitAnim(R.anim.exit_anim)
             .setPopEnterAnim(R.anim.pop_enter)
             .setPopExitAnim(R.anim.pop_exit)
-        if (item.order and Menu.CATEGORY_SECONDARY == 0) {
+        
+        // Always pop to home if we are navigating to a main tab
+        if (destinationId in listOf(
+                R.id.navigation_home,
+                R.id.navigation_livestreams,
+                R.id.navigation_library,
+                R.id.navigation_downloads,
+                R.id.navigation_settings
+            )) {
+            if (navController.currentDestination?.id == R.id.navigation_search) {
+                // Force pop back if we are in search and going to a main tab
+                navController.popBackStack(R.id.navigation_home, false)
+                if (destinationId == R.id.navigation_home) return true
+            }
+            
             builder.setPopUpTo(
                 navController.graph.findStartDestination().id,
                 inclusive = false,
                 saveState = true
             )
         }
+        
         return try {
             navController.navigate(destinationId, null, builder.build())
             true

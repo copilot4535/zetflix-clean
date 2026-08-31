@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lagradost.cloudstream3.APIHolder.apis
 import com.lagradost.cloudstream3.APIHolder.getApiFromNameNull
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.context
 import com.lagradost.cloudstream3.HomePageResponse
@@ -20,7 +21,6 @@ import com.lagradost.cloudstream3.ui.home.HomeViewModel
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_FOCUSED
 import com.lagradost.cloudstream3.ui.search.SearchClickCallback
 import com.lagradost.cloudstream3.ui.search.SearchHelper
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterHomePageListByFilmQuality
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterSearchResultByFilmQuality
@@ -28,20 +28,18 @@ import com.lagradost.cloudstream3.utils.AppContextUtils.loadResult
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.utils.PluginPriorityManager
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.CopyOnWriteArrayList
 
 class LiveStreamViewModel : ViewModel() {
     companion object {
-        private const val STAGE1_PLUGIN_COUNT = 5
-        private const val STAGE1_TOTAL_TIMEOUT_MS = 15_000L
-        private const val STAGE2_TOTAL_TIMEOUT_MS = 30_000L
-        private const val TOTAL_LOAD_TIMEOUT_MS = 45_000L
-        private const val PER_PLUGIN_TIMEOUT_MS = 10_000L
-        private const val MAX_CONCURRENT_PLUGIN_LOADS = 5
+        private const val STAGE1_PLUGIN_COUNT = 10
+        private const val STAGE1_TOTAL_TIMEOUT_MS = 30_000L
+        private const val STAGE2_TOTAL_TIMEOUT_MS = 60_000L
+        private const val TOTAL_LOAD_TIMEOUT_MS = 90_000L
+        private const val PER_PLUGIN_TIMEOUT_MS = 20_000L
+        private const val MAX_CONCURRENT_PLUGIN_LOADS = 8
 
         data class LoadClickCallback(
             val action: Int,
@@ -87,16 +85,30 @@ class LiveStreamViewModel : ViewModel() {
                     val filteredList = context?.filterHomePageListByFilmQuality(list) ?: list
                     
                     val listName = list.name.lowercase()
+                    // Extremely aggressive filter for any Live/Sports/TV related content
                     val isLiveCategory = listName.contains("live") || 
-                                         listName.contains("sports") ||
+                                         listName.contains("sport") ||
                                          listName.contains("tv") ||
                                          listName.contains("channel") ||
                                          listName.contains("stream") ||
-                                         listName.contains("broadcast")
+                                         listName.contains("broadcast") ||
+                                         listName.contains("iptv") ||
+                                         listName.contains("football") ||
+                                         listName.contains("cricket") ||
+                                         listName.contains("match") ||
+                                         listName.contains("news")
 
-                    // Filter for Live streams only, OR items in a live category
+                    // Broad filter: TvType.Live OR any item that belongs to a "Live-ish" category
+                    // OR any item that has "sport" or "live" in its name/tags
                     val liveOnlyItems = filteredList.list.filter { 
-                        it.type == TvType.Live || isLiveCategory 
+                        val itemName = it.name.lowercase()
+                        it.type == TvType.Live || 
+                        isLiveCategory || 
+                        itemName.contains("live") || 
+                        itemName.contains("sport") ||
+                        itemName.contains("match") ||
+                        itemName.contains("channel") ||
+                        itemName.contains("stream")
                     }
                     
                     if (liveOnlyItems.isEmpty()) return@forEach
@@ -199,24 +211,28 @@ class LiveStreamViewModel : ViewModel() {
         _preview.postValue(Resource.Loading())
 
         val filteredApis = context?.filterProviderByPreferredMedia() ?: emptyList()
+        val allApis = apis
+        
+        // Use filtered APIs first, but fallback to all if needed
+        val apisToUse = if (filteredApis.isNotEmpty()) filteredApis else allApis
 
-        if (filteredApis.isEmpty()) {
+        if (apisToUse.isEmpty()) {
             _page.postValue(Resource.Success(emptyMap()))
             _preview.postValue(Resource.Failure(false, "No plugins found"))
             return@ioSafe
         }
 
         val startTime = System.currentTimeMillis()
-        val shuffledApis = filteredApis.shuffled()
+        val shuffledApis = apisToUse.shuffled()
 
-        val stage1Plugins = PluginPriorityManager.selectInitialPlugins(
-            filteredApis,
-            STAGE1_PLUGIN_COUNT
-        )
-
-        val stage2Plugins = shuffledApis.filterNot { api ->
-            stage1Plugins.any { it.name == api.name && it.lang == api.lang }
+        // Prioritize providers that likely have live content
+        val priorityKeywords = listOf("iptv", "live", "tv", "sports", "stream")
+        val prioritizedApis = shuffledApis.sortedByDescending { api ->
+            priorityKeywords.any { kw -> api.name.lowercase().contains(kw) }
         }
+
+        val stage1Plugins = prioritizedApis.take(STAGE1_PLUGIN_COUNT)
+        val stage2Plugins = prioritizedApis.drop(STAGE1_PLUGIN_COUNT)
 
         suspend fun loadPlugins(plugins: List<MainAPI>, stageDeadline: Long) {
             plugins.chunked(MAX_CONCURRENT_PLUGIN_LOADS).forEach { chunk ->
@@ -225,7 +241,11 @@ class LiveStreamViewModel : ViewModel() {
 
                 chunk.amap { api ->
                     withTimeoutOrNull(PER_PLUGIN_TIMEOUT_MS) {
-                        APIRepository(api).getMainPage(1, null)
+                        try {
+                            APIRepository(api).getMainPage(1, null)
+                        } catch (e: Exception) {
+                            null
+                        }
                     }
                 }.forEach { result ->
                     if (result != null) {
@@ -241,6 +261,13 @@ class LiveStreamViewModel : ViewModel() {
         updatePreviewFromExpandable()
         loadPlugins(stage2Plugins, STAGE2_TOTAL_TIMEOUT_MS)
         updatePreviewFromExpandable()
+        
+        // Final update to ensure UI knows we're done
+        if (expandable.isEmpty()) {
+             _page.postValue(Resource.Failure(false, "No live content found. Try enabling more providers."))
+        } else {
+             _page.postValue(Resource.Success(expandable))
+        }
     }
 
     fun expand(name: String) = viewModelScope.launchSafe {
