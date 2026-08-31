@@ -7,7 +7,6 @@ import androidx.preference.PreferenceManager
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentAccountBinding
 import com.lagradost.cloudstream3.databinding.PreferenceZetflixSwitchBinding
-import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
@@ -33,8 +32,6 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
     }
 
     override fun onBindingCreated(binding: FragmentAccountBinding) {
-        val settingsManager = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        
         binding.accountToolbar.setNavigationOnClickListener {
             activity?.onBackPressedDispatcher?.onBackPressed()
         }
@@ -44,30 +41,39 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
     }
 
     private fun setupAccountSection(binding: FragmentAccountBinding) {
-        val isBiometricAvailable = BiometricAuthenticator.isBiometricHardwareAvailable(requireContext())
-        binding.rowBiometric.root.visibility = if (isBiometricAvailable) View.VISIBLE else View.GONE
+        val hasHardware = BiometricAuthenticator.isBiometricHardwareAvailable(requireContext())
         
-        if (isBiometricAvailable) {
+        if (hasHardware) {
+            binding.rowBiometric.root.visibility = View.VISIBLE
             bindSwitch(
                 binding.rowBiometric,
                 getString(R.string.biometric_key),
                 R.string.biometric_setting,
-                R.drawable.video_locked,
+                R.drawable.ic_fingerprint,
                 summary = getString(R.string.biometric_setting_summary)
             ) { newValue ->
                 if (newValue) {
                     BiometricAuthenticator.startBiometricAuthentication(
                         requireActivity(),
                         R.string.biometric_authentication_title,
-                        false,
                         this
                     )
-                    false // Wait for callback
+                    false // Wait for success callback
                 } else {
-                    BiometricAuthenticator.setFingerprintEnabled(requireContext(), false)
+                    BiometricAuthenticator.setBiometricLoginEnabled(requireContext(), false)
                     true
                 }
             }
+        } else {
+            // Show that biometric is not available on this device
+            binding.rowBiometric.root.visibility = View.VISIBLE
+            binding.rowBiometric.root.isEnabled = false
+            binding.rowBiometric.root.alpha = 0.5f
+            binding.rowBiometric.rowTitle.setText(R.string.biometric_setting)
+            binding.rowBiometric.rowIcon.setImageResource(R.drawable.ic_fingerprint)
+            binding.rowBiometric.rowSummary.visibility = View.VISIBLE
+            binding.rowBiometric.rowSummary.setText(R.string.biometric_unsupported)
+            binding.rowBiometric.rowSwitch.visibility = View.GONE
         }
 
         binding.rowLogout.logoutButton.setOnClickListener {
@@ -134,7 +140,7 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
         }
         
         val switch = switchBinding.rowSwitch
-        switch.isChecked = settingsManager.getBoolean(key, true)
+        switch.isChecked = settingsManager.getBoolean(key, false)
         
         switchBinding.root.setOnClickListener {
             val newValue = !switch.isChecked
@@ -151,7 +157,7 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
     }
 
     override fun onAuthenticationSuccess() {
-        BiometricAuthenticator.setFingerprintEnabled(requireContext(), true)
+        BiometricAuthenticator.setBiometricLoginEnabled(requireContext(), true)
         binding?.rowBiometric?.rowSwitch?.isChecked = true
     }
 

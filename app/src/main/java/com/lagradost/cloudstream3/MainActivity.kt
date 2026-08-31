@@ -100,12 +100,7 @@ import com.lagradost.cloudstream3.utils.AppContextUtils.loadCache
 import com.lagradost.cloudstream3.utils.AppContextUtils.loadSearchResult
 import com.lagradost.cloudstream3.utils.AppContextUtils.updateHasTrailers
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.BiometricCallback
-import com.lagradost.cloudstream3.utils.BiometricAuthenticator.biometricPrompt
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
-import com.lagradost.cloudstream3.utils.BiometricAuthenticator.isAuthEnabled
-import com.lagradost.cloudstream3.utils.BiometricAuthenticator.promptInfo
-import com.lagradost.cloudstream3.utils.BiometricAuthenticator.biometricPrompt
-import com.lagradost.cloudstream3.utils.BiometricAuthenticator.startBiometricAuthentication
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.DataStore.getKey
@@ -721,25 +716,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         binding?.homeRoot?.setPadding(padding, padding, padding, padding)
 
         changeStatusBarState(false)
-
-        /** Biometric stuff for users without accounts **/
-        val noAccounts = settingsManager.getBoolean(
-            getString(R.string.skip_startup_account_select_key),
-            false
-        ) || accounts.count() <= 1
-
-        if (isAuthEnabled(this) && noAccounts) {
-            if (BiometricAuthenticator.isBiometricHardwareAvailable(this)) {
-                startBiometricAuthentication(this, R.string.biometric_authentication_title, false)
-
-                promptInfo?.let { prompt ->
-                    biometricPrompt?.authenticate(prompt)
-                }
-
-                // hide background while authenticating, Sorry moms & dads 🙏
-                binding?.navHostFragment?.isInvisible = true
-            }
-        }
 
         // Automatically enable jsdelivr if cant connect to raw.githubusercontent.com
         if (this.getKey<Boolean>(getString(R.string.jsdelivr_proxy_key)) == null && isNetworkAvailable()) {

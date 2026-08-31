@@ -71,6 +71,7 @@ import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.EmptyEvent
 import com.lagradost.cloudstream3.utils.SubtitleHelper.getFlagFromIso
+import com.lagradost.cloudstream3.utils.UIHelper.colorFromAttribute
 import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
 import com.lagradost.cloudstream3.utils.UIHelper.getSpanCount
@@ -515,6 +516,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         binding?.homeMasterRecycler?.let {
             fixSystemBarsPadding(
                 it,
+                padTop = false,
                 padBottom = false,
                 padLeft = false,
                 padRight = false
@@ -547,18 +549,26 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                     val offset = recyclerView.computeVerticalScrollOffset()
                     val alpha = (offset / 200f).coerceIn(0f, 1f)
                     val context = context ?: return
+                    
+                    // Show background only when scrolled
+                    val color = context.colorFromAttribute(R.attr.primaryBlackBackground)
+                    val alphaInt = (alpha * 255).toInt() 
                     _binding?.stickyHeader?.setBackgroundColor(
-                        com.lagradost.cloudstream3.utils.UIHelper.run {
-                            context.colorFromAttribute(R.attr.primaryBlackBackground).let { color ->
-                                androidx.core.graphics.ColorUtils.setAlphaComponent(
-                                    color,
-                                    (alpha * 220).toInt()
-                                )
-                            }
-                        }
+                        androidx.core.graphics.ColorUtils.setAlphaComponent(color, alphaInt)
                     )
+                    
+                    // Fade out scrim as we scroll to solid color
+                    _binding?.homeHeaderScrim?.alpha = 1f - alpha
+                    
+                    // Dynamic blending could also mean adjusting elevation or visibility
+                    _binding?.stickyHeader?.elevation = if (alpha > 0.1f) 4f else 0f
                 }
             })
+            
+            // Initial state: transparent with scrim
+            stickyHeader.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            homeHeaderScrim.alpha = 1f
+            stickyHeader.elevation = 0f
         }
 
         context?.let {

@@ -676,12 +676,12 @@
     <string name="auto_rotate_video">Auto rotate</string>
     <string name="favorite">Favorite</string>
     <string name="unfavorite">Unfavorite</string>
-    <string name="biometric_authentication_title">Unlock ZetFlix</string>
-    <string name="biometric_setting">App Lock (Fingerprint/PIN)</string>
-    <string name="password_pin_authentication_title">Password/PIN Authentication</string>
+    <string name="biometric_authentication_title">Biometric Login</string>
+    <string name="biometric_setting">Biometric Login</string>
+    <string name="password_pin_authentication_title">Biometric Authentication</string>
     <string name="biometric_unsupported">Biometric authentication is not supported on this device</string>
-    <string name="biometric_setting_summary">Secure the app using your device\'s Fingerprint, Face ID, PIN, or Password.</string>
-    <string name="biometric_prompt_description">After a few failed attempts, the prompt will close. Simply restart the app to try again.</string>
+    <string name="biometric_setting_summary">Login using Fingerprint or Face ID without entering credentials.</string>
+    <string name="biometric_prompt_description">Authenticate using your biometrics to continue.</string>
     <string name="biometric_warning">Your ZetFlix data has been backed up now. Although the possibility of this is very low, all devices can behave differently. In the rare case, that you get locked out from accessing the app, clear the app data completely and restore from a backup. We are very sorry for any inconvenience arising from this.</string>
     <string name="reset_btn">Reset</string>
     <string name="cs3wiki">CloudStream Wiki</string>

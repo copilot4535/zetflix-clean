@@ -153,13 +153,18 @@
         android:id="@+id/home_master_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/home_header_height"
         android:clipToPadding="false"
         android:descendantFocusability="afterDescendants"
         android:nextFocusLeft="@id/nav_rail_view"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/homepage_parent"
         tools:visibility="gone" />
+
+    <View
+        android:id="@+id/home_header_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="@drawable/home_header_scrim" />
 
     <LinearLayout
         android:id="@+id/sticky_header"
@@ -173,8 +178,8 @@
 
         <ImageView
             android:id="@+id/home_sticky_logo"
-            android:layout_width="215dp"
-            android:layout_height="55dp"
+            android:layout_width="198dp"
+            android:layout_height="50dp"
             android:scaleType="fitStart"
             android:src="@drawable/ic_zetflix_logo_text"
             android:contentDescription="@string/app_name" />

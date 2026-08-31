@@ -19,12 +19,11 @@ import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
-import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.BiometricCallback {
+class ZetFlixRegisterActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "ZetFlixAuthDebug"
@@ -52,15 +51,12 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
             try {
                 val phoneNumber = Identity.getSignInClient(this)
                     .getPhoneNumberFromIntent(result.data!!)
-                // Normalize phone number if it contains country code
                 var filteredPhone = phoneNumber.filter { it.isDigit() }
                 
-                // Try to match country code and strip it
                 for (country in countries) {
                     val codeDigits = country.code.filter { it.isDigit() }
                     if (filteredPhone.startsWith(codeDigits)) {
                         filteredPhone = filteredPhone.substring(codeDigits.length)
-                        // Select the country in spinner
                         val spinner = findViewById<Spinner>(R.id.country_code_spinner)
                         val index = countries.indexOf(country)
                         if (index != -1) spinner.setSelection(index)
@@ -70,7 +66,6 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
                 
                 findViewById<EditText>(R.id.phone_number_edit).setText(filteredPhone)
             } catch (e: Exception) {
-                // Fallback
             }
         }
     }
@@ -157,8 +152,6 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    Log.d(TAG, "Registration Attempt initiated. Using file: ${ZetFlixAuthPrefs.PREFS_FILE}")
-                    
                     val normalizedEmail = emailRaw.trim().lowercase()
                     val existingEmail = ZetFlixAuthPrefs.getStoredEmail(this@ZetFlixRegisterActivity)
                     
@@ -185,30 +178,13 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
                         password
                     )
 
-                    Log.d(TAG, "Registration successful")
-                    Log.d(TAG, "Stored Email: $normalizedEmail")
-                    Log.d(TAG, "Stored Country Code: ${country.code}")
-                    Log.d(TAG, "Stored National Number: $nationalNumber")
-                    Log.d(TAG, "Stored Password Length: " + password.trim().length.toString())
-
                     ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixRegisterActivity, true)
 
                     withContext(Dispatchers.Main) {
                         setKey("HAS_DONE_SETUP", true)
                         if (BiometricAuthenticator.isBiometricHardwareAvailable(this@ZetFlixRegisterActivity)) {
-                            BiometricSetupDialog.show(
-                                this@ZetFlixRegisterActivity,
-                                onEnable = {
-                                    BiometricAuthenticator.startBiometricAuthentication(
-                                        this@ZetFlixRegisterActivity,
-                                        R.string.fingerprint_setup_title,
-                                        false
-                                    )
-                                },
-                                onSkip = {
-                                    navigateToMain()
-                                }
-                            )
+                            startActivity(Intent(this@ZetFlixRegisterActivity, BiometricSetupActivity::class.java))
+                            finish()
                         } else {
                             navigateToMain()
                         }
@@ -223,19 +199,9 @@ class ZetFlixRegisterActivity : AppCompatActivity(), BiometricAuthenticator.Biom
         }
     }
 
-    override fun onAuthenticationSuccess() {
-        BiometricAuthenticator.setFingerprintEnabled(this, true)
-        Toast.makeText(this, R.string.fingerprint_setup_success, Toast.LENGTH_SHORT).show()
-        navigateToMain()
-    }
-
-    override fun onAuthenticationError() {
-        Toast.makeText(this, R.string.fingerprint_setup_failed, Toast.LENGTH_SHORT).show()
-        navigateToMain()
-    }
-
     private fun navigateToMain() {
-        val intent = Intent(this, MainActivity::class.java)
+        val intent = Intent(this, com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity::class.java)
+        intent.putExtra(com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity.EXTRA_FIRST_SETUP, true)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

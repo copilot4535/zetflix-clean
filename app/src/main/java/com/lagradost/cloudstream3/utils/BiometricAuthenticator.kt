@@ -1,16 +1,13 @@
 package com.lagradost.cloudstream3.utils
 
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.KeyguardManager
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
-import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getString
@@ -22,16 +19,13 @@ import com.lagradost.cloudstream3.R
 object BiometricAuthenticator {
 
     const val TAG = "cs3Auth"
-    private const val MAX_FAILED_ATTEMPTS = 3
-    private var failedAttempts = 0
     private var biometricManager: BiometricManager? = null
     var biometricPrompt: BiometricPrompt? = null
     var promptInfo: BiometricPrompt.PromptInfo? = null
-    var authCallback: BiometricCallback? = null // listen to authentication success
+    var authCallback: BiometricCallback? = null
 
     private fun initializeBiometrics(activity: FragmentActivity) {
         val executor = ContextCompat.getMainExecutor(activity)
-
         biometricManager = BiometricManager.from(activity)
 
         biometricPrompt = BiometricPrompt(
@@ -40,79 +34,37 @@ object BiometricAuthenticator {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    showToast("$errString")
-                    Log.e(TAG, "$errorCode")
+                    if (errorCode != BiometricPrompt.ERROR_USER_CANCELED && errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                        showToast("$errString")
+                    }
+                    Log.e(TAG, "Biometric Error: $errorCode - $errString")
                     authCallback?.onAuthenticationError()
-                        //activity.finish()
                 }
 
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    failedAttempts = 0
+                    Log.d(TAG, "Biometric Succeeded")
                     authCallback?.onAuthenticationSuccess()
                 }
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    failedAttempts++
-                    if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
-                        failedAttempts = 0
-                        activity.finish()
-                    }
+                    Log.d(TAG, "Biometric Failed")
                 }
             })
     }
 
-    @Suppress("DEPRECATION")
-    // authentication dialog prompt builder
-    private fun authenticationDialog(
-        activity: Activity,
-        title: Int,
-        setDeviceCred: Boolean,
+    private fun createPromptInfo(
+        context: Context,
+        titleRes: Int,
+        negativeButtonTextRes: Int = R.string.cancel
     ) {
-        val description = activity.getString(R.string.biometric_prompt_description)
-
-        if (setDeviceCred) {
-            // For API level > 30, Newer API setAllowedAuthenticators is used
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-
-                val authFlag = DEVICE_CREDENTIAL or BIOMETRIC_WEAK or BIOMETRIC_STRONG
-                promptInfo = BiometricPrompt.PromptInfo.Builder()
-                    .setTitle(activity.getString(title))
-                    .setDescription(description)
-                    .setAllowedAuthenticators(authFlag)
-                    .build()
-            } else {
-                // for apis < 30
-                promptInfo = BiometricPrompt.PromptInfo.Builder()
-                    .setTitle(activity.getString(title))
-                    .setDescription(description)
-                    .setDeviceCredentialAllowed(true)
-                    .build()
-            }
-        } else {
-            promptInfo = BiometricPrompt.PromptInfo.Builder()
-                .setTitle(activity.getString(title))
-                .setDescription(description)
-                .setNegativeButtonText(activity.getString(R.string.zetflix_login_button)) // "Login" or "Use Password"
-                .setAllowedAuthenticators(BIOMETRIC_STRONG or BIOMETRIC_WEAK)
-                .build()
-        }
-    }
-
-    // checks if device is secured i.e has at least some type of lock
-    fun deviceHasPasswordPinLock(context: Context?): Boolean {
-        val keyMgr =
-            context?.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-        return keyMgr?.isKeyguardSecure ?: false
-    }
-
-    fun canSetupBiometrics(context: Context): Boolean {
-        return deviceHasPasswordPinLock(context) && isBiometricHardwareAvailable(context)
-    }
-
-    fun isBiometricAvailable(context: Context): Boolean {
-        return isBiometricHardwareAvailable(context)
+        promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(context.getString(titleRes))
+            .setDescription(context.getString(R.string.biometric_prompt_description))
+            .setNegativeButtonText(context.getString(negativeButtonTextRes))
+            .setAllowedAuthenticators(BIOMETRIC_STRONG or BIOMETRIC_WEAK)
+            .build()
     }
 
     fun isBiometricHardwareAvailable(context: Context): Boolean {
@@ -128,47 +80,35 @@ object BiometricAuthenticator {
             Log.e(TAG, "isBiometricHardwareAvailable error", e)
             BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE
         }
-        
-        // Permissive check: show if hardware isn't explicitly missing
-        return result != BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE && 
-               result != BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED &&
-               result != BiometricManager.BIOMETRIC_STATUS_UNKNOWN
+
+        return result == BiometricManager.BIOMETRIC_SUCCESS ||
+                result == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
     }
 
-    // function to start authentication in any fragment or activity
     fun startBiometricAuthentication(
         activity: FragmentActivity,
-        title: Int,
-        setDeviceCred: Boolean,
-        callback: BiometricCallback? = null
+        titleRes: Int,
+        callback: BiometricCallback? = null,
+        negativeButtonTextRes: Int = R.string.cancel
     ) {
         initializeBiometrics(activity)
         authCallback = callback ?: (activity as? BiometricCallback)
-        
+
         if (isBiometricHardwareAvailable(activity)) {
-            authenticationDialog(activity, title, setDeviceCred)
+            createPromptInfo(activity, titleRes, negativeButtonTextRes)
             promptInfo?.let { biometricPrompt?.authenticate(it) }
         } else {
-            if (setDeviceCred && deviceHasPasswordPinLock(activity)) {
-                authenticationDialog(activity, R.string.password_pin_authentication_title, true)
-                promptInfo?.let { biometricPrompt?.authenticate(it) }
-            } else {
-                showToast(R.string.biometric_unsupported)
-                authCallback?.onAuthenticationError()
-            }
+            showToast(R.string.biometric_unsupported)
+            authCallback?.onAuthenticationError()
         }
     }
 
-    fun isFingerprintEnabled(context: Context): Boolean {
-        return isAuthEnabled(context)
+    fun isBiometricLoginEnabled(context: Context): Boolean {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+            .getBoolean(getString(context, R.string.biometric_key), false)
     }
 
-    fun isAuthEnabled(ctx: Context): Boolean {
-        return PreferenceManager.getDefaultSharedPreferences(ctx)
-            .getBoolean(getString(ctx, R.string.biometric_key), false)
-    }
-
-    fun setFingerprintEnabled(context: Context, enabled: Boolean) {
+    fun setBiometricLoginEnabled(context: Context, enabled: Boolean) {
         PreferenceManager.getDefaultSharedPreferences(context)
             .edit()
             .putBoolean(getString(context, R.string.biometric_key), enabled)

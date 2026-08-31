@@ -15,7 +15,7 @@ object ZetFlixSessionManager {
         // We do NOT clear credentials here so the user can log back in locally.
         // ZetFlixAuthPrefs.clearCredentials(context)
         
-        BiometricAuthenticator.setFingerprintEnabled(context, false)
+        BiometricAuthenticator.setBiometricLoginEnabled(context, false)
 
         val intent = Intent(context, ZetFlixLoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

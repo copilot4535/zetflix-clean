@@ -12,7 +12,6 @@ import androidx.lifecycle.lifecycleScope
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.R
-import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,21 +34,21 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
         val loginButton = findViewById<Button>(R.id.login_button)
         val modeSwitchLink = findViewById<TextView>(R.id.mode_switch_link)
         val googleSigninLink = findViewById<TextView>(R.id.google_signin_link)
-        val fingerprintLoginButton = findViewById<Button>(R.id.fingerprint_login_button)
+        val biometricLoginButton = findViewById<Button>(R.id.fingerprint_login_button)
 
         setupPasswordToggle(passwordEdit, passwordToggle)
 
-        val isFingerprintEnabled = BiometricAuthenticator.isFingerprintEnabled(this)
-        fingerprintLoginButton.visibility = if (isFingerprintEnabled) View.VISIBLE else View.GONE
+        val isBiometricEnabled = BiometricAuthenticator.isBiometricLoginEnabled(this)
+        val hasHardware = BiometricAuthenticator.isBiometricHardwareAvailable(this)
+        
+        biometricLoginButton.visibility = if (isBiometricEnabled && hasHardware) View.VISIBLE else View.GONE
 
-        if (isFingerprintEnabled) {
-            fingerprintLoginButton.setOnClickListener {
-                BiometricAuthenticator.startBiometricAuthentication(
-                    this,
-                    R.string.biometric_authentication_title,
-                    false
-                )
-            }
+        biometricLoginButton.setOnClickListener {
+            BiometricAuthenticator.startBiometricAuthentication(
+                this,
+                R.string.biometric_authentication_title,
+                this
+            )
         }
 
         modeSwitchLink.setOnClickListener {
@@ -61,106 +60,94 @@ class ZetFlixLoginActivity : AppCompatActivity(), BiometricAuthenticator.Biometr
         }
 
         loginButton.setOnClickListener {
-            val identifierRaw = identifierEdit.text.toString().trim()
-            val passwordInput = passwordEdit.text.toString().trim()
+            performEmailLogin(identifierEdit.text.toString().trim(), passwordEdit.text.toString().trim())
+        }
+    }
 
-            if (identifierRaw.isEmpty()) {
-                Toast.makeText(this, "Please enter email or phone number", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (passwordInput.length < 8) {
-                Toast.makeText(this, R.string.zetflix_password_error, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+    private fun performEmailLogin(identifierRaw: String, passwordInput: String) {
+        if (identifierRaw.isEmpty()) {
+            Toast.makeText(this, "Please enter email or phone number", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (passwordInput.length < 8) {
+            Toast.makeText(this, R.string.zetflix_password_error, Toast.LENGTH_SHORT).show()
+            return
+        }
 
-            lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    Log.d(TAG, "Login Attempt initiated. Using file: ${ZetFlixAuthPrefs.PREFS_FILE}")
-                    
-                    val storedEmail = ZetFlixAuthPrefs.getStoredEmail(this@ZetFlixLoginActivity)
-                    val storedPhone = ZetFlixAuthPrefs.getStoredPhoneNationalNumber(this@ZetFlixLoginActivity)
-                    val storedCountryCode = ZetFlixAuthPrefs.getStoredPhoneCountryCode(this@ZetFlixLoginActivity)
-                    val storedPassword = ZetFlixAuthPrefs.getStoredPassword(this@ZetFlixLoginActivity)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val storedEmail = ZetFlixAuthPrefs.getStoredEmail(this@ZetFlixLoginActivity)
+                val storedPhone = ZetFlixAuthPrefs.getStoredPhoneNationalNumber(this@ZetFlixLoginActivity)
+                val storedCountryCode = ZetFlixAuthPrefs.getStoredPhoneCountryCode(this@ZetFlixLoginActivity)
+                val storedPassword = ZetFlixAuthPrefs.getStoredPassword(this@ZetFlixLoginActivity)
 
-                    val identifierType: String
-                    val normalizedIdentifier: String
+                val identifierType = if (identifierRaw.contains("@")) "Email" else "Phone"
+                val normalizedIdentifier = if (identifierType == "Email") identifierRaw.lowercase() else identifierRaw.filter { it.isDigit() }
 
-                    Log.d(TAG, "Entered Identifier: $identifierRaw")
+                var emailMatch = false
+                var phoneMatch = false
 
-                    if (identifierRaw.contains("@")) {
-                        identifierType = "Email"
-                        normalizedIdentifier = identifierRaw.lowercase()
-                    } else {
-                        identifierType = "Phone"
-                        normalizedIdentifier = identifierRaw.filter { it.isDigit() }
-                    }
+                if (identifierType == "Email") {
+                    emailMatch = storedEmail != null && normalizedIdentifier == storedEmail.lowercase()
+                } else {
+                    val storedNational = storedPhone?.filter { it.isDigit() } ?: ""
+                    val storedCountryDigits = storedCountryCode?.filter { it.isDigit() } ?: ""
+                    val inputWithoutLeadingZero = normalizedIdentifier.removePrefix("0")
+                    val storedWithoutLeadingZero = storedNational.removePrefix("0")
 
-                    Log.d(TAG, "Identifier Type: $identifierType")
-                    Log.d(TAG, "Normalized Identifier: $normalizedIdentifier")
-                    Log.d(TAG, "Stored Email: $storedEmail")
-                    Log.d(TAG, "Stored Phone: $storedPhone")
-                    Log.d(TAG, "Stored Country Code: $storedCountryCode")
+                    phoneMatch = (normalizedIdentifier == storedNational ||
+                                  normalizedIdentifier == (storedCountryDigits + storedNational) ||
+                                  (inputWithoutLeadingZero.isNotEmpty() && inputWithoutLeadingZero == storedWithoutLeadingZero))
+                }
 
-                    var emailMatch: Boolean = false
-                    var phoneMatch: Boolean = false
-
-                    if (identifierType == "Email") {
-                        emailMatch = storedEmail != null && normalizedIdentifier == storedEmail.lowercase()
-                        Log.d(TAG, "Email Match Result: $emailMatch")
-                    } else {
-                        val storedNational: String = storedPhone?.filter { it.isDigit() } ?: ""
-                        val storedCountryDigits: String = storedCountryCode?.filter { it.isDigit() } ?: ""
-
-                        val inputWithoutLeadingZero: String = normalizedIdentifier.removePrefix("0")
-                        val storedWithoutLeadingZero: String = storedNational.removePrefix("0")
-
-                        phoneMatch = (
-                                normalizedIdentifier == storedNational ||
-                                        normalizedIdentifier == (storedCountryDigits + storedNational) ||
-                                        (inputWithoutLeadingZero.isNotEmpty() && inputWithoutLeadingZero == storedWithoutLeadingZero)
-                                )
-                        Log.d(TAG, "Phone Match Result: $phoneMatch")
-                    }
-
-                    val passwordMatch: Boolean = storedPassword != null && passwordInput == storedPassword.trim()
-                    Log.d(TAG, "Password Match Result: $passwordMatch")
-                    
-                    val loginSuccess: Boolean = (emailMatch || phoneMatch) && passwordMatch
-                    Log.d(TAG, "Final Login Result: $loginSuccess")
-
-                    if (loginSuccess) {
-                        Log.d(TAG, "Login Result: Success")
-                        ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixLoginActivity, true)
-                        withContext(Dispatchers.Main) {
-                            setKey("HAS_DONE_SETUP", true)
-                            navigateToMain()
-                        }
-                    } else {
-                        Log.d(TAG, "Login Result: Failure")
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@ZetFlixLoginActivity, "Invalid email/phone or password", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error during login", e)
+                val passwordMatch = storedPassword != null && passwordInput == storedPassword.trim()
+                
+                if ((emailMatch || phoneMatch) && passwordMatch) {
+                    onLoginSuccess()
+                } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@ZetFlixLoginActivity, "Error accessing secure storage", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ZetFlixLoginActivity, "Invalid email/phone or password", Toast.LENGTH_SHORT).show()
                     }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during login", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@ZetFlixLoginActivity, "Error accessing secure storage", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
+    private suspend fun onLoginSuccess() {
+        ZetFlixAuthPrefs.setZetFlixAuthenticated(this@ZetFlixLoginActivity, true)
+        withContext(Dispatchers.Main) {
+            setKey("HAS_DONE_SETUP", true)
+            navigateToMain()
+        }
+    }
+
     override fun onAuthenticationSuccess() {
-        navigateToMain()
+        // Log in directly using stored credentials
+        lifecycleScope.launch(Dispatchers.IO) {
+            val storedEmail = ZetFlixAuthPrefs.getStoredEmail(this@ZetFlixLoginActivity)
+            val storedPassword = ZetFlixAuthPrefs.getStoredPassword(this@ZetFlixLoginActivity)
+            
+            if (storedEmail != null && storedPassword != null) {
+                onLoginSuccess()
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@ZetFlixLoginActivity, "No stored credentials found. Please login manually once.", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     override fun onAuthenticationError() {
-        Toast.makeText(this, R.string.fingerprint_login_failed, Toast.LENGTH_SHORT).show()
+        // Error toast already shown in Authenticator
     }
 
     private fun navigateToMain() {
-        val intent = Intent(this, MainActivity::class.java)
+        val intent = Intent(this, com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

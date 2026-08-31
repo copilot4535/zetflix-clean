@@ -3,7 +3,6 @@ package com.lagradost.cloudstream3.ui.account
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
-import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
 import android.content.Intent
@@ -32,7 +31,8 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
 
     @SuppressLint("UnsafeIntentLaunch")
     private fun navigateToMainActivity() {
-        openActivity(MainActivity::class.java, baseIntent = intent)
+        val intent = Intent(this, com.lagradost.cloudstream3.ui.setup.ZetFlixLoadingActivity::class.java)
+        startActivity(intent)
         finish()
     }
 

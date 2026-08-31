@@ -207,13 +207,14 @@ object PluginManager {
     var loadedOnlinePlugins = false
         private set
 
-    private suspend fun maybeLoadPlugin(context: Context, file: File) {
+    private suspend fun maybeLoadPlugin(context: Context, file: File, quiet: Boolean = false) {
         val name = file.name
         if (file.extension == "zip" || file.extension == "cs3") {
             loadPlugin(
                 context,
                 file,
-                PluginData(name, null, false, file.absolutePath, PLUGIN_VERSION_NOT_SET)
+                PluginData(name, null, false, file.absolutePath, PLUGIN_VERSION_NOT_SET),
+                quiet = quiet
             )
         } else {
             Log.i(TAG, "Skipping invalid plugin file: $file")
@@ -312,7 +313,8 @@ object PluginManager {
                     pluginData.onlineData.plugin.fileHash,
                     pluginData.savedData.internalName,
                     File(pluginData.savedData.filePath),
-                    true
+                    true,
+                    quiet = true
                 ).let { success ->
                     if (success)
                         updatedPlugins.add(pluginData.onlineData.plugin.name)
@@ -424,7 +426,8 @@ object PluginManager {
                 pluginData.onlineData.plugin.fileHash,
                 pluginData.savedData.internalName,
                 pluginData.onlineData.repositoryData.url,
-                !pluginData.isDisabled
+                !pluginData.isDisabled,
+                quiet = true
             ).let { success ->
                 if (success)
                     newDownloadPlugins.add(pluginData.onlineData.plugin.name)
@@ -467,7 +470,8 @@ object PluginManager {
             loadPlugin(
                 context,
                 File(pluginData.filePath),
-                pluginData
+                pluginData,
+                quiet = true
             )
         }
     }
@@ -555,7 +559,7 @@ object PluginManager {
                 }
 
                 // Load the plugin after it has been copied
-                maybeLoadPlugin(context, destinationFile)
+                maybeLoadPlugin(context, destinationFile, quiet = true)
             } catch (t: Throwable) {
                 Log.e(TAG, "Failed to copy the file")
                 logError(t)
@@ -589,7 +593,7 @@ object PluginManager {
     /**
      * @return True if successful, false if not
      * */
-    private suspend fun loadPlugin(context: Context, file: File, data: PluginData): Boolean {
+    private suspend fun loadPlugin(context: Context, file: File, data: PluginData, quiet: Boolean = false): Boolean {
         val fileName = file.nameWithoutExtension
         val filePath = file.absolutePath
         currentlyLoading = fileName
@@ -675,11 +679,13 @@ object PluginManager {
             true
         } catch (e: Throwable) {
             Log.e(TAG, "Failed to load $file: ${Log.getStackTraceString(e)}")
-            showToast(
-                // context.getActivity(), // we are not always on the main thread
-                context.getString(R.string.plugin_load_fail).format(fileName),
-                Toast.LENGTH_LONG
-            )
+            if (!quiet) {
+                showToast(
+                    // context.getActivity(), // we are not always on the main thread
+                    context.getString(R.string.plugin_load_fail).format(fileName),
+                    Toast.LENGTH_LONG
+                )
+            }
             currentlyLoading = null
             false
         }
@@ -759,10 +765,11 @@ object PluginManager {
         pluginHash: String?,
         internalName: String,
         repositoryUrl: String,
-        loadPlugin: Boolean
+        loadPlugin: Boolean,
+        quiet: Boolean = false
     ): Boolean {
         val file = getPluginPath(activity, internalName, repositoryUrl)
-        return downloadPlugin(activity, pluginUrl, pluginHash, internalName, file, loadPlugin)
+        return downloadPlugin(activity, pluginUrl, pluginHash, internalName, file, loadPlugin, quiet)
     }
 
     suspend fun downloadPlugin(
@@ -772,6 +779,7 @@ object PluginManager {
         internalName: String,
         file: File,
         loadPlugin: Boolean,
+        quiet: Boolean = false,
     ): Boolean {
         try {
             Log.d(TAG, "Downloading plugin: $pluginUrl to ${file.absolutePath}")
@@ -791,7 +799,8 @@ object PluginManager {
                 loadPlugin(
                     activity,
                     newFile,
-                    data
+                    data,
+                    quiet = quiet
                 )
             } else {
                 setPluginData(data)
