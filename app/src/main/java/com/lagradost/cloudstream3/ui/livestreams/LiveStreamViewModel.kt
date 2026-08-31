@@ -1,5 +1,6 @@
 package com.lagradost.cloudstream3.ui.livestreams
 
+import android.util.Log
 import android.view.View
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -34,12 +35,13 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class LiveStreamViewModel : ViewModel() {
     companion object {
-        private const val STAGE1_PLUGIN_COUNT = 10
-        private const val STAGE1_TOTAL_TIMEOUT_MS = 30_000L
-        private const val STAGE2_TOTAL_TIMEOUT_MS = 60_000L
-        private const val TOTAL_LOAD_TIMEOUT_MS = 90_000L
-        private const val PER_PLUGIN_TIMEOUT_MS = 20_000L
-        private const val MAX_CONCURRENT_PLUGIN_LOADS = 8
+        private const val STAGE1_PLUGIN_COUNT = 30
+        private const val STAGE1_TOTAL_TIMEOUT_MS = 60_000L
+        private const val STAGE2_TOTAL_TIMEOUT_MS = 120_000L
+        private const val TOTAL_LOAD_TIMEOUT_MS = 180_000L
+        private const val PER_PLUGIN_TIMEOUT_MS = 45_000L
+        private const val MAX_CONCURRENT_PLUGIN_LOADS = 15
+        private const val TAG = "LiveStreamVM"
 
         data class LoadClickCallback(
             val action: Int,
@@ -59,6 +61,12 @@ class LiveStreamViewModel : ViewModel() {
         MutableLiveData<Resource<Map<String, HomeViewModel.ExpandableHomepageList>>>(Resource.Loading())
     val page: LiveData<Resource<Map<String, HomeViewModel.ExpandableHomepageList>>> = _page
 
+    private val _searchQuery = MutableLiveData<String>("")
+    val searchQuery: LiveData<String> = _searchQuery
+
+    private val _filteredPage = MutableLiveData<Resource<Map<String, HomeViewModel.ExpandableHomepageList>>>()
+    val filteredPage: LiveData<Resource<Map<String, HomeViewModel.ExpandableHomepageList>>> = _filteredPage
+
     private val _randomItems = MutableLiveData<List<SearchResponse>?>(null)
     val randomItems: LiveData<List<SearchResponse>?> = _randomItems
 
@@ -70,13 +78,83 @@ class LiveStreamViewModel : ViewModel() {
     private val previewResponses = CopyOnWriteArrayList<LoadResponse>()
     private val previewResponsesAdded = mutableSetOf<String>()
 
-    private val _bookmarks = MutableLiveData<Pair<Boolean, List<SearchResponse>>>()
-    val bookmarks: LiveData<Pair<Boolean, List<SearchResponse>>> = _bookmarks
-
     private val _resumeWatching = MutableLiveData<List<SearchResponse>>()
     val resumeWatching: LiveData<List<SearchResponse>> = _resumeWatching
 
+    private val _availableWatchStatusTypes =
+        MutableLiveData<Pair<Set<WatchType>, Set<WatchType>>>()
+    val availableWatchStatusTypes: LiveData<Pair<Set<WatchType>, Set<WatchType>>> =
+        _availableWatchStatusTypes
+
     private var onGoingLoad: Job? = null
+
+    private fun loadResumeWatching() = viewModelScope.launchSafe {
+        val resumeWatchingResult = HomeViewModel.getResumeWatching()
+        resumeWatchingResult?.let { list ->
+            _resumeWatching.postValue(list.filter { it.type == TvType.Live })
+        }
+    }
+
+    fun loadStoredData(preferredWatchStatus: Set<WatchType>? = null) = viewModelScope.launchSafe {
+        val watchStatusIds = withContext(Dispatchers.IO) {
+            DataStoreHelper.getAllWatchStateIds()?.map { id ->
+                Pair(id, DataStoreHelper.getResultWatchState(id))
+            }
+        }?.distinctBy { it.first } ?: return@launchSafe
+
+        val length = WatchType.entries.size
+        val currentWatchTypes = mutableSetOf<WatchType>()
+
+        for (watch in watchStatusIds) {
+            currentWatchTypes.add(watch.second)
+            if (currentWatchTypes.size >= length) {
+                break
+            }
+        }
+
+        currentWatchTypes.remove(WatchType.NONE)
+
+        if (currentWatchTypes.size <= 0) {
+            _availableWatchStatusTypes.postValue(setOf<WatchType>() to setOf())
+            _bookmarks.postValue(Pair(false, ArrayList()))
+            return@launchSafe
+        }
+
+        val watchPrefNotNull = preferredWatchStatus ?: java.util.EnumSet.of(currentWatchTypes.first())
+
+        _availableWatchStatusTypes.postValue(watchPrefNotNull to currentWatchTypes)
+
+        val list = withContext(Dispatchers.IO) {
+            watchStatusIds.filter { watchPrefNotNull.contains(it.second) }
+                .mapNotNull { DataStoreHelper.getBookmarkedData(it.first) }
+                .filter { it.type == TvType.Live }
+                .sortedBy { -it.latestUpdatedTime }
+        }
+        _bookmarks.postValue(Pair(list.isNotEmpty(), list))
+    }
+
+    fun reloadStored() {
+        loadResumeWatching()
+        loadStoredData()
+    }
+
+    private fun afterPluginsLoaded(forceReload: Boolean) {
+        load(forceReload)
+    }
+
+    private fun reloadAccount(unused: Boolean = false) {
+    }
+
+    init {
+        MainActivity.afterPluginsLoadedEvent += ::afterPluginsLoaded
+        MainActivity.reloadAccountEvent += ::reloadAccount
+    }
+
+    override fun onCleared() {
+        MainActivity.afterPluginsLoadedEvent -= ::afterPluginsLoaded
+        MainActivity.reloadAccountEvent -= ::reloadAccount
+        super.onCleared()
+    }
 
     private fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>) {
         if (resource is Resource.Success) {
@@ -85,7 +163,7 @@ class LiveStreamViewModel : ViewModel() {
                     val filteredList = context?.filterHomePageListByFilmQuality(list) ?: list
                     
                     val listName = list.name.lowercase()
-                    // Extremely aggressive filter for any Live/Sports/TV related content
+                    // Aggressive filter for Live/Sports/TV related content
                     val isLiveCategory = listName.contains("live") || 
                                          listName.contains("sport") ||
                                          listName.contains("tv") ||
@@ -96,19 +174,45 @@ class LiveStreamViewModel : ViewModel() {
                                          listName.contains("football") ||
                                          listName.contains("cricket") ||
                                          listName.contains("match") ||
-                                         listName.contains("news")
+                                         listName.contains("news") ||
+                                         listName.contains("tenis") ||
+                                         listName.contains("soccer") ||
+                                         listName.contains("nba") ||
+                                         listName.contains("f1") ||
+                                         listName.contains("olympic") ||
+                                         listName.contains("league") ||
+                                         listName.contains("cup") ||
+                                         listName.contains("event")
 
                     // Broad filter: TvType.Live OR any item that belongs to a "Live-ish" category
                     // OR any item that has "sport" or "live" in its name/tags
+                    // AND explicitly exclude non-live content like Movies/Series
                     val liveOnlyItems = filteredList.list.filter { 
                         val itemName = it.name.lowercase()
+                        val type = it.type
+                        val isForbiddenType = type == TvType.Movie || 
+                                             type == TvType.TvSeries || 
+                                             type == TvType.Anime || 
+                                             type == TvType.AnimeMovie || 
+                                             type == TvType.OVA || 
+                                             type == TvType.AsianDrama || 
+                                             type == TvType.Cartoon ||
+                                             type == TvType.Documentary
+                        
+                        if (isForbiddenType) return@filter false
+
                         it.type == TvType.Live || 
                         isLiveCategory || 
                         itemName.contains("live") || 
                         itemName.contains("sport") ||
                         itemName.contains("match") ||
                         itemName.contains("channel") ||
-                        itemName.contains("stream")
+                        itemName.contains("stream") ||
+                        itemName.contains("tv") ||
+                        itemName.contains("broadcast") ||
+                        itemName.contains("iptv") ||
+                        itemName.contains("cricket") ||
+                        itemName.contains("football")
                     }
                     
                     if (liveOnlyItems.isEmpty()) return@forEach
@@ -226,7 +330,7 @@ class LiveStreamViewModel : ViewModel() {
         val shuffledApis = apisToUse.shuffled()
 
         // Prioritize providers that likely have live content
-        val priorityKeywords = listOf("iptv", "live", "tv", "sports", "stream")
+        val priorityKeywords = listOf("iptv", "live", "tv", "sports", "stream", "cnc", "mega", "crichd", "phisher", "karma", "csx")
         val prioritizedApis = shuffledApis.sortedByDescending { api ->
             priorityKeywords.any { kw -> api.name.lowercase().contains(kw) }
         }
@@ -250,10 +354,12 @@ class LiveStreamViewModel : ViewModel() {
                 }.forEach { result ->
                     if (result != null) {
                         mergeHomeResult(result)
+                        Log.d(TAG, "Loaded result from provider: ${apiName.value}. Current sections: ${expandable.size}")
                     }
                 }
                 
                 _page.postValue(Resource.Success(expandable))
+                search(_searchQuery.value ?: "")
             }
         }
 
@@ -264,9 +370,31 @@ class LiveStreamViewModel : ViewModel() {
         
         // Final update to ensure UI knows we're done
         if (expandable.isEmpty()) {
-             _page.postValue(Resource.Failure(false, "No live content found. Try enabling more providers."))
+             val errorMsg = "No live content found. Please ensure you have enabled providers that support Live TV (e.g., CricHD, IPTV Sports, Phisher, or CNC Verse)."
+             _page.postValue(Resource.Failure(false, errorMsg))
+             _filteredPage.postValue(Resource.Failure(false, errorMsg))
         } else {
              _page.postValue(Resource.Success(expandable))
+             search(_searchQuery.value ?: "")
+        }
+    }
+
+    fun search(query: String) {
+        _searchQuery.value = query
+        val currentData = _page.value
+        if (currentData is Resource.Success) {
+            if (query.isBlank()) {
+                _filteredPage.postValue(currentData)
+            } else {
+                val lowercaseQuery = query.lowercase()
+                val filtered = currentData.value.mapValues { entry ->
+                    val filteredList = entry.value.list.list.filter { item ->
+                        item.name.lowercase().contains(lowercaseQuery)
+                    }
+                    entry.value.copy(list = entry.value.list.copy(list = filteredList))
+                }.filter { it.value.list.list.isNotEmpty() }
+                _filteredPage.postValue(Resource.Success(filtered))
+            }
         }
     }
 

@@ -11,6 +11,7 @@ import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.ui.player.OfflinePlaybackHelper.playLink
 import com.lagradost.cloudstream3.ui.player.OfflinePlaybackHelper.playUri
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPressedCallback
+import com.lagradost.cloudstream3.utils.AdBlocker
 import com.lagradost.cloudstream3.utils.UIHelper.enableEdgeToEdgeCompat
 
 class DownloadedPlayerActivity : AppCompatActivity() {
@@ -27,6 +28,16 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         CommonActivity.onUserLeaveHint(this)
+    }
+
+    override fun startActivity(intent: Intent?) {
+        if (AdBlocker.isBlocked(intent)) return
+        super.startActivity(intent)
+    }
+
+    override fun startActivity(intent: Intent?, options: Bundle?) {
+        if (AdBlocker.isBlocked(intent)) return
+        super.startActivity(intent, options)
     }
 
     override fun onNewIntent(intent: Intent) {

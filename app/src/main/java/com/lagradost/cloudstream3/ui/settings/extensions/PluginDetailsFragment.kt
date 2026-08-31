@@ -18,6 +18,7 @@ import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
+import com.lagradost.cloudstream3.utils.AdBlocker
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.getImageFromDrawable
@@ -99,7 +100,7 @@ class PluginDetailsFragment(val data: PluginViewData) : BaseBottomSheetDialogFra
                     actionSettings.isVisible = true
                     actionSettings.setOnClickListener {
                         try {
-                            plugin.openSettings!!.invoke(requireContext())
+                            plugin.openSettings!!.invoke(AdBlocker.SafeContext(requireContext()))
                         } catch (e: Throwable) {
                             Log.e(
                                 "PluginAdapter",

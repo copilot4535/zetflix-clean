@@ -6,9 +6,12 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
 import android.content.res.Resources
+import android.os.Bundle
 import android.os.Build
 import android.os.Environment
 import android.util.Log
@@ -50,6 +53,7 @@ import com.lagradost.cloudstream3.plugins.RepositoryManager.sha256
 import com.lagradost.cloudstream3.ui.settings.extensions.REPOSITORIES_KEY
 import com.lagradost.cloudstream3.ui.settings.extensions.RepositoryData
 import com.lagradost.cloudstream3.utils.AppContextUtils.getApiProviderLangSettings
+import com.lagradost.cloudstream3.utils.AdBlocker
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.ExtractorApi
@@ -671,8 +675,10 @@ object PluginManager {
             synchronized(urlPlugins) {
                 urlPlugins[data.url ?: filePath] = pluginInstance
             }
+
+            val safeContext = AdBlocker.SafeContext(context)
             if (pluginInstance is Plugin) {
-                pluginInstance.load(context)
+                pluginInstance.load(safeContext)
             } else {
                 pluginInstance.load()
             }

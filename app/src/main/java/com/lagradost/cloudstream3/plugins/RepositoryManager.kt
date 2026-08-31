@@ -99,6 +99,11 @@ object RepositoryManager {
     const val ONLINE_PLUGINS_FOLDER = "Extensions"
     val PREBUILT_REPOSITORIES: Array<RepositoryData> = arrayOf(
         RepositoryData(
+            name = "CNC Verse",
+            url = "https://raw.githubusercontent.com/NivinCNC/CNCVerse-Cloud-Stream-Extension/refs/heads/builds/CNC.json",
+            iconUrl = null
+        ),
+        RepositoryData(
             name = "Mega Repository",
             url = "https://raw.githubusercontent.com/self-similarity/MegaRepo/builds/repo.json",
             iconUrl = null

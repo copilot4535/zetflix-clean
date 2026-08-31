@@ -57,7 +57,7 @@ class ZetFlixLoadingActivity : AppCompatActivity() {
             PropertyValuesHolder.ofFloat(View.SCALE_X, 1f),
             PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f)
         ).apply {
-            duration = 1200
+            duration = 600
             interpolator = AnticipateOvershootInterpolator(1.2f)
         }
 
@@ -67,7 +67,7 @@ class ZetFlixLoadingActivity : AppCompatActivity() {
             PropertyValuesHolder.ofFloat(View.SCALE_X, 1.2f),
             PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.2f)
         ).apply {
-            duration = 1500
+            duration = 800
             interpolator = AccelerateDecelerateInterpolator()
         }
 
@@ -89,19 +89,12 @@ class ZetFlixLoadingActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val startTime = System.currentTimeMillis()
             
-            // On first setup, show the branding for at least 4 seconds to allow plugin installation
-            // On normal starts, show it for at least 2 seconds for visual continuity
-            val minDisplayTime = if (isFirstSetup) 4000L else 2000L
+            // On first setup, show the branding for at least 2 seconds to allow plugin installation
+            // On normal starts, show it for at least 800ms for visual continuity
+            val minDisplayTime = if (isFirstSetup) 2000L else 800L
 
-            try {
-                // Update and load all online plugins
-                withTimeoutOrNull(60000L) {
-                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(this@ZetFlixLoadingActivity)
-                }
-            } catch (e: Exception) {
-                Log.e("ZetFlixPluginSetup", "Failed to setup plugins", e)
-            }
-
+            // Note: Plugin updates moved to MainActivity to avoid double preloader and blocking startup
+            
             val elapsedTime = System.currentTimeMillis() - startTime
             if (elapsedTime < minDisplayTime) {
                 delay(minDisplayTime - elapsedTime)
@@ -161,17 +154,17 @@ class ZetFlixLoadingActivity : AppCompatActivity() {
             PropertyValuesHolder.ofFloat(View.SCALE_Y, 12f),
             PropertyValuesHolder.ofFloat(View.ALPHA, 0f)
         ).apply {
-            duration = 800
+            duration = 500
             interpolator = AccelerateInterpolator(1.5f)
         }
 
         val fadeGlow = ObjectAnimator.ofFloat(glow, View.ALPHA, 0f).apply {
-            duration = 400
+            duration = 300
         }
 
         val fadeOutRoot = ObjectAnimator.ofFloat(root, View.ALPHA, 0f).apply {
-            duration = 500
-            startDelay = 300
+            duration = 400
+            startDelay = 200
         }
 
         AnimatorSet().apply {

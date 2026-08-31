@@ -98,9 +98,14 @@ import com.lagradost.cloudstream3.utils.AppContextUtils.isCastApiAvailable
 import com.lagradost.cloudstream3.utils.AppContextUtils.isNetworkAvailable
 import com.lagradost.cloudstream3.utils.AppContextUtils.loadCache
 import com.lagradost.cloudstream3.utils.AppContextUtils.loadSearchResult
+import com.lagradost.cloudstream3.providers.CricHDProvider
+import com.lagradost.cloudstream3.providers.IptvSportsProvider
+import com.lagradost.cloudstream3.providers.SportsAggregatorProvider
+import com.lagradost.cloudstream3.providers.LegalSportsProvider
 import com.lagradost.cloudstream3.utils.AppContextUtils.updateHasTrailers
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.BiometricCallback
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
+import com.lagradost.cloudstream3.utils.AdBlocker
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.DataStore.getKey
@@ -417,6 +422,16 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 showSystemUI()
             }
         }
+    }
+
+    override fun startActivity(intent: Intent?) {
+        if (AdBlocker.isBlocked(intent)) return
+        super.startActivity(intent)
+    }
+
+    override fun startActivity(intent: Intent?, options: Bundle?) {
+        if (AdBlocker.isBlocked(intent)) return
+        super.startActivity(intent, options)
     }
 
     override fun onResume() {
@@ -785,19 +800,34 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         ioSafe { SafeFile.check(this@MainActivity) }
 
+        // Register built-in sports providers and add them to mappings
+        listOf(
+            CricHDProvider(),
+            IptvSportsProvider(),
+            SportsAggregatorProvider(),
+            LegalSportsProvider()
+        ).forEach { provider ->
+            allProviders.add(provider)
+            APIHolder.addPluginMapping(provider)
+        }
+
         if (PluginManager.checkSafeModeFile()) {
             safe {
                 showToast(R.string.safe_mode_file, Toast.LENGTH_LONG)
             }
         } else if (lastError == null) {
             ioSafe {
-                DataStoreHelper.currentHomePage?.let { homeApi ->
+                // Priority 1: Load homepage provider immediately to unblock HomeFragment UI
+                val homeApi = DataStoreHelper.currentHomePage
+                if (homeApi != null) {
                     mainPluginsLoadedEvent.invoke(loadSinglePlugin(this@MainActivity, homeApi))
-                } ?: run {
+                } else {
                     mainPluginsLoadedEvent.invoke(false)
                 }
 
+                // Priority 2: Background updates and loading of remaining plugins
                 ioSafe {
+                    // Start background synchronization routine
                     if (settingsManager.getBoolean(
                             getString(R.string.auto_update_plugins_key),
                             true
@@ -810,7 +840,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                         ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(this@MainActivity)
                     }
 
-                    //Automatically download not existing plugins, using mode specified.
+                    // Automatically download not existing plugins
                     val autoDownloadPlugin = AutoDownloadMode.getEnum(
                         settingsManager.getInt(
                             getString(R.string.auto_download_plugins_key),
@@ -823,9 +853,8 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                             autoDownloadPlugin
                         )
                     }
-                }
 
-                ioSafe {
+                    // Load all local plugins
                     PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllLocalPlugins(
                         this@MainActivity,
                         false
@@ -1050,7 +1079,12 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         ioSafe {
             initAll()
-            apis = allProviders.distinctBy { it }
+            // Ensure apis list is consistent and distinct
+            allProviders.withLock {
+                apis.withLock {
+                    apis = allProviders.distinctBy { it.name + it.mainUrl + it::class.qualifiedName }
+                }
+            }
         }
 
         setUpBackup()

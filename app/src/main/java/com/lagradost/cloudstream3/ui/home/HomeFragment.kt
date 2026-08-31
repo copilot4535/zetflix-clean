@@ -69,6 +69,7 @@ import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPres
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
+import com.lagradost.cloudstream3.utils.AdBlocker
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.EmptyEvent
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
@@ -383,7 +384,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                             settingsIcon.setOnClickListener {
                                 try {
                                     val activityContext = it.context.getActivity() ?: it.context
-                                    pluginInstance.openSettings?.invoke(activityContext)
+                                    pluginInstance.openSettings?.invoke(AdBlocker.SafeContext(activityContext))
                                 } catch (e: Throwable) {
                                     logError(e)
                                 }

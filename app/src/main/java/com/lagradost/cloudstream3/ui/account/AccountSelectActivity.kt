@@ -17,17 +17,17 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdgeCompat()
-        super.onCreate(savedInstanceState)
-
-        // Enforce ZetFlix authentication
+        // Enforce ZetFlix authentication immediately to avoid unnecessary work
         if (!ZetFlixAuthPrefs.isZetFlixAuthenticated(this)) {
             startActivity(Intent(this, ZetFlixLoginActivity::class.java))
             finish()
             return
         }
 
-        // If authenticated, go to MainActivity
+        enableEdgeToEdgeCompat()
+        super.onCreate(savedInstanceState)
+
+        // If authenticated, go to MainActivity (via splash)
         navigateToMainActivity()
     }
 

@@ -18,6 +18,7 @@ import com.lagradost.cloudstream3.mvvm.safeAsync
 import com.lagradost.cloudstream3.plugins.PluginManager
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
+import com.lagradost.cloudstream3.utils.AdBlocker
 import com.lagradost.cloudstream3.utils.AppContextUtils.openBrowser
 import com.lagradost.cloudstream3.utils.AppDebug
 import com.lagradost.cloudstream3.utils.Coroutines.runOnMainThread
@@ -105,8 +106,8 @@ class CloudStreamApp : Application(), SingletonImageLoader.Factory {
         }
 
         private var _context: WeakReference<Context>? = null
-        var context
-            get() = _context?.get()
+        var context: Context?
+            get() = _context?.get()?.let { AdBlocker.SafeContext(it) }
             private set(value) {
                 _context = WeakReference(value)
                 setContext(value)

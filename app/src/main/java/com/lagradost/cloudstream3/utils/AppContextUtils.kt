@@ -371,6 +371,11 @@ object AppContextUtils {
         fragment: Fragment? = null,
     ) = (this.getActivity() ?: activity)?.runOnUiThread {
         try {
+            if (AdBlocker.isAd(url)) {
+                Log.d("AdBlock", "Blocked ad redirect: $url")
+                return@runOnUiThread
+            }
+
             val intent = Intent(Intent.ACTION_VIEW)
             intent.data = url.toUri()
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

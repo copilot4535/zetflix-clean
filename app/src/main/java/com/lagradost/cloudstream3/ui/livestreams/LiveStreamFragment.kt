@@ -1,11 +1,10 @@
 package com.lagradost.cloudstream3.ui.livestreams
 
 import android.annotation.SuppressLint
-import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.RecyclerView
 import com.lagradost.cloudstream3.R
@@ -17,9 +16,20 @@ import com.lagradost.cloudstream3.ui.home.HomeChildItemAdapter
 import com.lagradost.cloudstream3.ui.home.ParentItemAdapter
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
+import com.lagradost.cloudstream3.utils.AppContextUtils.ownHide
+import com.lagradost.cloudstream3.utils.AppContextUtils.ownShow
+import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
+import com.lagradost.cloudstream3.utils.Coroutines.main
+import com.lagradost.cloudstream3.utils.DataStoreHelper
+import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
+import com.lagradost.cloudstream3.MainActivity
+import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.colorFromAttribute
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
+import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
+import com.lagradost.cloudstream3.utils.UIHelper.showInputMethod
+import kotlin.math.absoluteValue
 
 class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
     BaseFragment.BindingCreator.Bind(FragmentHomeBinding::bind)
@@ -57,14 +67,6 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
-    }
-
     @SuppressLint("SetTextI18n")
     override fun onBindingCreated(binding: FragmentHomeBinding) {
         context?.let { HomeChildItemAdapter.updatePosterSize(it) }
@@ -75,26 +77,35 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
             homeMasterRecycler.adapter = adapter
             homeMasterRecycler.setRecycledViewPool(ParentItemAdapter.sharedPool)
             
-            // Solid header for Livestream since there is no hero banner
-            val color = requireContext().colorFromAttribute(R.attr.primaryBlackBackground)
-            stickyHeader.setBackgroundColor(color)
-            homeHeaderScrim.isVisible = false
-            stickyHeader.elevation = 4f
+            // Dynamic header behavior matching HomeFragment
+            stickyHeader.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            homeHeaderScrim.isVisible = true
+            stickyHeader.elevation = 0f
             
-            // Show Livestream title and hide logo/avatar
-            homeStickyLogo.isVisible = false
-            homeAvatar.isVisible = false
-            homeStickyTitle.isVisible = true
-            homeStickyTitle.text = getString(R.string.livestreams)
+            // Show Logo and Avatar as default AI/UI
+            homeStickyLogo.isVisible = true
+            homeAvatar.isVisible = true
+            homeStickyTitle.isGone = true
             
-            // Adjust shimmer for livestream (no banner or center line)
-            homeLoadingShimmerBanner.isVisible = false
-            binding.root.findViewById<View>(R.id.home_loading_shimmer_line)?.isVisible = false
+            // Adjust shimmer for livestream
+            homeLoadingShimmerBanner.isVisible = true // Show banner shimmer for consistency
+            root.findViewById<View>(R.id.home_loading_shimmer_line)?.isVisible = true
             
             homeMasterRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
                     val offset = recyclerView.computeVerticalScrollOffset()
-                    stickyHeader.elevation = if (offset > 0) 4f else 0f
+                    val alpha = (offset / 200f).coerceIn(0f, 1f)
+                    val context = context ?: return
+                    
+                    val color = context.colorFromAttribute(R.attr.primaryBlackBackground)
+                    val alphaInt = (alpha * 255).toInt() 
+                    stickyHeader.setBackgroundColor(
+                        androidx.core.graphics.ColorUtils.setAlphaComponent(color, alphaInt)
+                    )
+                    
+                    homeHeaderScrim.alpha = 1f - alpha
+                    stickyHeader.elevation = if (alpha > 0.1f) 4f else 0f
                 }
             })
 
@@ -102,15 +113,27 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
                 liveStreamViewModel.load(true)
             }
             
-            // Start shimmer immediately if we're going to load
+            homeAvatar.setOnClickListener {
+                activity?.navigate(R.id.navigation_account)
+            }
+            
+            // Initial state while loading
             homeLoadingShimmer.startShimmer()
+            homeLoadingShimmer.isVisible = true
             homeLoading.isVisible = true
-            homeLoadingError.isVisible = false
-            homeMasterRecycler.isVisible = false
+            homeLoadingError.isGone = true
+            homeMasterRecycler.isGone = true
         }
         
-        observe(liveStreamViewModel.page) { data ->
+        observe(liveStreamViewModel.filteredPage) { data ->
             binding.apply {
+                // Ensure header elements stay hidden/shown correctly based on search state
+                val isSearchGone = homeSearchBar.isGone
+                homeStickyLogo.isVisible = isSearchGone
+                homeAvatar.isVisible = isSearchGone
+                homeSearchIcon.isVisible = isSearchGone
+                homeStickyTitle.isGone = true // Always hide title in favor of Logo
+
                 when (data) {
                     is Resource.Success -> {
                         val d = data.value
@@ -120,20 +143,21 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
                             )
                         })
 
-                        homeLoading.isVisible = false
-                        homeLoadingError.isVisible = false
-                        homeMasterRecycler.isVisible = true
+                        homeLoading.isGone = true
                         homeLoadingShimmer.stopShimmer()
+                        homeLoadingError.isGone = true
+                        homeMasterRecycler.isVisible = true
                     }
                     is Resource.Loading -> {
                         homeLoadingShimmer.startShimmer()
+                        homeLoadingShimmer.isVisible = true
                         homeLoading.isVisible = true
-                        homeMasterRecycler.isVisible = false
-                        homeLoadingError.isVisible = false
+                        homeMasterRecycler.isGone = true
+                        homeLoadingError.isGone = true
                     }
                     is Resource.Failure -> {
                         homeLoadingShimmer.stopShimmer()
-                        homeLoading.isVisible = false
+                        homeLoading.isGone = true
                         homeLoadingError.isVisible = true
                         resultErrorText.text = data.errorString
                     }
@@ -142,13 +166,77 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
         }
         
         binding.homeSearchIcon.setOnClickListener {
-            activity?.navigate(R.id.navigation_search)
-        }
-        
-        binding.homeAvatar.setOnClickListener {
-            activity?.navigate(R.id.navigation_account)
+            binding.homeStickyLogo.isGone = true
+            binding.homeHeaderSpacer.isGone = true
+            binding.homeSearchIcon.isGone = true
+            binding.homeAvatar.isGone = true
+            
+            binding.homeSearchBar.isVisible = true
+            binding.homeSearchEdittext.requestFocus()
+            showInputMethod(binding.homeSearchEdittext)
         }
 
+        binding.homeSearchClose.setOnClickListener {
+            binding.homeSearchEdittext.text = null
+            binding.homeSearchBar.isGone = true
+            hideKeyboard()
+            
+            binding.homeStickyLogo.isVisible = true
+            binding.homeHeaderSpacer.isVisible = true
+            binding.homeSearchIcon.isVisible = true
+            binding.homeAvatar.isVisible = true
+        }
+
+        binding.homeSearchEdittext.addTextChangedListener { text ->
+            liveStreamViewModel.search(text?.toString() ?: "")
+        }
+
+        loadAvatar(binding)
+        MainActivity.reloadAccountEvent += ::reloadAvatarObserver
+
         liveStreamViewModel.load(false)
+    }
+
+    private fun reloadAvatarObserver(reload: Boolean) {
+        loadAvatar(binding ?: return)
+    }
+
+    override fun onDestroyView() {
+        MainActivity.reloadAccountEvent -= ::reloadAvatarObserver
+        super.onDestroyView()
+    }
+
+    private fun loadAvatar(binding: FragmentHomeBinding) {
+        val context = context ?: return
+        ioSafe {
+            try {
+                val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
+                val userId = if (email.isNotEmpty()) email.substringBefore("@") else ""
+                val account = DataStoreHelper.getCurrentAccount() ?: DataStoreHelper.getDefaultAccount(context)
+
+                main {
+                    val avatarView = binding.homeAvatar
+                    if (account.customImage != null) {
+                        avatarView.loadImage(account.image)
+                        avatarView.background = null
+                    } else {
+                        val backgrounds = listOf(
+                            R.drawable.profile_bg_blue,
+                            R.drawable.profile_bg_dark_blue,
+                            R.drawable.profile_bg_orange,
+                            R.drawable.profile_bg_pink,
+                            R.drawable.profile_bg_purple,
+                            R.drawable.profile_bg_red,
+                            R.drawable.profile_bg_teal
+                        )
+                        val bgIndex = if (userId.isNotEmpty()) userId.hashCode().absoluteValue % backgrounds.size else 0
+                        avatarView.setBackgroundResource(backgrounds[bgIndex])
+                        avatarView.setImageResource(R.drawable.ic_outline_account_circle_24)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }

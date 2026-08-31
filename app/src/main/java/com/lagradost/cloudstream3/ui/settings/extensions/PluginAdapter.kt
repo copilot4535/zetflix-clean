@@ -20,6 +20,7 @@ import com.lagradost.cloudstream3.ui.BaseDiffCallback
 import com.lagradost.cloudstream3.ui.NoStateAdapter
 import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.newSharedPool
+import com.lagradost.cloudstream3.utils.AdBlocker
 import com.lagradost.cloudstream3.utils.AppContextUtils.html
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.SubtitleHelper.getNameNextToFlagEmoji
@@ -116,7 +117,7 @@ class PluginAdapter(
                 binding.actionSettings.isVisible = true
                 binding.actionSettings.setOnClickListener {
                     try {
-                        plugin.openSettings?.invoke(itemView.context)
+                        plugin.openSettings?.invoke(AdBlocker.SafeContext(itemView.context))
                     } catch (e: Throwable) {
                         Log.e(
                             "PluginAdapter",
