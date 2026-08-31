@@ -8,6 +8,7 @@ import com.lagradost.cloudstream3.ui.auth.ZetFlixLoginActivity
 import android.content.Intent
 import androidx.activity.viewModels
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator.BiometricCallback
+import com.lagradost.cloudstream3.utils.UIHelper.enableEdgeToEdgeCompat
 import com.lagradost.cloudstream3.utils.UIHelper.openActivity
 
 class AccountSelectActivity : FragmentActivity(), BiometricCallback {
@@ -16,6 +17,7 @@ class AccountSelectActivity : FragmentActivity(), BiometricCallback {
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdgeCompat()
         super.onCreate(savedInstanceState)
 
         // Enforce ZetFlix authentication

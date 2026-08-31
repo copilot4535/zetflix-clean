@@ -19,6 +19,32 @@
 
     <PreferenceCategory android:title="@string/category_general">
         <Preference
+            android:icon="@drawable/ic_battery"
+            android:key="@string/battery_optimisation_key"
+            android:title="@string/battery_dialog_title" />
+
+        <Preference
+            android:icon="@drawable/ic_baseline_add_24"
+            android:key="@string/override_site_key"
+            android:summary="@string/add_site_summary"
+            android:title="@string/add_site_pref" />
+
+        <Preference
+            android:icon="@drawable/ic_baseline_dns_24"
+            android:key="@string/dns_key"
+            android:summary="@string/dns_pref_summary"
+            android:title="@string/dns_pref" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_github_logo"
+            android:key="@string/jsdelivr_proxy_key"
+            android:summary="@string/jsdelivr_proxy_summary"
+            android:title="@string/jsdelivr_proxy" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/category_downloads">
+        <Preference
             android:icon="@drawable/netflix_download"
             android:key="@string/download_path_key"
             android:title="@string/download_path_pref" />
@@ -46,30 +72,6 @@
             app:min="1"
             app:seekBarIncrement="1"
             app:showSeekBarValue="true" />
-
-        <Preference
-            android:icon="@drawable/ic_battery"
-            android:key="@string/battery_optimisation_key"
-            android:title="@string/battery_dialog_title" />
-
-        <Preference
-            android:icon="@drawable/ic_baseline_add_24"
-            android:key="@string/override_site_key"
-            android:summary="@string/add_site_summary"
-            android:title="@string/add_site_pref" />
-
-        <Preference
-            android:icon="@drawable/ic_baseline_dns_24"
-            android:key="@string/dns_key"
-            android:summary="@string/dns_pref_summary"
-            android:title="@string/dns_pref" />
-
-        <SwitchPreference
-            android:defaultValue="false"
-            android:icon="@drawable/ic_github_logo"
-            android:key="@string/jsdelivr_proxy_key"
-            android:summary="@string/jsdelivr_proxy_summary"
-            android:title="@string/jsdelivr_proxy" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/category_player">

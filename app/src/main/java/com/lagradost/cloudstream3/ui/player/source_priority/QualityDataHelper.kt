@@ -48,7 +48,7 @@ object QualityDataHelper {
         None(R.string.none, false),
         WiFi(R.string.wifi, true),
         Data(R.string.mobile_data, true),
-        Download(R.string.download, true)
+        Download(R.string.title_downloads, true)
     }
 
     data class QualityProfile(

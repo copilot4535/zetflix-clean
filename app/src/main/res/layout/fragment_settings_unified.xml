@@ -47,13 +47,32 @@
                         style="@style/ZetFlixSettingsCategoryHeader"
                         android:text="@string/category_general" />
 
-                    <include android:id="@+id/row_download_path" layout="@layout/preference_zetflix_row" />
-                    <include android:id="@+id/row_download_parallel" layout="@layout/preference_zetflix_row" />
-                    <include android:id="@+id/row_download_concurrent" layout="@layout/preference_zetflix_row" />
                     <include android:id="@+id/row_battery" layout="@layout/preference_zetflix_row" />
                     <include android:id="@+id/row_override_site" layout="@layout/preference_zetflix_row" />
                     <include android:id="@+id/row_dns" layout="@layout/preference_zetflix_row" />
                     <include android:id="@+id/row_jsdelivr" layout="@layout/preference_zetflix_switch" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Downloads Settings Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_downloads"
+                style="@style/ZetFlixSettingsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/ZetFlixSettingsCategoryHeader"
+                        android:text="@string/category_downloads" />
+
+                    <include android:id="@+id/row_download_path" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_download_parallel" layout="@layout/preference_zetflix_row" />
+                    <include android:id="@+id/row_download_concurrent" layout="@layout/preference_zetflix_row" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

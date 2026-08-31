@@ -17,6 +17,7 @@ import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.plugins.PluginManager
+import com.lagradost.cloudstream3.utils.UIHelper.enableEdgeToEdgeCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -31,6 +32,7 @@ class ZetFlixLoadingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         CommonActivity.loadThemes(this)
+        enableEdgeToEdgeCompat()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_zetflix_loading)
 

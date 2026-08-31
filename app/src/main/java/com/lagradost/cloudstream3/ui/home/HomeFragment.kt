@@ -56,6 +56,7 @@ import com.lagradost.cloudstream3.ui.search.SearchHelper.handleSearchClickCallba
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
+import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
 import com.lagradost.cloudstream3.utils.AppContextUtils.getApiProviderLangSettings
 import com.lagradost.cloudstream3.utils.AppContextUtils.isNetworkAvailable
@@ -70,6 +71,7 @@ import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.utils.Coroutines.main
 import com.lagradost.cloudstream3.utils.EmptyEvent
+import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.SubtitleHelper.getFlagFromIso
 import com.lagradost.cloudstream3.utils.UIHelper.colorFromAttribute
 import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
@@ -485,6 +487,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
     override fun onDestroyView() {
         (activity as? ComponentActivity)?.detachBackPressedCallback("HomeFragment_BackPress")
         bottomSheetDialog?.ownHide()
+        MainActivity.reloadAccountEvent -= ::reloadAvatarObserver
         super.onDestroyView()
     }
 
@@ -494,6 +497,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
 
     private var bottomSheetDialog: BottomSheetDialog? = null
     private var homeMasterAdapter: HomeParentItemAdapterPreview? = null
+
+    private fun reloadAvatarObserver(reload: Boolean) {
+        loadAvatar(binding ?: return)
+    }
 
     override fun fixLayout(view: View) {
         fixSystemBarsPadding(
@@ -689,30 +696,18 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         homeViewModel.loadAndCancel(DataStoreHelper.currentHomePage, false)
 
         loadAvatar(binding)
+
+        MainActivity.reloadAccountEvent += ::reloadAvatarObserver
     }
 
     private fun loadAvatar(binding: FragmentHomeBinding) {
         val context = context ?: return
         ioSafe {
             try {
-                val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
-                val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
+                val account = DataStoreHelper.getCurrentAccount() ?: DataStoreHelper.getDefaultAccount(context)
 
                 main {
-                    val avatarView = binding.homeAvatar
-                    val backgrounds = listOf(
-                        R.drawable.profile_bg_blue,
-                        R.drawable.profile_bg_dark_blue,
-                        R.drawable.profile_bg_orange,
-                        R.drawable.profile_bg_pink,
-                        R.drawable.profile_bg_purple,
-                        R.drawable.profile_bg_red,
-                        R.drawable.profile_bg_teal
-                    )
-                    val bgIndex =
-                        if (username.isNotEmpty()) username.hashCode().absoluteValue % backgrounds.size else 0
-                    avatarView.setBackgroundResource(backgrounds[bgIndex])
-                    avatarView.setImageResource(R.drawable.ic_outline_account_circle_24)
+                    binding.homeAvatar.loadImage(account.image)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
