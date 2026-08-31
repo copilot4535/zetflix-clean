@@ -704,10 +704,29 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         val context = context ?: return
         ioSafe {
             try {
+                val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
+                val userId = if (email.isNotEmpty()) email.substringBefore("@") else ""
                 val account = DataStoreHelper.getCurrentAccount() ?: DataStoreHelper.getDefaultAccount(context)
 
                 main {
-                    binding.homeAvatar.loadImage(account.image)
+                    val avatarView = binding.homeAvatar
+                    if (account.customImage != null) {
+                        avatarView.loadImage(account.image)
+                        avatarView.background = null
+                    } else {
+                        val backgrounds = listOf(
+                            R.drawable.profile_bg_blue,
+                            R.drawable.profile_bg_dark_blue,
+                            R.drawable.profile_bg_orange,
+                            R.drawable.profile_bg_pink,
+                            R.drawable.profile_bg_purple,
+                            R.drawable.profile_bg_red,
+                            R.drawable.profile_bg_teal
+                        )
+                        val bgIndex = if (userId.isNotEmpty()) userId.hashCode().absoluteValue % backgrounds.size else 0
+                        avatarView.setBackgroundResource(backgrounds[bgIndex])
+                        avatarView.setImageResource(R.drawable.ic_outline_account_circle_24)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

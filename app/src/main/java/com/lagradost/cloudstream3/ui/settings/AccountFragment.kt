@@ -127,18 +127,50 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
                 main {
                     val header = binding.accountHeader
                     
-                    val displayName = if (account.name == getString(R.string.default_account) && email.isNotEmpty()) {
-                        email
-                    } else {
-                        account.name
-                    }
-                    header.accountUsername.text = displayName
+                    // User ID: exclude everything after @
+                    val userId = if (email.isNotEmpty()) email.substringBefore("@") else ""
+                    header.accountUsername.text = userId
                     header.accountEmail.text = email
                     
-                    header.accountAvatar.loadImage(account.image)
+                    val backgrounds = listOf(
+                        R.drawable.profile_bg_blue,
+                        R.drawable.profile_bg_dark_blue,
+                        R.drawable.profile_bg_orange,
+                        R.drawable.profile_bg_pink,
+                        R.drawable.profile_bg_purple,
+                        R.drawable.profile_bg_red,
+                        R.drawable.profile_bg_teal
+                    )
+
+                    if (account.customImage != null) {
+                        header.accountAvatar.loadImage(account.image)
+                        header.accountAvatar.background = null
+                    } else {
+                        val bgIndex = if (userId.isNotEmpty()) userId.hashCode().absoluteValue % backgrounds.size else 0
+                        header.accountAvatar.setBackgroundResource(backgrounds[bgIndex])
+                        header.accountAvatar.setImageResource(R.drawable.ic_outline_account_circle_24)
+                    }
                     
                     val clickListener = View.OnClickListener {
-                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        val options = if (account.customImage != null) {
+                            arrayOf("Change Photo", "Remove Photo", "Cancel")
+                        } else {
+                            arrayOf("Upload Photo", "Cancel")
+                        }
+
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Profile Photo")
+                            .setItems(options) { _, which ->
+                                when (options[which]) {
+                                    "Change Photo", "Upload Photo" -> {
+                                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                    }
+                                    "Remove Photo" -> {
+                                        updateAccount(account.copy(customImage = null))
+                                    }
+                                }
+                            }
+                            .show()
                     }
                     
                     header.accountAvatar.setOnClickListener(clickListener)
