@@ -2,12 +2,17 @@ package com.lagradost.cloudstream3.ui.settings
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
+import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentAccountBinding
 import com.lagradost.cloudstream3.databinding.PreferenceZetflixSwitchBinding
 import com.lagradost.cloudstream3.ui.BaseFragment
+import com.lagradost.cloudstream3.ui.account.AccountViewModel
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
@@ -15,13 +20,35 @@ import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.Coroutines.main
+import com.lagradost.cloudstream3.utils.DataStoreHelper
+import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
 import com.lagradost.cloudstream3.utils.ZetFlixSessionManager
+import com.lagradost.cloudstream3.utils.saveUriToInternalStorage
 import kotlin.math.absoluteValue
 
 class AccountFragment : BaseFragment<FragmentAccountBinding>(
     BindingCreator.Inflate(FragmentAccountBinding::inflate)
 ), BiometricAuthenticator.BiometricCallback {
+
+    private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            val context = context ?: return@registerForActivityResult
+            val account = DataStoreHelper.getCurrentAccount() ?: DataStoreHelper.getDefaultAccount(context)
+            val fileName = "profile_${account.keyIndex}_${System.currentTimeMillis()}.jpg"
+            val path = saveUriToInternalStorage(context, uri, fileName)
+            if (path != null) {
+                updateAccount(account.copy(customImage = path))
+            }
+        }
+    }
+
+    private fun updateAccount(account: DataStoreHelper.Account) {
+        val context = context ?: return
+        val viewModel = ViewModelProvider(requireActivity())[AccountViewModel::class.java]
+        viewModel.handleAccountUpdate(account, context)
+        loadUserData(binding ?: return)
+    }
 
     override fun fixLayout(view: View) {
         fixSystemBarsPadding(
@@ -94,14 +121,16 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
         ioSafe {
             try {
                 val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
-                val username = if (email.isNotEmpty()) email.substringBefore("@") else ""
+                val account = DataStoreHelper.getCurrentAccount() ?: DataStoreHelper.getDefaultAccount(context)
 
                 main {
                     val header = binding.accountHeader
-                    header.accountUsername.text = username
+                    
+                    // User ID: exclude @gmail.com
+                    val userId = email.substringBefore("@")
+                    header.accountUsername.text = userId
                     header.accountEmail.text = email
                     
-                    val avatarView = header.accountAvatar
                     val backgrounds = listOf(
                         R.drawable.profile_bg_blue,
                         R.drawable.profile_bg_dark_blue,
@@ -111,9 +140,44 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
                         R.drawable.profile_bg_red,
                         R.drawable.profile_bg_teal
                     )
-                    val bgIndex = if (username.isNotEmpty()) username.hashCode().absoluteValue % backgrounds.size else 0
-                    avatarView.setBackgroundResource(backgrounds[bgIndex])
-                    avatarView.setImageResource(R.drawable.ic_outline_account_circle_24)
+
+                    fun updateAvatarUI() {
+                        if (account.customImage != null) {
+                            header.accountAvatar.loadImage(account.image)
+                            header.accountAvatar.background = null
+                        } else {
+                            val bgIndex = if (userId.isNotEmpty()) userId.hashCode().absoluteValue % backgrounds.size else 0
+                            header.accountAvatar.setBackgroundResource(backgrounds[bgIndex])
+                            header.accountAvatar.setImageResource(R.drawable.ic_outline_account_circle_24)
+                        }
+                    }
+
+                    updateAvatarUI()
+
+                    val clickListener = View.OnClickListener {
+                        val options = if (account.customImage != null) {
+                            arrayOf("Change Photo", "Remove Photo", "Cancel")
+                        } else {
+                            arrayOf("Upload Photo", "Cancel")
+                        }
+
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Profile Photo")
+                            .setItems(options) { _, which ->
+                                when (options[which]) {
+                                    "Change Photo", "Upload Photo" -> {
+                                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                    }
+                                    "Remove Photo" -> {
+                                        updateAccount(account.copy(customImage = null))
+                                    }
+                                }
+                            }
+                            .show()
+                    }
+
+                    header.accountAvatar.setOnClickListener(clickListener)
+                    header.editAvatarIcon.setOnClickListener(clickListener)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

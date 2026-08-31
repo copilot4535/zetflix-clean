@@ -38,3 +38,20 @@ fun drawableToBitmap(drawable: Drawable): Bitmap? {
         }
     }
 }
+
+fun saveUriToInternalStorage(context: Context, uri: android.net.Uri, fileName: String): String? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val file = java.io.File(context.filesDir, fileName)
+        val outputStream = java.io.FileOutputStream(file)
+        inputStream?.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+        file.absolutePath
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
