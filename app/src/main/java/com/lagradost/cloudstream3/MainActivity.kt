@@ -667,20 +667,20 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
 
-        // backup when we update the app, I don't trust myself to not boot lock users, might want to make this a setting?
-        safe {
+        // backup when we update the app
+        ioSafe {
             val appVer = BuildConfig.VERSION_NAME
             val lastAppAutoBackup: String = getKey<String>("VERSION_NAME") ?: ""
             if (appVer != lastAppAutoBackup) {
                 setKey("VERSION_NAME", BuildConfig.VERSION_NAME)
-                if (lastAppAutoBackup.isEmpty()) return@safe
+                if (lastAppAutoBackup.isEmpty()) return@ioSafe
 
                 safe {
-                    backup(this)
+                    backup(this@MainActivity)
                 }
                 safe {
                     // Recompile oat on new version
-                    PluginManager.deleteAllOatFiles(this)
+                    PluginManager.deleteAllOatFiles(this@MainActivity)
                 }
             }
         }

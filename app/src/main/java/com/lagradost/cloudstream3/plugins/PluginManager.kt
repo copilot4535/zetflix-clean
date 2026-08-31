@@ -59,8 +59,10 @@ import com.lagradost.cloudstream3.utils.downloader.DownloadFileManagement.saniti
 import com.lagradost.cloudstream3.utils.extractorApis
 import com.lagradost.cloudstream3.utils.txt
 import dalvik.system.PathClassLoader
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
@@ -272,7 +274,7 @@ object PluginManager {
     @Suppress("FunctionName")
     @InternalAPI
     @Throws
-    suspend fun ___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(activity: Activity) {
+    suspend fun ___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(activity: Activity) = withContext(Dispatchers.IO) {
         assertNonRecursiveCallstack()
 
         // Load all plugins as fast as possible!
@@ -462,7 +464,7 @@ object PluginManager {
     @Suppress("FunctionName")
     @InternalAPI
     @Throws
-    suspend fun ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(context: Context) {
+    suspend fun ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(context: Context) = withContext(Dispatchers.IO) {
         assertNonRecursiveCallstack()
 
         // Load all plugins as fast as possible!
@@ -506,7 +508,7 @@ object PluginManager {
     @Suppress("FunctionName")
     @InternalAPI
     @Throws
-    suspend fun ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllLocalPlugins(context: Context, forceReload: Boolean) {
+    suspend fun ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllLocalPlugins(context: Context, forceReload: Boolean) = withContext(Dispatchers.IO) {
         assertNonRecursiveCallstack()
 
         val dir = File(LOCAL_PLUGINS_PATH)
@@ -518,7 +520,7 @@ object PluginManager {
                 // We have tried to load local plugins, but exit early.
                 // This needs to be true to prevent the downloader waiting for plugins.
                 loadedLocalPlugins = true
-                return
+                return@withContext
             }
         }
 
@@ -593,13 +595,13 @@ object PluginManager {
     /**
      * @return True if successful, false if not
      * */
-    private suspend fun loadPlugin(context: Context, file: File, data: PluginData, quiet: Boolean = false): Boolean {
+    private suspend fun loadPlugin(context: Context, file: File, data: PluginData, quiet: Boolean = false): Boolean = withContext(Dispatchers.IO) {
         val fileName = file.nameWithoutExtension
         val filePath = file.absolutePath
         currentlyLoading = fileName
         Log.i(TAG, "Loading plugin: $data")
 
-        return try {
+        try {
             // In case of Android 14+ then
             try {
                 // Set the file as read-only and log if it fails
@@ -616,7 +618,7 @@ object PluginManager {
             loader.getResourceAsStream("manifest.json").use { stream ->
                 if (stream == null) {
                     Log.e(TAG, "Failed to load plugin  $fileName: No manifest found")
-                    return false
+                    return@withContext false
                 }
                 InputStreamReader(stream).use { reader ->
                     manifest = parseJson<BasePlugin.Manifest>(reader.readText())
@@ -641,7 +643,7 @@ object PluginManager {
 
             if (plugins.containsKey(filePath)) {
                 Log.i(TAG, "Plugin with name $name already exists")
-                return true
+                return@withContext true
             }
 
             pluginInstance.filename = file.absolutePath
@@ -680,11 +682,13 @@ object PluginManager {
         } catch (e: Throwable) {
             Log.e(TAG, "Failed to load $file: ${Log.getStackTraceString(e)}")
             if (!quiet) {
-                showToast(
-                    // context.getActivity(), // we are not always on the main thread
-                    context.getString(R.string.plugin_load_fail).format(fileName),
-                    Toast.LENGTH_LONG
-                )
+                main {
+                    showToast(
+                        // context.getActivity(), // we are not always on the main thread
+                        context.getString(R.string.plugin_load_fail).format(fileName),
+                        Toast.LENGTH_LONG
+                    )
+                }
             }
             currentlyLoading = null
             false
