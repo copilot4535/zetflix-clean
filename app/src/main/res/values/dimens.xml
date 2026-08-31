@@ -1,21 +1,39 @@
 <resources>
     <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
-    <dimen name="rounded_image_radius">10dp</dimen>
-    <dimen name="rounded_button_radius">4dp</dimen>
+    <dimen name="activity_horizontal_margin">@dimen/grid_2</dimen>
+    <dimen name="activity_vertical_margin">@dimen/grid_2</dimen>
+    <dimen name="rounded_image_radius">@dimen/grid_1_5</dimen>
+    <dimen name="rounded_button_radius">@dimen/grid_1_5</dimen>
+    <dimen name="radius_pill">100dp</dimen>
+
+    <dimen name="grid_0_5">4dp</dimen>
+    <dimen name="grid_1">8dp</dimen>
+    <dimen name="grid_1_5">12dp</dimen>
+    <dimen name="grid_2">16dp</dimen>
+    <dimen name="grid_3">24dp</dimen>
+    <dimen name="grid_4">32dp</dimen>
+    <dimen name="grid_6">48dp</dimen>
+    <dimen name="grid_7">56dp</dimen>
+    <dimen name="grid_8">64dp</dimen>
 
     <dimen name="navbar_height">0dp</dimen>
-    <dimen name="card_corner_radius">2dp</dimen>
-    <dimen name="result_padding">15dp</dimen>
+    <dimen name="card_corner_radius">@dimen/grid_1</dimen>
+    <dimen name="result_padding">@dimen/grid_2</dimen>
 
-    <dimen name="loading_line_height">15dp</dimen>
-    <dimen name="loading_radius">3dp</dimen>
-    <dimen name="loading_margin">15dp</dimen>
+    <dimen name="loading_line_height">@dimen/grid_2</dimen>
+    <dimen name="loading_radius">@dimen/grid_0_5</dimen>
+    <dimen name="loading_margin">@dimen/grid_2</dimen>
+
+    <dimen name="shimmer_card_width">125dp</dimen>
+    <dimen name="shimmer_card_height">200dp</dimen>
+    <dimen name="shimmer_card_width_large">148dp</dimen>
+    <dimen name="shimmer_card_height_large">234dp</dimen>
+    <dimen name="shimmer_translation_x">164dp</dimen>
+    <dimen name="shimmer_translation_x_neg">-164dp</dimen>
 
     <integer name="loading_time">2000</integer>
 
-    <dimen name="storage_radius">3dp</dimen>
+    <dimen name="storage_radius">@dimen/grid_0_5</dimen>
     <dimen name="navbar_width">0dp</dimen>
 
     <dimen name="nav_view_height">70dp</dimen>

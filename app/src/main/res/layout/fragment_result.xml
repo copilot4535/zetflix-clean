@@ -592,7 +592,7 @@
                                 style="@style/WhiteButton"
                                 android:layout_width="match_parent"
                                 android:layout_margin="0dp"
-                                android:backgroundTint="#e50914"
+                                android:backgroundTint="@color/zetflix_accent"
                                 android:visibility="visible" />
 
                             <LinearLayout

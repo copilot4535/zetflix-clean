@@ -112,6 +112,8 @@ import com.lagradost.cloudstream3.utils.Event
 import com.lagradost.cloudstream3.utils.InAppUpdater.runAutoUpdate
 import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showBottomDialog
 import com.lagradost.cloudstream3.utils.SnackbarHelper.showSnackbar
+import com.lagradost.cloudstream3.utils.UIHelper.hideSystemUI
+import com.lagradost.cloudstream3.utils.UIHelper.showSystemUI
 import com.lagradost.cloudstream3.utils.UIHelper.changeStatusBarState
 import com.lagradost.cloudstream3.utils.UIHelper.checkWrite
 import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
@@ -298,12 +300,19 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
     private fun updateNavBar(destination: NavDestination) {
         this.hideKeyboard()
 
+        val isPlayer = listOf(
+            R.id.navigation_results_phone,
+            R.id.navigation_player
+        ).contains(destination.id)
+
+        if (isPlayer) {
+            hideSystemUI()
+        } else {
+            showSystemUI()
+        }
+
         // Fucks up anime info layout since that has its own layout
-        binding?.castMiniControllerHolder?.isVisible =
-            !listOf(
-                R.id.navigation_results_phone,
-                R.id.navigation_player
-            ).contains(destination.id)
+        binding?.castMiniControllerHolder?.isVisible = !isPlayer
 
         val isNavVisible = listOf(
             R.id.navigation_home,
@@ -382,6 +391,20 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         }
 
         override fun onSessionResuming(session: Session, s: String) {
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            val navHostFragment =
+                supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+            val currentDestination = navHostFragment?.navController?.currentDestination
+            if (currentDestination?.id == R.id.navigation_player || currentDestination?.id == R.id.navigation_results_phone) {
+                hideSystemUI()
+            } else {
+                showSystemUI()
+            }
         }
     }
 

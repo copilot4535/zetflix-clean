@@ -63,8 +63,8 @@
                 android:inputType="text"
                 android:paddingEnd="12dp"
                 android:paddingStart="12dp"
-                android:textColor="#ffffff"
-                android:textColorHint="#80ffffff" />
+                android:textColor="@color/zetflix_text_primary"
+                android:textColorHint="@color/zetflix_text_hint" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -80,8 +80,8 @@
                     android:inputType="textPassword"
                     android:paddingEnd="44dp"
                     android:paddingStart="12dp"
-                    android:textColor="#ffffff"
-                    android:textColorHint="#80ffffff" />
+                    android:textColor="@color/zetflix_text_primary"
+                    android:textColorHint="@color/zetflix_text_hint" />
 
                 <ImageView
                     android:id="@+id/password_visibility_toggle"
@@ -102,7 +102,7 @@
                 android:background="@drawable/zetflix_button_bg"
                 android:text="@string/zetflix_login_button"
                 android:textAllCaps="false"
-                android:textColor="#ffffff"
+                android:textColor="@color/zetflix_text_primary"
                 android:textSize="18sp"
                 app:backgroundTint="@null" />
 
@@ -115,7 +115,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:text="@string/zetflix_register_toggle"
-                android:textColor="#ffffff"
+                android:textColor="@color/zetflix_text_primary"
                 android:textSize="14sp" />
 
             <TextView

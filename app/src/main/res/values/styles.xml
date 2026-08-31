@@ -104,7 +104,7 @@
 
     <style name="ChipFilledSemiTransparent" parent="@style/ChipFilled">
         <item name="chipBackgroundColor">@color/transparent</item>
-        <item name="chipSurfaceColor">#33FFFFFF</item>
+        <item name="chipSurfaceColor">@color/zetflix_white_20</item>
         <item name="backgroundColor">@color/transparent</item>
         <item name="android:textColor">@color/textColor</item>
         <item name="textColor">@color/textColor</item>
@@ -120,8 +120,8 @@
 
     <style name="DubButton" parent="@style/SearchBox">
         <item name="android:text">@string/app_dubbed_text</item>
-        <item name="textColor">?attr/primaryGrayBackground</item>
-        <item name="android:textColor">?attr/primaryGrayBackground</item>
+        <item name="textColor">@color/zetflix_text_primary</item>
+        <item name="android:textColor">@color/zetflix_text_primary</item>
     </style>
 
     <style name="SubButton" parent="@style/SearchBox">
@@ -195,7 +195,9 @@
         <item name="android:windowMinWidthMinor">@dimen/abc_dialog_min_width_minor</item>
         <item name="android:windowBackground">@drawable/dialog__window_background</item>
         <item name="textAllCaps">false</item>
-        <item name="android:textColorPrimary">?attr/grayTextColor</item>
+        <item name="android:textColorPrimary">?attr/textColor</item>
+        <item name="colorAccent">@color/zetflix_accent</item>
+        <item name="colorControlActivated">@color/zetflix_accent</item>
 
         <item name="buttonBarPositiveButtonStyle">@style/WhiteButton.Dialog</item>
         <item name="buttonBarNegativeButtonStyle">@style/BlackButton.Dialog</item>
@@ -211,8 +213,11 @@
         <item name="android:fontFamily">@font/google_sans</item>
     </style>
 
-    <style name="AppButtonStyle" parent="android:Widget.Holo.Button">
+    <style name="AppButtonStyle" parent="Widget.MaterialComponents.Button">
         <item name="android:fontFamily">@font/google_sans</item>
+        <item name="backgroundTint">@color/zetflix_accent</item>
+        <item name="android:textColor">@color/zetflix_text_primary</item>
+        <item name="cornerRadius">@dimen/rounded_button_radius</item>
     </style>
 
     <style name="AppEditStyle" parent="android:Widget.EditText">
@@ -232,6 +237,9 @@
 
     <style name="AppMaterialButtonStyle" parent="Widget.MaterialComponents.Button">
         <item name="android:fontFamily">@font/google_sans</item>
+        <item name="backgroundTint">@color/zetflix_accent</item>
+        <item name="android:textColor">@color/zetflix_text_primary</item>
+        <item name="cornerRadius">@dimen/rounded_button_radius</item>
     </style>
 
     <style name="Theme.Widget.Tabs" parent="Widget.MaterialComponents.TabLayout.Colored">
@@ -322,15 +330,17 @@
 
     <style name="SettingsItem">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">50dp</item>
+        <item name="android:layout_height">56dp</item>
         <item name="android:gravity">center_vertical</item>
-        <item name="android:paddingStart">20dp</item>
-        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
         <item name="android:selectAllOnFocus">true</item>
         <item name="android:background">?attr/focusBackground</item>
         <item name="android:textColor">?attr/textColor</item>
-        <item name="android:textAppearance">?android:attr/textAppearanceListItemSmall</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/google_sans</item>
         <item name="drawableEndCompat">@drawable/ic_baseline_keyboard_arrow_right_24</item>
+        <item name="drawableTint">@color/zetflix_text_secondary</item>
     </style>
 
     <style name="WatchHeaderText">
@@ -382,11 +392,11 @@
     </style>
 
     <style name="WhiteButton" parent="NiceButton">
-        <item name="strokeColor">?attr/iconGrayBackground</item>
-        <item name="backgroundTint">?attr/textColor</item>
-        <item name="iconTint">?attr/iconGrayBackground</item>
-        <item name="android:textColor">?attr/iconGrayBackground</item>
-        <item name="rippleColor">?attr/primaryBlackBackground</item>
+        <item name="backgroundTint">@color/zetflix_accent</item>
+        <item name="android:textColor">@color/zetflix_text_primary</item>
+        <item name="iconTint">@color/zetflix_text_primary</item>
+        <item name="rippleColor">@color/video_button_ripple</item>
+        <item name="strokeWidth">0dp</item>
     </style>
 
     <style name="BlackButton.Dialog" parent="BlackButton">
@@ -438,11 +448,12 @@
     </style>
 
     <style name="BlackButton" parent="NiceButton">
-        <item name="strokeColor">?attr/textColor</item>
-        <item name="backgroundTint">?attr/iconGrayBackground</item>
-        <item name="iconTint">?attr/textColor</item>
-        <item name="android:textColor">?attr/textColor</item>
-        <item name="rippleColor">@color/black_button_ripple</item>
+        <item name="backgroundTint">@color/zetflix_surface</item>
+        <item name="android:textColor">@color/zetflix_text_primary</item>
+        <item name="iconTint">@color/zetflix_text_primary</item>
+        <item name="rippleColor">@color/video_button_ripple</item>
+        <item name="strokeColor">@color/zetflix_border</item>
+        <item name="strokeWidth">1dp</item>
     </style>
 
     <style name="SmallBlackButton" parent="BlackButton">
@@ -482,10 +493,10 @@
     <style name="ExtendedFloatingActionButton">
         <item name="elevation">0dp</item>
         <item name="android:textStyle">bold</item>
-        <item name="backgroundTint">#e50914</item>
-        <item name="tint">#ffffff</item>
-        <item name="textColor">#ffffff</item>
-        <item name="iconTint">#ffffff</item>
+        <item name="backgroundTint">@color/zetflix_accent</item>
+        <item name="tint">@color/zetflix_text_primary</item>
+        <item name="textColor">@color/zetflix_text_primary</item>
+        <item name="iconTint">@color/zetflix_text_primary</item>
         <item name="android:layout_margin">16dp</item>
         <item name="android:layout_gravity">end|bottom</item>
         <item name="textAllCaps">false</item>
@@ -498,7 +509,7 @@
         <item name="backgroundTint">@color/toggle_button</item>
         <item name="rippleColor">@color/textColor</item>
         <item name="android:textColor">@color/toggle_button_text</item>
-        <item name="cornerRadius">100dp</item>
+        <item name="cornerRadius">@dimen/radius_pill</item>
         <item name="strokeWidth">1dp</item>
         <item name="strokeColor">@color/toggle_button_outline</item>
         <item name="android:layout_width">wrap_content</item>
@@ -611,7 +622,7 @@
         <item name="castBackground">@color/transparent
         </item>
         <item name="castProgressBarColor">?attr/colorPrimary</item>
-        <item name="castStopButtonDrawable">@drawable/cast_ic_mini_controller_stop</item>'
+        <item name="castStopButtonDrawable">@drawable/cast_ic_mini_controller_stop</item>
         <item name="castLargeStopButtonDrawable">@drawable/cast_ic_mini_controller_stop_large</item>
         <item name="castSkipPreviousButtonDrawable">@drawable/cast_ic_mini_controller_skip_prev
         </item>
@@ -694,10 +705,10 @@
     </style>
 
     <style name="ZetFlixSettingsCard" parent="Widget.MaterialComponents.CardView">
-        <item name="cardBackgroundColor">#1a1a24</item>
+        <item name="cardBackgroundColor">@color/zetflix_surface</item>
         <item name="cardCornerRadius">12dp</item>
         <item name="cardElevation">0dp</item>
-        <item name="strokeColor">#2c2c3a</item>
+        <item name="strokeColor">@color/zetflix_border</item>
         <item name="strokeWidth">1dp</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -707,9 +718,12 @@
     <style name="ZetFlixSettingsCategoryHeader">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">#ffffff</item>
-        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/zetflix_accent</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:layout_marginBottom">12dp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginTop">8dp</item>
     </style>
 </resources>

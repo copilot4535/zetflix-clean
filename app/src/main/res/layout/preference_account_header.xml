@@ -12,7 +12,7 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:padding="2dp"
-        app:strokeColor="#e50914"
+        app:strokeColor="@color/zetflix_accent"
         app:strokeWidth="2dp"
         app:shapeAppearanceOverlay="@style/RoundedImageView"
         android:scaleType="centerCrop"

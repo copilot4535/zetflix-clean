@@ -7,24 +7,30 @@
     <color name="zetflix_border">#2c2c3a</color>           <!-- Borders -->
     <color name="zetflix_text_primary">#ffffff</color>     <!-- Primary text -->
     <color name="zetflix_text_secondary">#a0a0b0</color>   <!-- Secondary text -->
+    <color name="zetflix_text_hint">#80ffffff</color>      <!-- Hint text -->
+    <color name="zetflix_text_high">#e6ffffff</color>      <!-- 90% white -->
+    <color name="zetflix_text_med">#b3ffffff</color>       <!-- 70% white -->
+    <color name="zetflix_white_20">#33ffffff</color>      <!-- 20% white -->
+    <color name="zetflix_white_30">#4dffffff</color>      <!-- 30% white -->
+    <color name="zetflix_accent_50">#80e50914</color>      <!-- 50% red -->
     <color name="zetflix_error">#ff5c5c</color>            <!-- Error text -->
     <color name="zetflix_accent">#e50914</color>           <!-- Brand red -->
 
-    <color name="colorPrimary">#e50914</color>
-    <color name="colorPrimarySecond">@color/colorPrimary</color>
-    <color name="colorSearch">#1a1a24</color>
+    <color name="colorPrimary">@color/zetflix_accent</color>
+    <color name="colorPrimarySecond">@color/zetflix_accent</color>
+    <color name="colorSearch">@color/zetflix_surface</color>
     <color name="colorOngoing">#F53B66</color>
     <color name="colorPrimaryDark">#b0070f</color>
-    <color name="colorAccent">#e50914</color>
+    <color name="colorAccent">@color/zetflix_accent</color>
 
-    <color name="primaryGrayBackground">#0b0b0f</color>
-    <color name="primaryBlackBackground">#000000</color>
-    <color name="iconGrayBackground">#121218</color>
-    <color name="boxItemBackground">#1a1a24</color>
+    <color name="primaryGrayBackground">@color/zetflix_background</color>
+    <color name="primaryBlackBackground">@color/zetflix_background</color>
+    <color name="iconGrayBackground">@color/zetflix_surface_light</color>
+    <color name="boxItemBackground">@color/zetflix_surface</color>
 
-    <color name="textColor">#ffffff</color>
-    <color name="grayTextColor">#a0a0b0</color>
-    <color name="grayShimmer">#DCDCDC</color>
+    <color name="textColor">@color/zetflix_text_primary</color>
+    <color name="grayTextColor">@color/zetflix_text_secondary</color>
+    <color name="grayShimmer">@color/zetflix_surface_light</color>
 
     <color name="searchColorTransparent">#1AFFFFFF</color>
     <color name="transparent">#00000000</color>

@@ -53,6 +53,7 @@ import androidx.core.view.marginRight
 import androidx.core.view.marginTop
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import com.lagradost.cloudstream3.R
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -74,7 +75,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.context
 import com.lagradost.cloudstream3.CommonActivity.activity
 import com.lagradost.cloudstream3.CommonActivity.showToast
-import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.utils.AppContextUtils.isRtl
 import com.lagradost.cloudstream3.utils.Coroutines.main
@@ -435,10 +435,22 @@ object UIHelper {
         overlayCutout: Boolean = true,
         fixIme: Boolean = false
     ) {
-        val initialPaddingLeft = v.paddingLeft
-        val initialPaddingTop = v.paddingTop
-        val initialPaddingRight = v.paddingRight
-        val initialPaddingBottom = v.paddingBottom
+        val initialPaddingLeft =
+            v.getTag(R.id.initial_padding_left) as? Int ?: v.paddingLeft.also {
+                v.setTag(R.id.initial_padding_left, it)
+            }
+        val initialPaddingTop =
+            v.getTag(R.id.initial_padding_top) as? Int ?: v.paddingTop.also {
+                v.setTag(R.id.initial_padding_top, it)
+            }
+        val initialPaddingRight =
+            v.getTag(R.id.initial_padding_right) as? Int ?: v.paddingRight.also {
+                v.setTag(R.id.initial_padding_right, it)
+            }
+        val initialPaddingBottom =
+            v.getTag(R.id.initial_padding_bottom) as? Int ?: v.paddingBottom.also {
+                v.setTag(R.id.initial_padding_bottom, it)
+            }
 
         // edge-to-edge is very buggy on earlier versions so we just
         // handle the status bar here instead.
@@ -455,8 +467,8 @@ object UIHelper {
             val rightCheck = if (view.isRtl()) padLeft else padRight
 
             val insetTypes = WindowInsetsCompat.Type.systemBars() or
-                WindowInsetsCompat.Type.displayCutout() or
-                if (fixIme) WindowInsetsCompat.Type.ime() else 0
+                    WindowInsetsCompat.Type.displayCutout() or
+                    if (fixIme) WindowInsetsCompat.Type.ime() else 0
 
             val insets = windowInsets.getInsets(insetTypes)
 
@@ -468,17 +480,24 @@ object UIHelper {
             )
 
             heightResId?.let {
-                val heightPx = view.resources.getDimensionPixelSize(it)
+                val initialHeight = view.getTag(R.id.initial_height) as? Int
+                    ?: view.resources.getDimensionPixelSize(it).also { h ->
+                        view.setTag(R.id.initial_height, h)
+                    }
                 view.updateLayoutParams {
-                    height = heightPx + (if (padTop) insets.top else 0) + (if (padBottom) insets.bottom else 0)
+                    height =
+                        initialHeight + (if (padTop) insets.top else 0) + (if (padBottom) insets.bottom else 0)
                 }
             }
 
             widthResId?.let {
-                val widthPx = view.resources.getDimensionPixelSize(it)
+                val initialWidth = view.getTag(R.id.initial_width) as? Int
+                    ?: view.resources.getDimensionPixelSize(it).also { w ->
+                        view.setTag(R.id.initial_width, w)
+                    }
                 view.updateLayoutParams {
                     val startInset = if (view.isRtl()) insets.right else insets.left
-                    width = if (startInset > 0) widthPx + startInset else widthPx
+                    width = if (startInset > 0) initialWidth + startInset else initialWidth
                 }
             }
 
@@ -554,6 +573,7 @@ object UIHelper {
     fun Activity.showSystemUI() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val controller = WindowCompat.getInsetsController(window, window.decorView)
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             controller.show(WindowInsetsCompat.Type.systemBars())
             return
         }

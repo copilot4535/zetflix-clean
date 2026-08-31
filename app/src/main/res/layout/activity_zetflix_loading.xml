@@ -5,19 +5,43 @@
     android:layout_height="match_parent"
     android:background="@color/zetflix_background">
 
-    <ImageView
-        android:id="@+id/loading_logo"
-        android:layout_width="280dp"
-        android:layout_height="wrap_content"
-        android:adjustViewBounds="true"
+    <View
+        android:id="@+id/logo_glow"
+        android:layout_width="400dp"
+        android:layout_height="400dp"
         android:alpha="0"
-        android:scaleX="0.8"
-        android:scaleY="0.8"
-        android:src="@drawable/ic_zetflix_logo_text"
+        android:background="@drawable/logo_glow_gradient"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmer_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shimmer_auto_start="false"
+        app:shimmer_base_alpha="1"
+        app:shimmer_dropoff="0.5"
+        app:shimmer_duration="1500"
+        app:shimmer_highlight_alpha="0.3"
+        app:shimmer_intensity="0.3">
+
+        <ImageView
+            android:id="@+id/loading_logo"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:alpha="0"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
+            android:src="@drawable/ic_zetflix_logo_text" />
+
+    </com.facebook.shimmer.ShimmerFrameLayout>
 
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/loading_progress"

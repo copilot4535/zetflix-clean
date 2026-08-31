@@ -6,6 +6,6 @@
     android:paddingTop="24dp"
     android:paddingBottom="16dp"
     android:text="@string/title_settings"
-    android:textColor="#ffffff"
+    android:textColor="@color/zetflix_text_primary"
     android:textSize="26sp"
     android:textStyle="bold" />

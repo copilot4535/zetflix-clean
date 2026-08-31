@@ -18,7 +18,7 @@
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
             app:title="@string/zetflix_account_title"
-            app:titleTextColor="#ffffff" />
+            app:titleTextColor="@color/zetflix_text_primary" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

@@ -43,7 +43,7 @@
                     android:contentDescription="@string/change_providers_img_des"
                     android:padding="8dp"
                     android:src="@drawable/ic_mic"
-                    app:tint="#ffffff" />
+                    app:tint="@color/zetflix_text_primary" />
 
                 <FrameLayout
                     android:layout_width="match_parent"

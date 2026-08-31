@@ -66,8 +66,8 @@
                     android:inputType="phone"
                     android:paddingEnd="12dp"
                     android:paddingStart="12dp"
-                    android:textColor="#ffffff"
-                    android:textColorHint="#80ffffff" />
+                    android:textColor="@color/zetflix_text_primary"
+                    android:textColorHint="@color/zetflix_text_hint" />
             </LinearLayout>
 
             <!-- Email Layout -->
@@ -81,8 +81,8 @@
                 android:inputType="textEmailAddress"
                 android:paddingEnd="12dp"
                 android:paddingStart="12dp"
-                android:textColor="#ffffff"
-                android:textColorHint="#80ffffff" />
+                android:textColor="@color/zetflix_text_primary"
+                android:textColorHint="@color/zetflix_text_hint" />
 
             <!-- Password Layout -->
             <RelativeLayout
@@ -99,8 +99,8 @@
                     android:inputType="textPassword"
                     android:paddingEnd="44dp"
                     android:paddingStart="12dp"
-                    android:textColor="#ffffff"
-                    android:textColorHint="#80ffffff" />
+                    android:textColor="@color/zetflix_text_primary"
+                    android:textColorHint="@color/zetflix_text_hint" />
 
                 <ImageView
                     android:id="@+id/password_visibility_toggle"
@@ -128,8 +128,8 @@
                     android:inputType="textPassword"
                     android:paddingEnd="44dp"
                     android:paddingStart="12dp"
-                    android:textColor="#ffffff"
-                    android:textColorHint="#80ffffff" />
+                    android:textColor="@color/zetflix_text_primary"
+                    android:textColorHint="@color/zetflix_text_hint" />
 
                 <ImageView
                     android:id="@+id/confirm_password_visibility_toggle"
@@ -158,7 +158,7 @@
                 android:background="@drawable/zetflix_button_bg"
                 android:text="@string/zetflix_register_button"
                 android:textAllCaps="false"
-                android:textColor="#ffffff"
+                android:textColor="@color/zetflix_text_primary"
                 android:textSize="18sp"
                 app:backgroundTint="@null" />
 
@@ -171,7 +171,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:text="@string/zetflix_login_toggle"
-                android:textColor="#ffffff"
+                android:textColor="@color/zetflix_text_primary"
                 android:textSize="14sp" />
 
         </LinearLayout>

@@ -36,7 +36,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="15dp"
+                android:layout_marginStart="@dimen/grid_2"
                 android:text="@string/library"
                 android:textColor="?attr/textColor"
                 android:textSize="22sp"
@@ -51,7 +51,7 @@
                 android:contentDescription="@string/change_providers_img_des"
                 android:src="@drawable/ic_baseline_extension_24"
                 android:visibility="gone"
-                app:tint="#ffffff" />
+                app:tint="@color/zetflix_text_primary" />
 
             <ImageView
                 android:id="@+id/library_sort"
@@ -63,7 +63,7 @@
                 android:padding="5dp"
                 android:src="@drawable/ic_baseline_sort_24"
                 android:visibility="gone"
-                app:tint="#ffffff"
+                app:tint="@color/zetflix_text_primary"
                 tools:visibility="visible" />
 
             <ImageView
@@ -76,7 +76,7 @@
                 android:padding="10dp"
                 android:src="@drawable/ic_baseline_filter_list_24"
                 android:visibility="gone"
-                app:tint="#ffffff" />
+                app:tint="@color/zetflix_text_primary" />
 
         </LinearLayout>
 
@@ -142,11 +142,11 @@
             style="@style/ExtendedFloatingActionButton"
             android:layout_gravity="bottom|start"
             android:text="@string/home_random"
-            android:textColor="#ffffff"
+            android:textColor="@color/zetflix_text_primary"
             android:visibility="gone"
             app:icon="@drawable/ic_baseline_play_arrow_24"
-            app:iconTint="#ffffff"
-            app:tint="#ffffff"
+            app:iconTint="@color/zetflix_text_primary"
+            app:tint="@color/zetflix_text_primary"
             tools:ignore="ContentDescription"
             tools:visibility="visible" />
 
@@ -173,12 +173,12 @@
         app:layout_scrollFlags="noScroll"
         app:tabGravity="center"
         app:tabIndicator="@drawable/indicator_background"
-        app:tabIndicatorColor="#e50914"
+        app:tabIndicatorColor="@color/zetflix_accent"
         app:tabIndicatorGravity="center"
         app:tabIndicatorHeight="30dp"
         app:tabMode="scrollable"
         app:tabRippleColor="?attr/textColor"
-        app:tabSelectedTextColor="#ffffff"
+        app:tabSelectedTextColor="@color/zetflix_text_primary"
         app:tabTextAppearance="@style/TabNoCaps"
         app:tabTextColor="?attr/textColor" />
 

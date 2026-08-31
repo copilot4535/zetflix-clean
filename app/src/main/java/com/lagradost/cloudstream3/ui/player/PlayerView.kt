@@ -431,7 +431,7 @@ class PlayerView @JvmOverloads constructor(
         val lp = activity?.window?.attributes
         lp?.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            lp?.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+            lp?.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
         activity?.window?.attributes = lp
         activity?.showSystemUI()

@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="@dimen/grid_2"
             android:orientation="vertical"
             android:paddingTop="40dp"
             app:shimmer_auto_start="true"
@@ -46,29 +46,29 @@
                     android:orientation="horizontal">
 
                     <androidx.cardview.widget.CardView
-                        android:layout_width="125dp"
-                        android:layout_height="200dp"
+                        android:layout_width="@dimen/shimmer_card_width"
+                        android:layout_height="@dimen/shimmer_card_height"
                         android:layout_gravity="center"
                         android:layout_margin="@dimen/loading_margin"
                         android:background="@color/grayShimmer"
-                        android:translationX="-164dp"
+                        android:translationX="@dimen/shimmer_translation_x_neg"
                         app:cardCornerRadius="@dimen/loading_radius" />
 
                     <androidx.cardview.widget.CardView
-                        android:layout_width="148dp"
-                        android:layout_height="234dp"
+                        android:layout_width="@dimen/shimmer_card_width_large"
+                        android:layout_height="@dimen/shimmer_card_height_large"
                         android:layout_gravity="center"
                         android:layout_margin="@dimen/loading_margin"
                         android:background="@color/grayShimmer"
                         app:cardCornerRadius="@dimen/loading_radius" />
 
                     <androidx.cardview.widget.CardView
-                        android:layout_width="125dp"
-                        android:layout_height="200dp"
+                        android:layout_width="@dimen/shimmer_card_width"
+                        android:layout_height="@dimen/shimmer_card_height"
                         android:layout_gravity="center"
                         android:layout_margin="@dimen/loading_margin"
                         android:background="@color/grayShimmer"
-                        android:translationX="164dp"
+                        android:translationX="@dimen/shimmer_translation_x"
                         app:cardCornerRadius="@dimen/loading_radius" />
                 </FrameLayout>
 
@@ -194,7 +194,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:padding="2dp"
-            app:strokeColor="#e50914"
+            app:strokeColor="@color/zetflix_accent"
             app:strokeWidth="1.5dp"
             app:shapeAppearanceOverlay="@style/RoundedImageView"
             android:scaleType="centerCrop"
