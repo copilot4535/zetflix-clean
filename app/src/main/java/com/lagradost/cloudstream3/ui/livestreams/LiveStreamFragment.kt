@@ -119,11 +119,11 @@ class LiveStreamFragment : BaseFragment<FragmentHomeBinding>(
         }
         
         binding.homeSearchIcon.setOnClickListener {
-            activity.navigate(R.id.navigation_search)
+            activity?.navigate(R.id.navigation_search)
         }
         
         binding.homeAvatar.setOnClickListener {
-            activity.navigate(R.id.navigation_account)
+            activity?.navigate(R.id.navigation_account)
         }
 
         liveStreamViewModel.load(false)

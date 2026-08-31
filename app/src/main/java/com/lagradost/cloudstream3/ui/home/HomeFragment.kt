@@ -551,7 +551,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             }
 
             homeSearchIcon.setOnClickListener {
-                activity.navigate(R.id.navigation_search)
+                activity?.navigate(R.id.navigation_search)
             }
 
             homeMasterRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
