@@ -86,8 +86,19 @@ class LiveStreamViewModel : ViewModel() {
                 home?.items?.forEach { list ->
                     val filteredList = context?.filterHomePageListByFilmQuality(list) ?: list
                     
-                    // Filter for Live streams only
-                    val liveOnlyItems = filteredList.list.filter { it.type == TvType.Live }
+                    val listName = list.name.lowercase()
+                    val isLiveCategory = listName.contains("live") || 
+                                         listName.contains("sports") ||
+                                         listName.contains("tv") ||
+                                         listName.contains("channel") ||
+                                         listName.contains("stream") ||
+                                         listName.contains("broadcast")
+
+                    // Filter for Live streams only, OR items in a live category
+                    val liveOnlyItems = filteredList.list.filter { 
+                        it.type == TvType.Live || isLiveCategory 
+                    }
+                    
                     if (liveOnlyItems.isEmpty()) return@forEach
                     
                     val liveOnlyList = filteredList.copy(list = liveOnlyItems)

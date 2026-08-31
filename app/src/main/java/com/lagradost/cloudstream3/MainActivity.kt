@@ -524,7 +524,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         // Check if we are already at the selected destination
         if (navController.currentDestination?.id == destinationId) {
             when (destinationId) {
-                R.id.navigation_home -> {
+                R.id.navigation_home, R.id.navigation_livestreams -> {
                     binding?.root?.findViewById<RecyclerView>(R.id.home_master_recycler)
                         ?.smoothScrollToTop()
                 }
@@ -567,8 +567,8 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         }
         return try {
             navController.navigate(destinationId, null, builder.build())
-            navController.currentDestination?.matchDestination(destinationId) == true
-        } catch (e: IllegalArgumentException) {
+            true
+        } catch (e: Exception) {
             Log.e("NavigationError", "Failed to navigate: ${e.message}")
             false
         }
@@ -1060,7 +1060,12 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     navController
                 )
             }
-
+            setOnItemReselectedListener { item ->
+                onNavDestinationSelected(
+                    item,
+                    navController
+                )
+            }
         }
 
         binding?.navRailView?.apply {
@@ -1071,6 +1076,12 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             setupWithNavController(navController)
 
             setOnItemSelectedListener { item ->
+                onNavDestinationSelected(
+                    item,
+                    navController
+                )
+            }
+            setOnItemReselectedListener { item ->
                 onNavDestinationSelected(
                     item,
                     navController
@@ -1091,18 +1102,10 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 return@setOnLongClickListener recycler != null
             }
 
-
-            view?.findViewById<View?>(R.id.navigation_search)?.setOnLongClickListener {
-                for (recyclerId in arrayOf(
-                    R.id.search_master_recycler,
-                    R.id.search_autofit_results,
-                    R.id.search_history_recycler
-                )) {
-                    val recycler = binding?.root?.findViewById<RecyclerView?>(recyclerId)
-                        ?: return@setOnLongClickListener false
-                    recycler.smoothScrollToPosition(0)
-                }
-                return@setOnLongClickListener true
+            view?.findViewById<View?>(R.id.navigation_livestreams)?.setOnLongClickListener {
+                val recycler = binding?.root?.findViewById<RecyclerView?>(R.id.home_master_recycler)
+                recycler?.smoothScrollToPosition(0)
+                return@setOnLongClickListener recycler != null
             }
 
             view?.findViewById<View?>(R.id.navigation_downloads)?.setOnLongClickListener {

@@ -8,7 +8,6 @@ import android.text.Editable
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isGone
@@ -17,9 +16,6 @@ import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import coil3.ImageLoader
-import coil3.request.ImageRequest
-import coil3.request.allowHardware
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.getActivity
 import com.lagradost.cloudstream3.CommonActivity.showToast
@@ -27,7 +23,6 @@ import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.AccountEditDialogBinding
 import com.lagradost.cloudstream3.databinding.AccountSelectLinearBinding
-import com.lagradost.cloudstream3.databinding.BottomInputDialogBinding
 import com.lagradost.cloudstream3.databinding.LockPinDialogBinding
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.observe
@@ -165,57 +160,6 @@ object AccountHelper {
         }
 
         canSetPin = true
-
-        binding.editProfilePhotoButton.setOnClickListener {
-            val bottomSheetDialog = BottomSheetDialog(context)
-            val sheetBinding = BottomInputDialogBinding.inflate(LayoutInflater.from(context))
-            bottomSheetDialog.setContentView(sheetBinding.root)
-            bottomSheetDialog.show()
-
-            sheetBinding.apply {
-                text1.text = context.getString(R.string.edit_profile_image_title)
-                nginxTextInput.hint = context.getString(R.string.edit_profile_image_hint)
-
-                applyBtt.setOnClickListener {
-                    val url = sheetBinding.nginxTextInput.text.toString()
-                    if (url.isEmpty()) {
-                        showToast(R.string.edit_profile_image_error_empty, Toast.LENGTH_SHORT)
-                        return@setOnClickListener
-                    }
-                    applyBtt.showProgress()
-                    val imageLoader = ImageLoader(context)
-                    val request = ImageRequest.Builder(context)
-                        .data(url)
-                        .allowHardware(false)
-                        .listener(
-                            onSuccess = { _, _ ->
-                                currentEditAccount = currentEditAccount.copy(customImage = url)
-                                binding.accountImage.loadImage(url)
-                                showToast(
-                                    R.string.edit_profile_image_success,
-                                    Toast.LENGTH_SHORT
-                                )
-                                bottomSheetDialog.dismissSafe()
-                            },
-                            onError = { _, _ ->
-                                showToast(
-                                    R.string.edit_profile_image_error_invalid,
-                                    Toast.LENGTH_SHORT
-                                )
-                                applyBtt.hideProgress()
-                            },
-                            onCancel = {
-                                applyBtt.hideProgress()
-                            }
-                        )
-                        .build()
-                    imageLoader.enqueue(request)
-                }
-                sheetBinding.cancelBtt.setOnClickListener {
-                    bottomSheetDialog.dismissSafe()
-                }
-            }
-        }
     }
 
     fun showPinInputDialog(

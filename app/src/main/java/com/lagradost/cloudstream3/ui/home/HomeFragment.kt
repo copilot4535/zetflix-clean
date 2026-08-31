@@ -700,6 +700,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         homeViewModel.loadAndCancel(DataStoreHelper.currentHomePage, false)
 
         loadAvatar(binding)
+
         MainActivity.reloadAccountEvent += ::reloadAvatarObserver
     }
 
@@ -708,12 +709,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         ioSafe {
             try {
                 val email = ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
-                val userId = email.substringBefore("@")
+                val userId = if (email.isNotEmpty()) email.substringBefore("@") else ""
                 val account = DataStoreHelper.getCurrentAccount() ?: DataStoreHelper.getDefaultAccount(context)
 
                 main {
                     val avatarView = binding.homeAvatar
-                    
                     if (account.customImage != null) {
                         avatarView.loadImage(account.image)
                         avatarView.background = null

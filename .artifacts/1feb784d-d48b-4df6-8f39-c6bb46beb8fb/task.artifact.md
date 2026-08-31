@@ -1,0 +1,5 @@
+- [x] Update `media3` version in `libs.versions.toml` to `1.10.1`
+- [x] Update `nextlibMedia3` version in `libs.versions.toml` to `1.10.1-0.13.0`
+- [x] Sync Gradle project
+- [x] Verify build by running `./gradlew clean :app:assembleDebug`
+- [x] Run player-related unit tests (Skipped: No direct player tests found; build verified successfully)

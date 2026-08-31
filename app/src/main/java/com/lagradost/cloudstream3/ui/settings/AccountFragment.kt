@@ -1,6 +1,5 @@
 package com.lagradost.cloudstream3.ui.settings
 
-import android.os.Bundle
 import android.view.View
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,6 +11,7 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentAccountBinding
 import com.lagradost.cloudstream3.databinding.PreferenceZetflixSwitchBinding
 import com.lagradost.cloudstream3.ui.BaseFragment
+import com.lagradost.cloudstream3.ui.account.AccountHelper
 import com.lagradost.cloudstream3.ui.account.AccountViewModel
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
@@ -38,7 +38,9 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
             val fileName = "profile_${account.keyIndex}_${System.currentTimeMillis()}.jpg"
             val path = saveUriToInternalStorage(context, uri, fileName)
             if (path != null) {
-                updateAccount(account.copy(customImage = path))
+                val updatedAccount = account.copy(customImage = path)
+                // Also update the account in the view model if it's the current one
+                updateAccount(updatedAccount)
             }
         }
     }
@@ -126,8 +128,8 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
                 main {
                     val header = binding.accountHeader
                     
-                    // User ID: exclude @gmail.com
-                    val userId = email.substringBefore("@")
+                    // User ID: exclude everything after @
+                    val userId = if (email.isNotEmpty()) email.substringBefore("@") else ""
                     header.accountUsername.text = userId
                     header.accountEmail.text = email
                     
@@ -141,19 +143,15 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
                         R.drawable.profile_bg_teal
                     )
 
-                    fun updateAvatarUI() {
-                        if (account.customImage != null) {
-                            header.accountAvatar.loadImage(account.image)
-                            header.accountAvatar.background = null
-                        } else {
-                            val bgIndex = if (userId.isNotEmpty()) userId.hashCode().absoluteValue % backgrounds.size else 0
-                            header.accountAvatar.setBackgroundResource(backgrounds[bgIndex])
-                            header.accountAvatar.setImageResource(R.drawable.ic_outline_account_circle_24)
-                        }
+                    if (account.customImage != null) {
+                        header.accountAvatar.loadImage(account.image)
+                        header.accountAvatar.background = null
+                    } else {
+                        val bgIndex = if (userId.isNotEmpty()) userId.hashCode().absoluteValue % backgrounds.size else 0
+                        header.accountAvatar.setBackgroundResource(backgrounds[bgIndex])
+                        header.accountAvatar.setImageResource(R.drawable.ic_outline_account_circle_24)
                     }
-
-                    updateAvatarUI()
-
+                    
                     val clickListener = View.OnClickListener {
                         val options = if (account.customImage != null) {
                             arrayOf("Change Photo", "Remove Photo", "Cancel")
@@ -175,7 +173,7 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(
                             }
                             .show()
                     }
-
+                    
                     header.accountAvatar.setOnClickListener(clickListener)
                     header.editAvatarIcon.setOnClickListener(clickListener)
                 }

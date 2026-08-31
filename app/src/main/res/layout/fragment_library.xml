@@ -29,17 +29,18 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingVertical="5dp"
-            app:layout_scrollFlags="scroll|enterAlways">
+            app:layout_scrollFlags="noScroll">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="@dimen/grid_2"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="12dp"
                 android:text="@string/library"
                 android:textColor="?attr/textColor"
-                android:textSize="22sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
 
             <ImageView
@@ -48,7 +49,7 @@
                 android:layout_height="25dp"
                 android:layout_marginEnd="10dp"
                 android:background="@drawable/button_icon_background_red"
-                android:contentDescription="@string/change_providers_img_des"
+                android:contentDescription="@string/home_change_provider_img_des"
                 android:src="@drawable/ic_baseline_extension_24"
                 android:visibility="gone"
                 app:tint="@color/zetflix_text_primary" />
@@ -59,7 +60,7 @@
                 android:layout_height="45dp"
                 android:layout_marginEnd="10dp"
                 android:background="@drawable/button_icon_background_red"
-                android:contentDescription="@string/change_providers_img_des"
+                android:contentDescription="@string/sort"
                 android:padding="5dp"
                 android:src="@drawable/ic_baseline_sort_24"
                 android:visibility="gone"
@@ -72,7 +73,7 @@
                 android:layout_height="45dp"
                 android:layout_marginEnd="10dp"
                 android:background="@drawable/button_icon_background_red"
-                android:contentDescription="@string/change_providers_img_des"
+                android:contentDescription="@string/select_library"
                 android:padding="10dp"
                 android:src="@drawable/ic_baseline_filter_list_24"
                 android:visibility="gone"
