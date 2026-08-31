@@ -1212,21 +1212,28 @@ class ResultViewModel2 : ViewModel() {
         sourceTypes: Set<ExtractorLinkType>,
         text: UiText,
         isCasting: Boolean = false,
-        callback: (Pair<LinkLoadingResult, Int>) -> Unit
+        callback: (Pair<LinkLoadingResult, Int?>) -> Unit
     ) {
         // TODO Add skip loading here
         loadLinks(result, isVisible = true, sourceTypes, isCasting = isCasting) { links ->
-            // Could not find a better way to do this
-            //val context = CloudStreamApp.context
-            postPopup(
-                text,
-                links.links.map { txt("${it.name} ${Qualities.getStringByInt(it.quality)}") }
-                /*.amap {
-                val size =
-                    it.getVideoSize()?.let { size -> " " + formatFileSize(context, size) } ?: ""
-                txt("${it.name} ${Qualities.getStringByInt(it.quality)}$size")
-                }*/) {
-                callback.invoke(links to (it ?: return@postPopup))
+            if (links.links.isEmpty()) {
+                callback.invoke(links to null)
+            } else if (links.links.size == 1) {
+                callback.invoke(links to 0)
+            } else {
+                val qualityStrings = links.links.map { Qualities.getStringByIntFull(it.quality) }
+                val hasDuplicates = qualityStrings.distinct().size != qualityStrings.size
+                postPopup(
+                    text,
+                    links.links.mapIndexed { i, it ->
+                        val q = qualityStrings[i]
+                        if (hasDuplicates) txt("$q (${it.name})") else txt(q)
+                    }
+                ) { index ->
+                    if (index != null) {
+                        callback.invoke(links to index)
+                    }
+                }
             }
         }
     }
@@ -1360,7 +1367,7 @@ class ResultViewModel2 : ViewModel() {
                 options.add(txt(R.string.episode_action_play_in_app) to ACTION_PLAY_EPISODE_IN_PLAYER)
                 options.addAll(
                     listOf(
-                        txt(R.string.episode_action_auto_download) to ACTION_DOWNLOAD_EPISODE,
+                        txt(R.string.episode_action_auto_download) to ACTION_DOWNLOAD_EPISODE_SILENT,
                         txt(R.string.episode_action_download_mirror) to ACTION_DOWNLOAD_MIRROR,
                         txt(R.string.episode_action_download_subtitle) to ACTION_DOWNLOAD_EPISODE_SUBTITLE_MIRROR,
                         txt(R.string.episode_action_reload_links) to ACTION_RELOAD_EPISODE,
@@ -1460,6 +1467,34 @@ class ResultViewModel2 : ViewModel() {
 
             ACTION_DOWNLOAD_EPISODE -> {
                 val response = currentResponse ?: return
+                acquireSingleLink(
+                    click.data,
+                    LOADTYPE_INAPP_DOWNLOAD,
+                    txt(R.string.episode_action_download_mirror)
+                ) { (result, index) ->
+                    DownloadQueueManager.addToQueue(
+                        DownloadObjects.DownloadQueueItem(
+                            click.data,
+                            response.isMovie(),
+                            response.name,
+                            response.type,
+                            response.posterUrl,
+                            response.apiName,
+                            response.getId(),
+                            response.url,
+                            if (index != null) listOf(result.links[index]) else null,
+                            result.subs,
+                        ).toWrapper()
+                    )
+                    showToast(
+                        R.string.download_started,
+                        Toast.LENGTH_SHORT
+                    )
+                }
+            }
+
+            ACTION_DOWNLOAD_EPISODE_SILENT -> {
+                val response = currentResponse ?: return
                 DownloadQueueManager.addToQueue(
                     DownloadObjects.DownloadQueueItem(
                         click.data,
@@ -1491,7 +1526,7 @@ class ResultViewModel2 : ViewModel() {
                             response.apiName,
                             response.getId(),
                             response.url,
-                            listOf(result.links[index]),
+                            if (index != null) listOf(result.links[index]) else null,
                             result.subs,
                         ).toWrapper()
                     )
@@ -1524,7 +1559,9 @@ class ResultViewModel2 : ViewModel() {
                     txt(R.string.episode_action_chromecast_mirror),
                     isCasting = true
                 ) { (result, index) ->
-                    startChromecast(activity, click.data, result.links, result.subs, index)
+                    if (index != null) {
+                        startChromecast(activity, click.data, result.links, result.subs, index)
+                    }
                 }
             }
 

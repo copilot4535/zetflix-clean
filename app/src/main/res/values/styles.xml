@@ -7,6 +7,9 @@
         <item name="android:navigationBarColor">?attr/primaryBlackBackground</item>
         <item name="android:statusBarColor">?attr/iconGrayBackground</item>
 
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">false</item>
 
@@ -164,6 +167,7 @@
         <item name="android:searchIcon">@drawable/search_icon</item>
         <item name="android:queryHint">@string/search_hint</item>
         <item name="android:background">@color/transparent</item>
+        <item name="fontFamily">@font/google_sans</item>
         <item name="android:fontFamily">@font/google_sans</item>
         <item name="closeIcon">@drawable/ic_baseline_close_24</item>
     </style>
@@ -207,13 +211,16 @@
     <style name="TabNoCaps" parent="TextAppearance.Design.Tab">
         <item name="textAllCaps">false</item>
         <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
     </style>
 
     <style name="AppTextViewStyle" parent="android:Widget.TextView">
+        <item name="fontFamily">@font/google_sans</item>
         <item name="android:fontFamily">@font/google_sans</item>
     </style>
 
     <style name="AppButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="fontFamily">@font/google_sans</item>
         <item name="android:fontFamily">@font/google_sans</item>
         <item name="backgroundTint">@color/zetflix_accent</item>
         <item name="android:textColor">@color/zetflix_text_primary</item>
@@ -221,6 +228,7 @@
     </style>
 
     <style name="AppEditStyle" parent="android:Widget.EditText">
+        <item name="fontFamily">@font/google_sans</item>
         <item name="android:fontFamily">@font/google_sans</item>
     </style>
 
@@ -236,6 +244,7 @@
     </style>
 
     <style name="AppMaterialButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="fontFamily">@font/google_sans</item>
         <item name="android:fontFamily">@font/google_sans</item>
         <item name="backgroundTint">@color/zetflix_accent</item>
         <item name="android:textColor">@color/zetflix_text_primary</item>
@@ -338,6 +347,7 @@
         <item name="android:background">?attr/focusBackground</item>
         <item name="android:textColor">?attr/textColor</item>
         <item name="android:textSize">16sp</item>
+        <item name="fontFamily">@font/google_sans</item>
         <item name="android:fontFamily">@font/google_sans</item>
         <item name="drawableEndCompat">@drawable/ic_baseline_keyboard_arrow_right_24</item>
         <item name="drawableTint">@color/zetflix_text_secondary</item>
