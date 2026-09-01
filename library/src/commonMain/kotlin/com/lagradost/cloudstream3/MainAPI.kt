@@ -113,11 +113,10 @@ object APIHolder {
 
     val allProviders = atomicListOf<MainAPI>()
 
-    fun initAll() {
-        allProviders.withLock {
-            for (api in allProviders) {
-                api.init()
-            }
+    suspend fun initAll() {
+        val snapshot = allProviders.toList()
+        snapshot.amap(concurrencyLimit = 4) { api ->
+            api.init()
         }
         apiMap = null
     }
@@ -497,7 +496,10 @@ abstract class MainAPI {
         var settingsForProvider: SettingsJson = SettingsJson()
     }
 
-    fun init() {
+    var isInitialized: Boolean = false
+    open fun init() {
+        if (isInitialized) return
+        isInitialized = true
         overrideData?.get(this::class.simpleName)?.let { data ->
             overrideWithNewData(data)
         }

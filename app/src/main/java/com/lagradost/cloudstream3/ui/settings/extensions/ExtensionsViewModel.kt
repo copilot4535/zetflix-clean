@@ -53,7 +53,7 @@ class ExtensionsViewModel : ViewModel() {
     fun loadStats() = ioSafe {
         val urls = RepositoryManager.getRepositories()
 
-        val onlinePlugins = urls.toList().amap {
+        val onlinePlugins = urls.toList().amap(concurrencyLimit = 2) {
             RepositoryManager.getRepoPlugins(it)?.toList() ?: emptyList()
         }.flatten().distinctBy { it.plugin.url }
 

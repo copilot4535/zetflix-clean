@@ -2,6 +2,8 @@ package com.lagradost.cloudstream3
 
 import com.lagradost.cloudstream3.mvvm.logError
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -12,7 +14,24 @@ import kotlin.coroutines.cancellation.CancellationException
 suspend fun <K, V, R> Map<out K, V>.amap(f: suspend (Map.Entry<K, V>) -> R): List<R> =
     coroutineScope {
         ensureActive()
-        map { async { f(it) } }.map { it.await() }
+        map { async { f(it) } }.awaitAll()
+    }
+
+/**
+ * Throttled version of [amap] that limits the number of concurrent executions.
+ */
+@Throws(CancellationException::class)
+suspend fun <K, V, R> Map<out K, V>.amap(concurrencyLimit: Int, f: suspend (Map.Entry<K, V>) -> R): List<R> =
+    coroutineScope {
+        ensureActive()
+        val semaphore = Semaphore(concurrencyLimit)
+        this@amap.map { entry ->
+            async {
+                semaphore.withPermit {
+                    f(entry)
+                }
+            }
+        }.awaitAll()
     }
 
 /**
@@ -36,7 +55,24 @@ fun <K, V, R> Map<out K, V>.apmap(f: suspend (Map.Entry<K, V>) -> R): List<R> = 
 suspend fun <A, B> List<A>.amap(f: suspend (A) -> B): List<B> =
     coroutineScope {
         ensureActive()
-        map { async { f(it) } }.map { it.await() }
+        map { async { f(it) } }.awaitAll()
+    }
+
+/**
+ * Throttled version of [amap] that limits the number of concurrent executions.
+ */
+@Throws(CancellationException::class)
+suspend fun <A, B> List<A>.amap(concurrencyLimit: Int, f: suspend (A) -> B): List<B> =
+    coroutineScope {
+        ensureActive()
+        val semaphore = Semaphore(concurrencyLimit)
+        this@amap.map { item ->
+            async {
+                semaphore.withPermit {
+                    f(item)
+                }
+            }
+        }.awaitAll()
     }
 
 /**
@@ -73,7 +109,24 @@ fun <A, B> List<A>.apmapIndexed(f: suspend (index: Int, A) -> B): List<B> = runB
 suspend fun <A, B> List<A>.amapIndexed(f: suspend (index: Int, A) -> B): List<B> =
     coroutineScope {
         ensureActive()
-        mapIndexed { index, a -> async { f(index, a) } }.map { it.await() }
+        mapIndexed { index, a -> async { f(index, a) } }.awaitAll()
+    }
+
+/**
+ * Throttled version of [amapIndexed] that limits the number of concurrent executions.
+ */
+@Throws(CancellationException::class)
+suspend fun <A, B> List<A>.amapIndexed(concurrencyLimit: Int, f: suspend (index: Int, A) -> B): List<B> =
+    coroutineScope {
+        ensureActive()
+        val semaphore = Semaphore(concurrencyLimit)
+        this@amapIndexed.mapIndexed { index, a ->
+            async {
+                semaphore.withPermit {
+                    f(index, a)
+                }
+            }
+        }.awaitAll()
     }
 
 /**

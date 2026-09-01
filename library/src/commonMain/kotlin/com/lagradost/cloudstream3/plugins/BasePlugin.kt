@@ -20,6 +20,7 @@ abstract class BasePlugin {
     fun registerMainAPI(element: MainAPI) {
         Log.i(PLUGIN_TAG, "Adding ${element.name} (${element.mainUrl}) MainAPI")
         element.sourcePlugin = this.filename
+        element.init()
         APIHolder.allProviders.add(element)
         APIHolder.addPluginMapping(element)
     }

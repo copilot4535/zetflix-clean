@@ -767,6 +767,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             ioSafe {
                 Log.i("SportsIPTV", "Adding IPTV-Org Sports provider")
                 allProviders.add(com.lagradost.cloudstream3.providers.SportsIPTVProvider())
+                allProviders.add(com.lagradost.cloudstream3.providers.FredTVProvider())
                 initAll()
                 apis = allProviders.distinctBy { it }
 

@@ -34,6 +34,9 @@ abstract class BaseHomeFragment<T : ViewBinding>(
     abstract val errorText: android.widget.TextView?
     abstract val reloadButton: View?
 
+    open val pageLiveData: androidx.lifecycle.LiveData<Resource<Map<String, BaseHomeViewModel.ExpandableHomepageList>>>
+        get() = viewModel.page
+
     override fun fixLayout(view: View) {
         // Default implementation, can be overridden
     }
@@ -51,7 +54,7 @@ abstract class BaseHomeFragment<T : ViewBinding>(
     }
 
     protected open fun observeViewModel() {
-        observe(viewModel.page) { data ->
+        observe(pageLiveData) { data ->
             when (data) {
                 is Resource.Success -> {
                     val d = data.value

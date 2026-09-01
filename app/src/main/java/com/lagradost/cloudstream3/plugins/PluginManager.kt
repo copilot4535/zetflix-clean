@@ -291,7 +291,7 @@ object PluginManager {
 
         val urls = RepositoryManager.getRepositories()
 
-        val onlinePlugins = urls.toList().amap {
+        val onlinePlugins = urls.toList().amap(concurrencyLimit = 2) {
             getRepoPlugins(it) ?: emptyList()
         }.flatten().distinctBy { it.plugin.url }
 
@@ -312,7 +312,7 @@ object PluginManager {
 
         val updatedPlugins = mutableListOf<String>()
 
-        outdatedPlugins.amap { pluginData ->
+        outdatedPlugins.amap(concurrencyLimit = 2) { pluginData ->
             if (pluginData.isDisabled) {
                 //updatedPlugins.add(activity.getString(R.string.single_plugin_disabled, pluginData.onlineData.second.name))
                 unloadPlugin(pluginData.savedData.filePath)
@@ -369,7 +369,7 @@ object PluginManager {
         val newDownloadPlugins = mutableListOf<String>()
         val urls = (getKey<Array<RepositoryData>>(REPOSITORIES_KEY)
             ?: emptyArray()) + PREBUILT_REPOSITORIES
-        val onlinePlugins = urls.toList().amap {
+        val onlinePlugins = urls.toList().amap(concurrencyLimit = 2) {
             getRepoPlugins(it)?.toList() ?: emptyList()
         }.flatten().distinctBy { it.plugin.url }
 
@@ -429,7 +429,7 @@ object PluginManager {
         }
         //Log.i(TAG, "notDownloadedPlugins => ${notDownloadedPlugins.toJson()}")
 
-        notDownloadedPlugins.amap { pluginData ->
+        notDownloadedPlugins.amap(concurrencyLimit = 2) { pluginData ->
             downloadPlugin(
                 activity,
                 pluginData.onlineData.plugin.url,
@@ -478,7 +478,7 @@ object PluginManager {
         val allPlugins = getPluginsOnline().toList()
         val currentHome = DataStoreHelper.currentHomePage
         val pinned = DataStoreHelper.pinnedProviders.toSet()
-        val livePriorityKeywords = listOf("football", "cricket", "sports", "soccer", "live", "iptv")
+        val livePriorityKeywords = listOf("football", "cricket", "sports", "soccer", "live", "iptv", "fred")
 
         // Tier 1: Current Home
         val (tier1, tier234) = allPlugins.partition { it.internalName == currentHome }
@@ -491,8 +491,19 @@ object PluginManager {
             livePriorityKeywords.any { plugin.internalName.lowercase().contains(it) }
         }
 
-        // Tiers 1-3: Fast Parallel Load (Limited)
-        (tier1 + tier2 + tier3).amap { pluginData ->
+        // Tier 1: Immediate Load (Home)
+        tier1.forEach { pluginData ->
+            loadPlugin(
+                context,
+                File(pluginData.filePath),
+                pluginData,
+                quiet = true,
+                saveToPrefs = false
+            )
+        }
+
+        // Tiers 2-3: Throttled Parallel Load
+        (tier2 + tier3).amap(concurrencyLimit = 2) { pluginData ->
             loadPlugin(
                 context,
                 File(pluginData.filePath),
@@ -576,7 +587,7 @@ object PluginManager {
             pluginDirectory.mkdirs() // Ensure the plugins directory exists
         }
 
-        val loadedLocalPluginsList = sortedPlugins?.sortedBy { it.name }?.amap { file ->
+        val loadedLocalPluginsList = sortedPlugins?.sortedBy { it.name }?.amap(concurrencyLimit = 2) { file ->
             try {
                 val destinationFile = File(pluginDirectory, file.name)
 
@@ -890,7 +901,7 @@ object PluginManager {
         afterPluginsLoadedEvent.invoke(false)
 
         val urls = RepositoryManager.getRepositories()
-        val onlinePlugins = urls.toList().amap {
+        val onlinePlugins = urls.toList().amap(concurrencyLimit = 2) {
             getRepoPlugins(it) ?: emptyList()
         }.flatten().distinctBy { it.plugin.url }
 
@@ -904,7 +915,7 @@ object PluginManager {
 
         val updatedPlugins = mutableListOf<String>()
 
-        allPlugins.amap { pluginData ->
+        allPlugins.amap(concurrencyLimit = 2) { pluginData ->
             if (pluginData.isDisabled) {
                 Log.e(
                     "PluginManager",

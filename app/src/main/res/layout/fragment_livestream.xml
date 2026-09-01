@@ -9,18 +9,76 @@
     android:background="?attr/primaryGrayBackground"
     tools:context=".ui.home.LiveStreamFragment">
 
-    <TextView
-        android:id="@+id/livestream_title"
+    <FrameLayout
+        android:id="@+id/header_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="12dp"
-        android:text="@string/livestream"
-        android:textColor="?attr/textColor"
-        android:textSize="26sp"
-        android:textStyle="bold"
-        android:background="?attr/primaryGrayBackground" />
+        android:background="?attr/primaryGrayBackground">
+
+        <LinearLayout
+            android:id="@+id/sticky_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:id="@+id/livestream_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingTop="24dp"
+                android:paddingBottom="12dp"
+                android:text="@string/livestream"
+                android:textColor="?attr/textColor"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/livestream_search"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/search_icon"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/search" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/livestream_search_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="12dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="12dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/livestream_search_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:src="@drawable/ic_baseline_arrow_back_24"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cancel" />
+
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/livestream_search_view"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                app:iconifiedByDefault="false"
+                app:queryBackground="@android:color/transparent"
+                app:searchIcon="@null"
+                app:queryHint="Search Livestream..." />
+        </LinearLayout>
+    </FrameLayout>
 
     <FrameLayout
         android:layout_width="match_parent"

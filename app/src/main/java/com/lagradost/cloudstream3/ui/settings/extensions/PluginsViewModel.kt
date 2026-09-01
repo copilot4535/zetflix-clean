@@ -123,7 +123,7 @@ class PluginsViewModel : ViewModel() {
                             Toast.LENGTH_SHORT
                         )
                     }
-                }.amap { (_, repo, metadata) ->
+                }.amap(concurrencyLimit = 2) { (_, repo, metadata) ->
                     PluginManager.downloadPlugin(
                         activity,
                         metadata.url,
