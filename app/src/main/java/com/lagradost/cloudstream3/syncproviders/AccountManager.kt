@@ -4,10 +4,15 @@ import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.syncproviders.providers.Addic7ed
+import com.lagradost.cloudstream3.syncproviders.providers.AniListApi
+import com.lagradost.cloudstream3.syncproviders.providers.KitsuApi
 import com.lagradost.cloudstream3.syncproviders.providers.LocalList
+import com.lagradost.cloudstream3.syncproviders.providers.MalApi
 import com.lagradost.cloudstream3.syncproviders.providers.OpenSubtitlesApi
+import com.lagradost.cloudstream3.syncproviders.providers.SimklApi
 import com.lagradost.cloudstream3.syncproviders.providers.SubDlApi
 import com.lagradost.cloudstream3.syncproviders.providers.SubSourceApi
+import com.lagradost.cloudstream3.syncproviders.providers.TraktApi
 import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.lagradost.cloudstream3.utils.videoskip.AnimeSkipAuth
 import java.util.concurrent.TimeUnit
@@ -16,6 +21,11 @@ abstract class AccountManager {
     companion object {
         const val NONE_ID: Int = -1
         val localListApi = LocalList()
+        val aniListApi = AniListApi()
+        val malApi = MalApi()
+        val traktApi = TraktApi()
+        val kitsuApi = KitsuApi()
+        val simklApi = SimklApi()
 
         val openSubtitlesApi = OpenSubtitlesApi()
         val addic7ed = Addic7ed()
@@ -55,6 +65,11 @@ abstract class AccountManager {
 
         val allApis = arrayOf(
             SyncRepo(localListApi),
+            SyncRepo(aniListApi),
+            SyncRepo(malApi),
+            SyncRepo(traktApi),
+            SyncRepo(kitsuApi),
+            SyncRepo(simklApi),
             SubtitleRepo(openSubtitlesApi),
             SubtitleRepo(addic7ed),
             SubtitleRepo(subDlApi),
@@ -109,7 +124,12 @@ abstract class AccountManager {
             SubtitleRepo(subSourceApi)
         )
         val syncApis = arrayOf(
-            SyncRepo(localListApi)
+            SyncRepo(localListApi),
+            SyncRepo(aniListApi),
+            SyncRepo(malApi),
+            SyncRepo(traktApi),
+            SyncRepo(kitsuApi),
+            SyncRepo(simklApi)
         )
 
         const val APP_STRING = "cloudstreamapp"

@@ -222,6 +222,11 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         savedInstanceState: Bundle?
     ) {
         reloadRepos()
+
+        binding.searchBack.setOnClickListener {
+            activity?.onBackPressedDispatcher?.onBackPressed()
+        }
+
         binding.apply {
             val adapter =
                 SearchAdapter(

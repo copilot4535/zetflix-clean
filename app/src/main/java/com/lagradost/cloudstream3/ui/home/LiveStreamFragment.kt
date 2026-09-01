@@ -1,7 +1,11 @@
 package com.lagradost.cloudstream3.ui.home
 
 import android.annotation.SuppressLint
+import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isGone
@@ -10,7 +14,10 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.RecyclerView
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentLivestreamBinding
+import com.lagradost.cloudstream3.databinding.LivestreamLoadMoreBinding
 import com.lagradost.cloudstream3.mvvm.Resource
+import com.lagradost.cloudstream3.mvvm.observe
+import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPressedCallback
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPressedCallback
@@ -39,8 +46,36 @@ class LiveStreamFragment : BaseHomeFragment<FragmentLivestreamBinding>(
     override val pageLiveData: androidx.lifecycle.LiveData<Resource<Map<String, BaseHomeViewModel.ExpandableHomepageList>>>
         get() = viewModel.filteredPage
 
+    inner class LiveStreamParentAdapter(
+        id: Int,
+        clickCallback: (com.lagradost.cloudstream3.ui.search.SearchClickCallback) -> Unit,
+        moreInfoClickCallback: (BaseHomeViewModel.ExpandableHomepageList) -> Unit,
+        expandCallback: ((String) -> Unit)? = null,
+    ) : ParentItemAdapter(id, clickCallback, moreInfoClickCallback, expandCallback) {
+        override val footers: Int = 1
+
+        override fun onCreateCustomFooter(parent: ViewGroup, viewType: Int): ViewHolderState<Bundle> {
+            val inflater = LayoutInflater.from(parent.context)
+            val binding = LivestreamLoadMoreBinding.inflate(inflater, parent, false)
+            return ViewHolderState<Bundle>(binding)
+        }
+
+        override fun onBindFooter(holder: ViewHolderState<Bundle>) {
+            val binding = holder.view as? LivestreamLoadMoreBinding ?: return
+            val loading = viewModel.loadMoreLoading.value ?: false
+
+            binding.livestreamLoadMoreButton.setOnClickListener {
+                viewModel.loadMore()
+            }
+
+            binding.livestreamLoadMoreButton.isEnabled = !loading
+            binding.livestreamLoadMoreButton.text = if (loading) "" else "Load More"
+            binding.livestreamLoadMoreProgress.isVisible = loading
+        }
+    }
+
     override fun setupRecyclerView() {
-        val adapter = ParentItemAdapter(
+        val adapter = LiveStreamParentAdapter(
             id = "LiveStreamFragment".hashCode(),
             clickCallback = {
                 viewModel.click(it)
@@ -93,6 +128,22 @@ class LiveStreamFragment : BaseHomeFragment<FragmentLivestreamBinding>(
                 return true
             }
         })
+    }
+
+    override fun observeViewModel() {
+        super.observeViewModel()
+        val searchExitIcon =
+            binding?.livestreamSearchView?.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
+
+        observe(viewModel.searchLoading) { loading ->
+            binding?.livestreamSearchLoading?.alpha = if (loading) 1f else 0f
+            searchExitIcon?.alpha = if (loading) 0f else 1f
+        }
+
+        observe(viewModel.loadMoreLoading) {
+            val adapter = masterRecycler.adapter
+            adapter?.notifyItemChanged(adapter.itemCount - 1)
+        }
     }
 
     private fun closeSearch(binding: FragmentLivestreamBinding) {

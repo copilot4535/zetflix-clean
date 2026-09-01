@@ -134,6 +134,7 @@ import com.lagradost.cloudstream3.utils.txt
 import com.lagradost.safefile.SafeFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
@@ -765,17 +766,31 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             }
         } else if (lastError == null) {
             ioSafe {
-                Log.i("SportsIPTV", "Adding IPTV-Org Sports provider")
-                allProviders.add(com.lagradost.cloudstream3.providers.SportsIPTVProvider())
-                allProviders.add(com.lagradost.cloudstream3.providers.FredTVProvider())
-                initAll()
-                apis = allProviders.distinctBy { it }
-
-                DataStoreHelper.currentHomePage?.let { homeApi ->
-                    mainPluginsLoadedEvent.invoke(loadSinglePlugin(this@MainActivity, homeApi))
-                } ?: run {
-                    mainPluginsLoadedEvent.invoke(false)
+                // Start initializing built-in providers and home plugin concurrently
+                val builtInJob = launch {
+                    Log.i("SportsIPTV", "Adding IPTV-Org Sports provider")
+                    allProviders.add(com.lagradost.cloudstream3.providers.SportsIPTVProvider())
+                    allProviders.add(com.lagradost.cloudstream3.providers.FredTVProvider())
+                    initAll()
                 }
+
+                var homeSuccess = false
+                val homeJob = launch {
+                    DataStoreHelper.currentHomePage?.let { homeApi ->
+                        homeSuccess = loadSinglePlugin(this@MainActivity, homeApi)
+                    }
+                }
+
+                // Wait for built-ins and home to be ready
+                builtInJob.join()
+                homeJob.join()
+
+                // Update apis after loading initial providers to ensure they are available for HomeFragment
+                allProviders.withLock {
+                    apis = allProviders.distinctBy { it.lang + it.name + it.mainUrl + it::class.qualifiedName }
+                    APIHolder.apiMap = null
+                }
+                mainPluginsLoadedEvent.invoke(homeSuccess)
 
                 if (settingsManager.getBoolean(
                         getString(R.string.auto_update_plugins_key),

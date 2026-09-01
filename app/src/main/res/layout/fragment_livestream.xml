@@ -69,14 +69,37 @@
                 android:foreground="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/cancel" />
 
-            <androidx.appcompat.widget.SearchView
-                android:id="@+id/livestream_search_view"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                app:iconifiedByDefault="false"
-                app:queryBackground="@android:color/transparent"
-                app:searchIcon="@null"
-                app:queryHint="Search Livestream..." />
+                android:layout_marginStart="4dp"
+                android:background="@drawable/search_background">
+
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/livestream_search_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:paddingStart="-10dp"
+                    app:iconifiedByDefault="false"
+                    app:queryBackground="@android:color/transparent"
+                    app:searchIcon="@drawable/search_icon"
+                    app:closeIcon="@drawable/ic_baseline_close_24"
+                    app:queryHint="Search Livestream..."
+                    tools:ignore="RtlSymmetry" />
+
+                <androidx.core.widget.ContentLoadingProgressBar
+                    android:id="@+id/livestream_search_loading"
+                    style="@style/Widget.AppCompat.ProgressBar"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="-35dp"
+                    android:alpha="0"
+                    android:indeterminateTint="@color/white"
+                    android:foregroundTint="@color/white"
+                    android:progressTint="@color/white" />
+            </FrameLayout>
         </LinearLayout>
     </FrameLayout>
 

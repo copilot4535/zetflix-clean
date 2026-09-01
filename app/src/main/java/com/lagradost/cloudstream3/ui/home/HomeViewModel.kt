@@ -25,24 +25,28 @@ class HomeViewModel : BaseHomeViewModel() {
 
     override fun getFilteredApis(): List<MainAPI> {
         val allApis = super.getFilteredApis()
-        // Filter out APIs with "sport" or other live keywords in their name
+        val currentHome = DataStoreHelper.currentHomePage
+        // Filter out APIs with "sport" or other live keywords in their name, unless it's the user's selected home
         return allApis.filterNot { api ->
-            sportKeywords.any { api.name.lowercase().contains(it) }
+            api.name != currentHome && sportKeywords.any { api.name.lowercase().contains(it) }
         }
     }
 
     override fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>) {
         if (resource is Resource.Success) {
+            val currentHome = DataStoreHelper.currentHomePage
             resource.value.forEach { home ->
                 home?.items?.forEach { list ->
                     val categoryName = list.name.lowercase()
+                    // Get the apiName from the first item to check if this is our home provider
+                    val apiName = list.list.firstOrNull()?.apiName
 
-                    // 1. Strictly block categories that sound like Sports/Live
-                    if (sportKeywords.any { categoryName.contains(it) }) return@forEach
+                    // 1. Strictly block categories that sound like Sports/Live, unless it's the home provider
+                    if (apiName != currentHome && sportKeywords.any { categoryName.contains(it) }) return@forEach
 
-                    // 2. Filter out any individual items marked as Live
+                    // 2. Filter out any individual items marked as Live, unless it's the home provider
                     val strictlyNonLiveItems = list.list.filter {
-                        it.type != TvType.Live
+                        apiName == currentHome || it.type != TvType.Live
                     }
 
                     if (strictlyNonLiveItems.isEmpty()) return@forEach

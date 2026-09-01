@@ -25,12 +25,29 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
             app:layout_scrollFlags="scroll|enterAlways">
 
-            <FrameLayout
-                android:layout_width="match_parent"
+            <ImageView
+                android:id="@+id/search_back"
+                android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_margin="10dp"
+                android:layout_marginStart="10dp"
+                android:padding="8dp"
+                android:src="@drawable/ic_baseline_arrow_back_24"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cancel" />
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginStart="4dp"
                 android:background="@drawable/search_background"
                 android:visibility="visible">
 

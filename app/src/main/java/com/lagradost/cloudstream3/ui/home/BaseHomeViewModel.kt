@@ -56,14 +56,33 @@ import java.util.EnumSet
 import java.util.concurrent.CopyOnWriteArrayList
 
 abstract class BaseHomeViewModel : ViewModel() {
-    protected val sportKeywords = listOf("sports", "live", "cricket", "football", "soccer", "basketball", "tennis", "rugby", "golf", "iptv", "channel", "streaming")
+    open val sportKeywords = listOf(
+        "sports", "live", "cricket", "football", "soccer", "basketball", "tennis",
+        "rugby", "golf", "iptv", "channel", "streaming", "volleyball", "baseball",
+        "hockey", "formula1", "f1", "motogp", "ufc", "boxing", "wwe", "nba",
+        "nfl", "mlb", "nhl", "badminton", "kabaddi", "esports", "racing",
+        "fighting", "fifa", "olympics", "wrestling"
+    )
+
+    open val stage1PluginCount = 3
+    open val stage1TotalTimeoutMs = 15_000L
+    open val stage2TotalTimeoutMs = 30_000L
+    open val totalLoadTimeoutMs = 45_000L
+    open val perPluginTimeoutMs = 10_000L
+    open val maxConcurrentPluginLoads = 3
 
     companion object {
+        @Deprecated("Use open properties instead")
         protected const val STAGE1_PLUGIN_COUNT = 3
+        @Deprecated("Use open properties instead")
         protected const val STAGE1_TOTAL_TIMEOUT_MS = 15_000L
+        @Deprecated("Use open properties instead")
         protected const val STAGE2_TOTAL_TIMEOUT_MS = 30_000L
+        @Deprecated("Use open properties instead")
         protected const val TOTAL_LOAD_TIMEOUT_MS = 45_000L
+        @Deprecated("Use open properties instead")
         protected const val PER_PLUGIN_TIMEOUT_MS = 10_000L
+        @Deprecated("Use open properties instead")
         protected const val MAX_CONCURRENT_PLUGIN_LOADS = 3
 
         protected val sportKeywords = listOf("sports", "live", "cricket", "football", "soccer", "basketball", "tennis", "rugby", "golf", "iptv", "channel", "streaming")
@@ -260,7 +279,7 @@ abstract class BaseHomeViewModel : ViewModel() {
         return expandable[name]
     }
 
-    fun expand(name: String) = viewModelScope.launchSafe {
+    open fun expand(name: String) = viewModelScope.launchSafe {
         expandAndReturn(name)
     }
 
@@ -328,6 +347,7 @@ abstract class BaseHomeViewModel : ViewModel() {
         }
 
         if (!cachedShown) {
+            expandable.clear()
             _page.postValue(Resource.Loading())
             _preview.postValue(Resource.Loading())
         }
@@ -345,10 +365,10 @@ abstract class BaseHomeViewModel : ViewModel() {
         // Overall list shuffled for stage 2
         val shuffledApis = filteredApis.shuffled()
 
-        // Select 3 initial plugins with priority
+        // Select initial plugins with priority
         val stage1Plugins = PluginPriorityManager.selectInitialPlugins(
             filteredApis,
-            STAGE1_PLUGIN_COUNT
+            stage1PluginCount
         )
 
         // Stage 2: remaining plugins excluding stage 1, shuffled
@@ -357,12 +377,12 @@ abstract class BaseHomeViewModel : ViewModel() {
         }
 
         suspend fun loadPlugins(plugins: List<MainAPI>, stageDeadline: Long) {
-            plugins.chunked(MAX_CONCURRENT_PLUGIN_LOADS).forEach { chunk ->
-                if (System.currentTimeMillis() - startTime > TOTAL_LOAD_TIMEOUT_MS) return@forEach
+            plugins.chunked(maxConcurrentPluginLoads).forEach { chunk ->
+                if (System.currentTimeMillis() - startTime > totalLoadTimeoutMs) return@forEach
                 if (System.currentTimeMillis() - startTime > stageDeadline) return@forEach
 
                 chunk.amap { api ->
-                    withTimeoutOrNull(PER_PLUGIN_TIMEOUT_MS) {
+                    withTimeoutOrNull(perPluginTimeoutMs) {
                         APIRepository(api).getMainPage(1, null)
                     }
                 }.forEach { result ->
@@ -372,14 +392,15 @@ abstract class BaseHomeViewModel : ViewModel() {
                 }
                 
                 _page.postValue(Resource.Success(expandable))
+                cacheKey?.let { setKey(it, expandable) }
             }
         }
 
-        loadPlugins(stage1Plugins, STAGE1_TOTAL_TIMEOUT_MS)
+        loadPlugins(stage1Plugins, stage1TotalTimeoutMs)
 
         updatePreviewFromExpandable()
 
-        loadPlugins(stage2Plugins, STAGE2_TOTAL_TIMEOUT_MS)
+        loadPlugins(stage2Plugins, stage2TotalTimeoutMs)
 
         updatePreviewFromExpandable()
 
