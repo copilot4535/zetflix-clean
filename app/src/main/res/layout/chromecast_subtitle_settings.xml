@@ -22,7 +22,7 @@
                 android:layout_marginBottom="10dp"
                 android:textStyle="bold"
                 android:text="@string/chromecast_subtitles_settings"
-                android:textSize="20sp"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
                 android:textColor="?attr/textColor"
                 android:layout_width="match_parent"
                 android:layout_rowWeight="1"
@@ -122,7 +122,7 @@
             <TextView
                 android:gravity="center"
                 android:text="@string/subs_hold_to_reset_to_default"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_body_small"
 
                 android:textColor="?attr/textColor"
                 android:layout_width="match_parent"

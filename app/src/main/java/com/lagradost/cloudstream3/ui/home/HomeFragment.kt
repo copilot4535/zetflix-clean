@@ -14,7 +14,6 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
@@ -29,9 +28,9 @@ import com.lagradost.cloudstream3.CloudStreamApp.Companion.getActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.lagradost.cloudstream3.APIHolder.apis
 import com.lagradost.cloudstream3.AllLanguagesName
-import com.lagradost.cloudstream3.CommonActivity.showToast
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.SearchResponse
@@ -48,13 +47,11 @@ import com.lagradost.cloudstream3.plugins.Plugin
 import com.lagradost.cloudstream3.ui.APIRepository.Companion.noneApi
 import com.lagradost.cloudstream3.ui.APIRepository.Companion.randomApi
 import com.lagradost.cloudstream3.ui.BaseFragment
-import com.lagradost.cloudstream3.ui.account.AccountViewModel
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_LOAD
 import com.lagradost.cloudstream3.ui.search.SEARCH_ACTION_PLAY_FILE
 import com.lagradost.cloudstream3.ui.search.SearchAdapter
 import com.lagradost.cloudstream3.ui.search.SearchHelper.handleSearchClickCallback
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
-import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
@@ -81,8 +78,9 @@ import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
 import kotlin.math.absoluteValue
 
-class HomeFragment : BaseFragment<FragmentHomeBinding>(
-    BindingCreator.Bind(FragmentHomeBinding::bind)
+class HomeFragment : BaseHomeFragment<FragmentHomeBinding>(
+    R.layout.fragment_home,
+    FragmentHomeBinding::bind
 ) {
     companion object {
         // Used for configuration changed events to fix any popups that are not attached to a fragment
@@ -105,9 +103,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         val errorProfilePic = errorProfilePics.random()
 
         fun Activity.loadHomepageList(
-            expand: HomeViewModel.ExpandableHomepageList,
+            expand: BaseHomeViewModel.ExpandableHomepageList,
             deleteCallback: (() -> Unit)? = null,
-            expandCallback: (suspend (String) -> HomeViewModel.ExpandableHomepageList?)? = null,
+            expandCallback: (suspend (String) -> BaseHomeViewModel.ExpandableHomepageList?)? = null,
             dismissCallback: (() -> Unit),
         ): BottomSheetDialog {
             val context = this
@@ -471,9 +469,13 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         }
     }
 
-    private val homeViewModel: HomeViewModel by activityViewModels()
-
-    override fun pickLayout(): Int = R.layout.fragment_home
+    override val viewModel: HomeViewModel by activityViewModels()
+    override val masterRecycler: RecyclerView get() = binding?.homeMasterRecycler ?: throw Exception("Binding is null")
+    override val loadingView: View get() = binding?.homeLoading ?: throw Exception("Binding is null")
+    override val errorView: View get() = binding?.homeLoadingError ?: throw Exception("Binding is null")
+    override val loadingShimmer: com.facebook.shimmer.ShimmerFrameLayout? get() = binding?.homeLoadingShimmer
+    override val errorText: TextView? get() = binding?.resultErrorText
+    override val reloadButton: View? get() = binding?.homeReloadConnectionerror
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -513,7 +515,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         binding?.stickyHeader?.let {
             fixSystemBarsPadding(
                 it,
-                heightResId = R.dimen.home_header_height,
                 padBottom = false,
                 padLeft = false,
                 padRight = false
@@ -523,7 +524,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         binding?.homeMasterRecycler?.let {
             fixSystemBarsPadding(
                 it,
-                padTop = false,
+                padTop = true,
                 padBottom = false,
                 padLeft = false,
                 padRight = false
@@ -535,33 +536,33 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
 
     @SuppressLint("SetTextI18n")
     override fun onBindingCreated(binding: FragmentHomeBinding) {
-        context?.let { HomeChildItemAdapter.updatePosterSize(it) }
+        super.onBindingCreated(binding)
         (activity as? ComponentActivity)?.attachBackPressedCallback("HomeFragment_BackPress") {
             runDefault()
         }
         binding.apply {
-            homeMasterAdapter = HomeParentItemAdapterPreview(
-                homeViewModel
-            )
+            homeMasterAdapter = masterRecycler.adapter as? HomeParentItemAdapterPreview
             homeMasterRecycler.setRecycledViewPool(ParentItemAdapter.sharedPool)
-            homeMasterRecycler.adapter = homeMasterAdapter
 
             homeAvatar.setOnClickListener {
                 activity.navigate(R.id.navigation_account)
             }
 
+            homeSearch.setOnClickListener {
+                activity.navigate(R.id.navigation_search)
+            }
+
+            val headerColor = context?.colorFromAttribute(R.attr.primaryBlackBackground) ?: android.graphics.Color.BLACK
             homeMasterRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
                     val offset = recyclerView.computeVerticalScrollOffset()
                     val alpha = (offset / 200f).coerceIn(0f, 1f)
-                    val context = context ?: return
                     
                     // Show background only when scrolled
-                    val color = context.colorFromAttribute(R.attr.primaryBlackBackground)
                     val alphaInt = (alpha * 255).toInt() 
                     _binding?.stickyHeader?.setBackgroundColor(
-                        androidx.core.graphics.ColorUtils.setAlphaComponent(color, alphaInt)
+                        androidx.core.graphics.ColorUtils.setAlphaComponent(headerColor, alphaInt)
                     )
                     
                     // Fade out scrim as we scroll to solid color
@@ -587,91 +588,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                 )
         }
 
-        observe(homeViewModel.apiName) { apiName ->
+        observe(viewModel.apiName) { apiName ->
             currentApiName = apiName
         }
 
-        observe(homeViewModel.page) { data ->
-            binding.apply {
-                when (data) {
-                    is Resource.Success -> {
-                        val d = data.value
-                        (homeMasterRecycler.adapter as? ParentItemAdapter)?.submitList(d.values.map {
-                            it.copy(
-                                list = it.list.copy(list = it.list.list.toMutableList())
-                            )
-                        })
-
-                        homeLoading.isVisible = false
-                        homeLoadingError.isVisible = false
-                        homeMasterRecycler.isVisible = true
-                        homeLoadingShimmer.stopShimmer()
-                    }
-
-                    is Resource.Failure -> {
-                        homeLoadingShimmer.stopShimmer()
-                        homeReloadConnectionOpenInBrowser.setOnClickListener { view ->
-                            val validAPIs = apis
-
-                            view.popupMenuNoIconsAndNoStringRes(validAPIs.mapIndexed { index, api ->
-                                Pair(
-                                    index,
-                                    api.name
-                                )
-                            }) {
-                                try {
-                                    val i = Intent(Intent.ACTION_VIEW)
-                                    i.data = validAPIs[itemId].mainUrl.toUri()
-                                    startActivity(i)
-                                } catch (e: Exception) {
-                                    logError(e)
-                                }
-                            }
-                        }
-
-                        homeLoading.isVisible = false
-                        homeLoadingError.isVisible = true
-                        homeMasterRecycler.isInvisible = true
-
-                        val hasNoNetworkConnection = context?.isNetworkAvailable() == false
-                        val isNetworkError = data.isNetworkError
-
-                        homeReloadConnectionGoToDownloads.isVisible =
-                            hasNoNetworkConnection || isNetworkError
-
-                        homeReloadConnectionOpenInBrowser.isGone = hasNoNetworkConnection
-
-                        resultErrorText.text = if (hasNoNetworkConnection) {
-                            getString(R.string.no_internet_connection)
-                        } else {
-                            data.errorString
-                        }
-
-                        homeReloadConnectionGoToDownloads.setOnClickListener {
-                            activity.navigate(R.id.navigation_downloads)
-                        }
-
-                        (homeMasterRecycler.adapter as? ParentItemAdapter)?.apply {
-                            submitList(null)
-                            clearState()
-                        }
-                    }
-
-                    is Resource.Loading -> {
-                        homeLoadingShimmer.startShimmer()
-                        homeLoading.isVisible = true
-                        homeLoadingError.isVisible = false
-                        homeMasterRecycler.isInvisible = true
-                        (homeMasterRecycler.adapter as? ParentItemAdapter)?.apply {
-                            submitList(null)
-                            clearState()
-                        }
-                    }
-                }
-            }
-        }
-
-        observeNullable(homeViewModel.popup) { item ->
+        observeNullable(viewModel.popup) { item ->
             if (item == null) {
                 bottomSheetDialog?.dismissSafe()
                 bottomSheetDialog = null
@@ -685,15 +606,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             val (items, delete) = item
 
             bottomSheetDialog = activity?.loadHomepageList(items, expandCallback = {
-                homeViewModel.expandAndReturn(it)
+                viewModel.expandAndReturn(it)
             }, dismissCallback = {
-                homeViewModel.popup(null)
+                viewModel.popup(null)
                 bottomSheetDialog = null
             }, deleteCallback = delete)
         }
-
-        homeViewModel.reloadStored()
-        homeViewModel.loadAndCancel(DataStoreHelper.currentHomePage, false)
 
         loadAvatar(binding)
 

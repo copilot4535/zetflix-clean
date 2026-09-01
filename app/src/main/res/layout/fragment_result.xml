@@ -364,7 +364,7 @@
                                 android:layout_marginBottom="5dp"
                                 android:maxLines="2"
                                 android:textColor="?attr/textColor"
-                                android:textSize="20sp"
+                                android:textAppearance="?attr/textAppearanceHeadlineSmall"
                                 android:textStyle="bold"
                                 tools:text="The Perfect Run The Perfect Run" />
 
@@ -430,7 +430,7 @@
 
                                     android:paddingTop="5dp"
                                     android:textColor="?attr/textColor"
-                                    android:textSize="15sp"
+                                    android:textSize="@dimen/text_size_body_small"
                                     tools:text="Ryan Quicksave Romano is an eccentric adventurer with a strange power: he can create a save-point in time and redo his life whenever he dies. Arriving in New Rome, the glitzy capital of sin of a rebuilding Europe, he finds the city torn between mega-corporations, sponsored heroes, superpowered criminals, and true monsters. It's a time of chaos, where potions can grant the power to rule the world and dangers lurk everywhere. " />
 
                                 <ImageView
@@ -477,7 +477,7 @@
                         android:ellipsize="end"
                         android:maxLines="2"
                         android:textColor="?attr/grayTextColor"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_body_small"
                         tools:text="Cast: Joe Ligma" />
 
                     <androidx.recyclerview.widget.RecyclerView
@@ -504,7 +504,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textColor="?attr/grayTextColor"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_body_small"
                         tools:text="@string/vpn_torrent" />
 
                     <TextView
@@ -513,7 +513,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"
                         android:textColor="?attr/grayTextColor"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_body_small"
                         tools:text="@string/provider_info_meta" />
 
                     <TextView
@@ -522,7 +522,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"
                         android:textColor="?attr/grayTextColor"
-                        android:textSize="15sp"
+                        android:textSize="@dimen/text_size_body_small"
                         tools:text="@string/no_episodes_found" />
 
                     <TextView
@@ -533,7 +533,7 @@
                         android:layout_marginBottom="10dp"
                         android:text="@string/result_tags"
                         android:textColor="?attr/textColor"
-                        android:textSize="17sp"
+                        android:textSize="@dimen/text_size_body"
                         android:textStyle="normal"
                         android:visibility="gone" />
 
@@ -556,7 +556,7 @@
                         android:paddingTop="50dp"
                         android:text="@string/coming_soon"
                         android:textColor="?attr/textColor"
-                        android:textSize="20sp"
+                        android:textAppearance="?attr/textAppearanceHeadlineSmall"
                         android:textStyle="bold"
                         android:visibility="gone" />
 
@@ -636,7 +636,7 @@
                                     android:paddingStart="5dp"
                                     android:textAllCaps="false"
                                     android:textColor="?attr/iconGrayBackground"
-                                    android:textSize="15sp"
+                                    android:textSize="@dimen/text_size_body_small"
                                     android:textStyle="bold"
                                     android:visibility="visible"
                                     tools:ignore="RtlSymmetry"
@@ -655,7 +655,7 @@
                                     android:paddingStart="5dp"
                                     android:textAllCaps="false"
                                     android:textColor="?attr/iconGrayBackground"
-                                    android:textSize="15sp"
+                                    android:textSize="@dimen/text_size_body_small"
                                     android:textStyle="bold"
                                     android:visibility="gone"
                                     tools:ignore="RtlSymmetry"

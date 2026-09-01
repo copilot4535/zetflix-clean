@@ -48,12 +48,12 @@ import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.APIRepository
 import com.lagradost.cloudstream3.ui.BaseAdapter
 import com.lagradost.cloudstream3.ui.BaseFragment
+import com.lagradost.cloudstream3.ui.home.BaseHomeViewModel
 import com.lagradost.cloudstream3.ui.home.HomeFragment
 import com.lagradost.cloudstream3.ui.home.HomeFragment.Companion.bindChips
 import com.lagradost.cloudstream3.ui.home.HomeFragment.Companion.currentSpan
 import com.lagradost.cloudstream3.ui.home.HomeFragment.Companion.loadHomepageList
 import com.lagradost.cloudstream3.ui.home.HomeFragment.Companion.updateChips
-import com.lagradost.cloudstream3.ui.home.HomeViewModel
 import com.lagradost.cloudstream3.ui.home.ParentItemAdapter
 import com.lagradost.cloudstream3.ui.result.FOCUS_SELF
 import com.lagradost.cloudstream3.ui.result.setLinearListLayout
@@ -362,7 +362,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
                             dataListFiltered
                         )
 
-                        HomeViewModel.ExpandableHomepageList(
+                        BaseHomeViewModel.ExpandableHomepageList(
                             homePageList,
                             providerData.currentPage,
                             providerData.hasNext

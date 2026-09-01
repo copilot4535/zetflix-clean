@@ -17,6 +17,20 @@
         <item name="android:scrollbarThumbHorizontal">@null</item>
 
         <item name="android:textViewStyle">@style/AppTextViewStyle</item>
+
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.ZetFlix.Display</item>
+        <item name="textAppearanceDisplayMedium">@style/TextAppearance.ZetFlix.Display</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.ZetFlix.Display</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.ZetFlix.H1</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.ZetFlix.H2</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.ZetFlix.H3</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.ZetFlix.Body</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.ZetFlix.Body</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.ZetFlix.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.ZetFlix.Caption</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.ZetFlix.Caption</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.ZetFlix.Overline</item>
+
         <item name="android:buttonStyle">@style/AppButtonStyle</item>
         <item name="android:editTextStyle">@style/AppEditStyle</item>
         <item name="alertDialogTheme">@style/Theme.AlertDialog</item>
@@ -215,8 +229,7 @@
     </style>
 
     <style name="AppTextViewStyle" parent="android:Widget.TextView">
-        <item name="fontFamily">@font/google_sans</item>
-        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textAppearance">@style/TextAppearance.ZetFlix.Body</item>
     </style>
 
     <style name="AppButtonStyle" parent="Widget.MaterialComponents.Button">
@@ -346,7 +359,7 @@
         <item name="android:selectAllOnFocus">true</item>
         <item name="android:background">?attr/focusBackground</item>
         <item name="android:textColor">?attr/textColor</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">@dimen/text_size_body</item>
         <item name="fontFamily">@font/google_sans</item>
         <item name="android:fontFamily">@font/google_sans</item>
         <item name="drawableEndCompat">@drawable/ic_baseline_keyboard_arrow_right_24</item>
@@ -358,7 +371,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">?attr/textColor</item>
         <item name="android:gravity">center_vertical</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">@dimen/text_size_body_large</item>
         <item name="android:layout_marginEnd">50dp</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -374,7 +387,7 @@
         <item name="android:paddingRight">7dp</item>
         <item name="android:paddingTop">3dp</item>
         <item name="android:paddingBottom">3dp</item>
-        <item name="android:textSize">10sp</item>
+        <item name="android:textSize">@dimen/text_size_overline</item>
         <item name="textColor">?attr/textColor</item>
         <item name="android:textColor">?attr/textColor</item>
         <item name="android:layout_marginLeft">1dp</item>
@@ -394,7 +407,7 @@
         <item name="iconGravity">textStart</item>
         <item name="iconSize">20dp</item>
         <item name="cornerRadius">@dimen/rounded_button_radius</item>
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">@dimen/text_size_body_small</item>
 
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
@@ -437,7 +450,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:minHeight">?android:attr/listPreferredItemHeightSmall</item>
         <item name="android:textColor">@color/text_selection_color</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">@dimen/text_size_body</item>
         <item name="android:textStyle">bold</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:paddingStart">12dp</item>
@@ -572,7 +585,7 @@
         <item name="android:layout_gravity">center</item>
         <item name="textAllCaps">false</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textSize">10sp</item>
+        <item name="android:textSize">@dimen/text_size_overline</item>
         <item name="android:layout_marginStart">10dp</item>
         <item name="android:layout_marginEnd">10dp</item>
     </style>
@@ -729,11 +742,70 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/zetflix_accent</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">@dimen/text_size_body_small</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
         <item name="android:letterSpacing">0.1</item>
         <item name="android:layout_marginBottom">8dp</item>
         <item name="android:layout_marginTop">8dp</item>
+    </style>
+
+    <style name="AppPreferenceSummaryTextStyle" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textColor">?attr/grayTextColor</item>
+        <item name="android:textSize">@dimen/text_size_summary</item>
+        <item name="android:lineSpacingMultiplier">1.0</item>
+        <item name="android:lineSpacingExtra">0dp</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+
+    <!-- Typography Text Appearances -->
+    <style name="TextAppearance.ZetFlix.Display" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:textSize">@dimen/text_size_display</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+
+    <style name="TextAppearance.ZetFlix.H1" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textSize">@dimen/text_size_h1</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+
+    <style name="TextAppearance.ZetFlix.H2" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">@dimen/text_size_h2</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+
+    <style name="TextAppearance.ZetFlix.H3" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textSize">@dimen/text_size_h3</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+
+    <style name="TextAppearance.ZetFlix.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textSize">@dimen/text_size_body</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+
+    <style name="TextAppearance.ZetFlix.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textSize">@dimen/text_size_body_small</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+
+    <style name="TextAppearance.ZetFlix.Caption" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">@dimen/text_size_caption</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+
+    <style name="TextAppearance.ZetFlix.Overline" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">@dimen/text_size_overline</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textAllCaps">true</item>
     </style>
 </resources>

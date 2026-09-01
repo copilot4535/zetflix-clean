@@ -54,7 +54,7 @@ import android.content.SharedPreferences
 import kotlin.math.absoluteValue
 
 class HomeParentItemAdapterPreview(
-    private val viewModel: HomeViewModel,
+    private val viewModel: BaseHomeViewModel,
 ) : ParentItemAdapter(
     id = "HomeParentItemAdapterPreview".hashCode(),
     clickCallback = {
@@ -96,7 +96,7 @@ class HomeParentItemAdapterPreview(
 
     private class HeaderViewHolder(
         val binding: ViewBinding,
-        val viewModel: HomeViewModel,
+        val viewModel: BaseHomeViewModel,
     ) :
         ViewHolderState<Bundle>(binding) {
 
@@ -403,7 +403,7 @@ class HomeParentItemAdapterPreview(
 
                 title.setOnClickListener {
                     viewModel.popup(
-                        HomeViewModel.ExpandableHomepageList(
+                        BaseHomeViewModel.ExpandableHomepageList(
                             HomePageList(
                                 title.text.toString(),
                                 resumeWatching,
@@ -433,7 +433,7 @@ class HomeParentItemAdapterPreview(
                         .mapNotNull { it.text }.joinToString()
 
                     viewModel.popup(
-                        HomeViewModel.ExpandableHomepageList(
+                        BaseHomeViewModel.ExpandableHomepageList(
                             HomePageList(
                                 textSum,
                                 list,

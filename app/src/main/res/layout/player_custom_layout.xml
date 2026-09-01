@@ -47,7 +47,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:textColor="@android:color/white"
-                    android:textSize="30sp"
+                    android:textAppearance="?attr/textAppearanceDisplaySmall"
                     android:textStyle="bold"
                     android:maxLines="2"
                     android:ellipsize="end"
@@ -61,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:textColor="@color/zetflix_text_med"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_body_small"
                 android:maxLines="2"
                 tools:text="Animation • Action • Adventure • 2025 • ⭐ 7.6"/>
 
@@ -72,7 +72,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:textColor="@color/zetflix_text_high"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_body"
                 android:lineSpacingExtra="8dp"
                 android:maxLines="5"
                 tools:text="Brave rabbit cop Judy Hopps and her friend, the fox Nick Wilde, team up again to crack a new case."/>
@@ -150,7 +150,7 @@
                 android:shadowColor="@android:color/black"
                 android:shadowRadius="10.0"
                 android:textColor="@android:color/white"
-                android:textSize="30sp"
+                android:textSize="@dimen/text_size_display"
                 tools:text="+100" />
         </RelativeLayout>
 
@@ -522,7 +522,7 @@
                         android:layout_gravity="center"
                         android:gravity="center"
                         android:textColor="@color/white"
-                        android:textSize="19sp"
+                        android:textSize="@dimen/text_size_h3"
                         android:textStyle="bold"
                         tools:text="10" />
 
@@ -733,7 +733,7 @@
                         android:paddingLeft="4dp"
                         android:paddingRight="4dp"
                         android:textColor="@android:color/white"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_body_small"
                         android:textStyle="normal"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -794,7 +794,7 @@
                         android:paddingLeft="4dp"
                         android:paddingRight="4dp"
                         android:textColor="@android:color/white"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_body_small"
                         android:textStyle="normal"
                         app:layout_constraintBaseline_toBaselineOf="@id/exo_position"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -811,7 +811,7 @@
                         android:paddingLeft="4dp"
                         android:paddingRight="4dp"
                         android:textColor="@android:color/white"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_body_small"
                         android:textStyle="normal"
                         android:visibility="gone"
                         app:layout_constraintBaseline_toBaselineOf="@id/exo_position"
@@ -830,7 +830,7 @@
                         android:paddingLeft="4dp"
                         android:paddingRight="4dp"
                         android:textColor="@android:color/white"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_body_small"
                         android:textStyle="normal"
                         android:visibility="gone"
                         app:layout_constraintBaseline_toBaselineOf="@id/exo_position"

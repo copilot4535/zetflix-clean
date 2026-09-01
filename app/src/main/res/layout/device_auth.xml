@@ -14,7 +14,7 @@
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
             android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
             android:textColor="?attr/colorPrimary"
-            android:textSize="30sp"
+            android:textSize="@dimen/text_size_display"
             android:textStyle="bold"
             tools:text="YJTSKL" />
 
@@ -27,7 +27,7 @@
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
             android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
             android:textColor="?attr/textColor"
-            android:textSize="17sp"
+            android:textSize="@dimen/text_size_body"
             tools:text="Visit simkl.com/pin on your smartphone or computer and enter the above code" />
 
         <ImageView
@@ -53,7 +53,7 @@
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
             android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
             android:textColor="?attr/textColor"
-            android:textSize="17sp"
+            android:textSize="@dimen/text_size_body"
             tools:text="Code expires in 13m 2s" />
 
 </LinearLayout>

@@ -72,7 +72,7 @@
         android:alpha="0"
         android:text="Optimizing your experience"
         android:textColor="@color/zetflix_text_secondary"
-        android:textSize="11sp"
+        android:textSize="@dimen/text_size_overline"
         android:fontFamily="@font/productsans_medium"
         android:textAllCaps="true"
         android:letterSpacing="0.25"

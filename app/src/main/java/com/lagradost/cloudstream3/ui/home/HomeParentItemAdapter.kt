@@ -33,9 +33,9 @@ class LoadClickCallback(
 open class ParentItemAdapter(
     id: Int,
     private val clickCallback: (SearchClickCallback) -> Unit,
-    private val moreInfoClickCallback: (HomeViewModel.ExpandableHomepageList) -> Unit,
+    private val moreInfoClickCallback: (BaseHomeViewModel.ExpandableHomepageList) -> Unit,
     private val expandCallback: ((String) -> Unit)? = null,
-) : BaseAdapter<HomeViewModel.ExpandableHomepageList, Bundle>(
+) : BaseAdapter<BaseHomeViewModel.ExpandableHomepageList, Bundle>(
     id,
     diffCallback = BaseDiffCallback(
         itemSame = { a, b -> a.list.name == b.list.name },
@@ -66,7 +66,7 @@ open class ParentItemAdapter(
     }
 
     override fun submitList(
-        list: Collection<HomeViewModel.ExpandableHomepageList>?,
+        list: Collection<BaseHomeViewModel.ExpandableHomepageList>?,
         commitCallback: Runnable?
     ) {
         super.submitList(list?.sortedBy { it.list.list.isEmpty() }, commitCallback)
@@ -74,7 +74,7 @@ open class ParentItemAdapter(
 
     override fun onUpdateContent(
         holder: ViewHolderState<Bundle>,
-        item: HomeViewModel.ExpandableHomepageList,
+        item: BaseHomeViewModel.ExpandableHomepageList,
         position: Int
     ) {
         val binding = holder.view
@@ -84,7 +84,7 @@ open class ParentItemAdapter(
 
     override fun onBindContent(
         holder: ViewHolderState<Bundle>,
-        item: HomeViewModel.ExpandableHomepageList,
+        item: BaseHomeViewModel.ExpandableHomepageList,
         position: Int
     ) {
         val startFocus = R.id.nav_rail_view

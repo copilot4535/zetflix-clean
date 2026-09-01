@@ -81,7 +81,7 @@
             android:layout_margin="20dp"
             android:gravity="center"
             android:text="@string/blank_repo_message"
-            android:textSize="16sp" />
+            android:textSize="@dimen/text_size_body" />
 
         <!--        <com.google.android.material.button.MaterialButton-->
         <!--            android:id="@+id/list_repositories"-->
@@ -177,7 +177,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:textColor="?attr/textColor"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_caption"
                     tools:text="Downloaded: 7" />
 
                 <View
@@ -193,7 +193,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:textColor="?attr/textColor"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_caption"
                     tools:text="Disabled: 3" />
 
                 <View
@@ -209,7 +209,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:textColor="?attr/textColor"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_caption"
                     tools:text="Not downloaded 3" />
             </LinearLayout>
         </LinearLayout>

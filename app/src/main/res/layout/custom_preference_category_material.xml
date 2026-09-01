@@ -55,7 +55,7 @@
             android:textAlignment="viewStart"
             android:textColor="?android:attr/textColorSecondary"
             android:maxLines="10"
-            style="@style/PreferenceSummaryTextStyle"/>
+            style="@style/AppPreferenceSummaryTextStyle"/>
 
     </RelativeLayout>
 </LinearLayout>

@@ -325,6 +325,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             R.id.navigation_subtitles,
             R.id.navigation_chrome_subtitles,
             R.id.navigation_test_providers,
+            R.id.navigation_livestream,
         ).contains(destination.id)
 
         binding?.apply {
@@ -526,17 +527,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 R.id.navigation_home -> {
                     binding?.root?.findViewById<RecyclerView>(R.id.home_master_recycler)
                         ?.smoothScrollToTop()
-                }
-
-                R.id.navigation_search -> {
-                    for (recyclerId in arrayOf(
-                        R.id.search_master_recycler,
-                        R.id.search_autofit_results,
-                        R.id.search_history_recycler
-                    )) {
-                        binding?.root?.findViewById<RecyclerView>(recyclerId)
-                            ?.smoothScrollToTop()
-                    }
                 }
 
                 R.id.navigation_downloads -> {
@@ -757,7 +747,17 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             }
         }
 
-        ioSafe { SafeFile.check(this@MainActivity) }
+        // Consolidate non-critical IO tasks into a single deferred job
+        ioSafe {
+            SafeFile.check(this@MainActivity)
+            try {
+                loadCache()
+                File(filesDir, "exoplayer").deleteRecursively() // old cache
+                deleteFileOnExit(File(cacheDir, "exoplayer"))   // current cache
+            } catch (e: Exception) {
+                logError(e)
+            }
+        }
 
         if (PluginManager.checkSafeModeFile()) {
             safe {
@@ -765,46 +765,47 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             }
         } else if (lastError == null) {
             ioSafe {
+                Log.i("SportsIPTV", "Adding IPTV-Org Sports provider")
+                allProviders.add(com.lagradost.cloudstream3.providers.SportsIPTVProvider())
+                initAll()
+                apis = allProviders.distinctBy { it }
+
                 DataStoreHelper.currentHomePage?.let { homeApi ->
                     mainPluginsLoadedEvent.invoke(loadSinglePlugin(this@MainActivity, homeApi))
                 } ?: run {
                     mainPluginsLoadedEvent.invoke(false)
                 }
 
-                ioSafe {
-                    if (settingsManager.getBoolean(
-                            getString(R.string.auto_update_plugins_key),
-                            true
-                        )
-                    ) {
-                        PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(
-                            this@MainActivity
-                        )
-                    } else {
-                        ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(this@MainActivity)
-                    }
-
-                    //Automatically download not existing plugins, using mode specified.
-                    val autoDownloadPlugin = AutoDownloadMode.getEnum(
-                        settingsManager.getInt(
-                            getString(R.string.auto_download_plugins_key),
-                            2
-                        )
-                    ) ?: AutoDownloadMode.Disable
-                    if (autoDownloadPlugin != AutoDownloadMode.Disable) {
-                        PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_downloadNotExistingPluginsAndLoad(
-                            this@MainActivity,
-                            autoDownloadPlugin
-                        )
-                    }
+                if (settingsManager.getBoolean(
+                        getString(R.string.auto_update_plugins_key),
+                        true
+                    )
+                ) {
+                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(
+                        this@MainActivity
+                    )
+                } else {
+                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(this@MainActivity)
                 }
 
-                ioSafe {
-                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllLocalPlugins(
+                //Automatically download not existing plugins, using mode specified.
+                val autoDownloadPlugin = AutoDownloadMode.getEnum(
+                    settingsManager.getInt(
+                        getString(R.string.auto_download_plugins_key),
+                        2
+                    )
+                ) ?: AutoDownloadMode.Disable
+                if (autoDownloadPlugin != AutoDownloadMode.Disable) {
+                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_downloadNotExistingPluginsAndLoad(
                         this@MainActivity,
-                        false
+                        autoDownloadPlugin
                     )
                 }
+
+                PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllLocalPlugins(
+                    this@MainActivity,
+                    false
+                )
             }
         } else {
             val builder: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -1022,11 +1023,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         SearchResultBuilder.updateCache(this)
 
-        ioSafe {
-            initAll()
-            apis = allProviders.distinctBy { it }
-        }
-
         setUpBackup()
 
         CommonActivity.init(this)
@@ -1059,7 +1055,12 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     navController
                 )
             }
-
+            setOnItemReselectedListener { item ->
+                onNavDestinationSelected(
+                    item,
+                    navController
+                )
+            }
         }
 
         binding?.navRailView?.apply {
@@ -1070,6 +1071,12 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             setupWithNavController(navController)
 
             setOnItemSelectedListener { item ->
+                onNavDestinationSelected(
+                    item,
+                    navController
+                )
+            }
+            setOnItemReselectedListener { item ->
                 onNavDestinationSelected(
                     item,
                     navController
@@ -1090,19 +1097,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 return@setOnLongClickListener recycler != null
             }
 
-
-            view?.findViewById<View?>(R.id.navigation_search)?.setOnLongClickListener {
-                for (recyclerId in arrayOf(
-                    R.id.search_master_recycler,
-                    R.id.search_autofit_results,
-                    R.id.search_history_recycler
-                )) {
-                    val recycler = binding?.root?.findViewById<RecyclerView?>(recyclerId)
-                        ?: return@setOnLongClickListener false
-                    recycler.smoothScrollToPosition(0)
-                }
-                return@setOnLongClickListener true
-            }
 
             view?.findViewById<View?>(R.id.navigation_downloads)?.setOnLongClickListener {
                 val recycler: RecyclerView? = binding?.root?.findViewById(R.id.download_list)
@@ -1138,22 +1132,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         ioSafe {
             runAutoUpdate()
-        }
-
-        APIRepository.dubStatusActive = getApiDubstatusSettings()
-
-        ioSafe {
-            try {
-                loadCache()
-                File(filesDir, "exoplayer").deleteRecursively() // old cache
-                deleteFileOnExit(File(cacheDir, "exoplayer"))   // current cache
-            } catch (e: Exception) {
-                logError(e)
-            }
-        }
-        println("Loaded everything")
-
-        ioSafe {
+            APIRepository.dubStatusActive = getApiDubstatusSettings()
             migrateResumeWatching()
         }
 

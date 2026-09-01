@@ -24,9 +24,9 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.BaseFragment
+import com.lagradost.cloudstream3.ui.home.BaseHomeViewModel
 import com.lagradost.cloudstream3.ui.home.HomeFragment
 import com.lagradost.cloudstream3.ui.home.HomeFragment.Companion.loadHomepageList
-import com.lagradost.cloudstream3.ui.home.HomeViewModel
 import com.lagradost.cloudstream3.ui.home.ParentItemAdapter
 import com.lagradost.cloudstream3.ui.search.SearchAdapter
 import com.lagradost.cloudstream3.ui.search.SearchClickCallback
@@ -217,7 +217,7 @@ class QuickSearchFragment : BaseFragment<QuickSearchBinding>(
                             dataListFiltered
                         )
 
-                        val expandableList = HomeViewModel.ExpandableHomepageList(
+                        val expandableList = BaseHomeViewModel.ExpandableHomepageList(
                             homePageList,
                             ongoing.value.currentPage,
                             ongoing.value.hasNext

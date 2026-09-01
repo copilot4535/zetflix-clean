@@ -22,7 +22,7 @@
             android:paddingBottom="12dp"
             android:text="@string/title_downloads"
             android:textColor="?attr/textColor"
-            android:textSize="26sp"
+            android:textAppearance="?attr/textAppearanceHeadlineLarge"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -200,8 +200,8 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:textColor="?attr/textColor"
-                            android:textSize="12sp"
-                            tools:text="Used • 30.58GB" />
+                            android:textSize="@dimen/text_size_caption"
+                            tools:text="Used • 30.58GB" /> />
 
                         <View
                             android:layout_width="10dp"
@@ -216,8 +216,8 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:textColor="?attr/textColor"
-                            android:textSize="12sp"
-                            tools:text="App • 30.58GB" />
+                            android:textSize="@dimen/text_size_caption"
+                            tools:text="App • 30.58GB" /> />
 
                         <View
                             android:layout_width="10dp"
@@ -232,8 +232,8 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:textColor="?attr/textColor"
-                            android:textSize="12sp"
-                            tools:text="Free • 30.58GB" />
+                            android:textSize="@dimen/text_size_caption"
+                            tools:text="Free • 30.58GB" /> />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

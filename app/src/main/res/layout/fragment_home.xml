@@ -169,11 +169,12 @@
     <LinearLayout
         android:id="@+id/sticky_header"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/home_header_height"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
-        android:paddingTop="8dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="12dp"
         android:background="@android:color/transparent">
 
         <ImageView
@@ -188,6 +189,18 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_weight="1" />
+
+        <ImageView
+            android:id="@+id/home_search"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="12dp"
+            android:padding="3dp"
+            android:src="@drawable/search_icon"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/search" />
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/home_avatar"

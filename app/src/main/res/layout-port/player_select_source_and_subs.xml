@@ -36,7 +36,7 @@
                     android:layout_weight="1"
                     android:text="@string/pick_source"
                     android:textColor="?attr/textColor"
-                    android:textSize="20sp"
+                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
                     android:textStyle="bold" />
 
                 <TextView
@@ -47,7 +47,7 @@
                     android:minWidth="140dp"
                     android:paddingHorizontal="10dp"
                     android:textColor="?attr/textColor"
-                    android:textSize="15sp"
+                    android:textSize="@dimen/text_size_body_small"
                     app:drawableEndCompat="@drawable/ic_outline_settings_24"
                     tools:text="@string/profile_number" />
             </LinearLayout>
@@ -90,7 +90,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/pick_subtitle"
                         android:textColor="?attr/textColor"
-                        android:textSize="20sp"
+                        android:textAppearance="?attr/textAppearanceHeadlineSmall"
                         android:textStyle="bold" />
 
                     <TextView
@@ -100,7 +100,7 @@
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="3dp"
                         android:textColor="?attr/textColor"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_body_small"
                         android:ellipsize="end"
                         android:singleLine="true"
                         tools:text="Thai (TIS 620-2533/ISO 8859-11)" />

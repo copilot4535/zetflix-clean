@@ -16,7 +16,7 @@ import com.lagradost.cloudstream3.mvvm.debugAssert
 import com.lagradost.cloudstream3.mvvm.debugWarning
 import com.lagradost.cloudstream3.mvvm.launchSafe
 import com.lagradost.cloudstream3.ui.APIRepository
-import com.lagradost.cloudstream3.ui.home.HomeViewModel
+import com.lagradost.cloudstream3.ui.home.BaseHomeViewModel
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import com.lagradost.cloudstream3.utils.DataStoreHelper.currentAccount
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +61,7 @@ class SearchViewModel : ViewModel() {
 
     /** Save which providers can searched again and which search result page they are on.
      * Maps provider name to search list.
-     * @see [HomeViewModel.expandable] */
+     * @see [BaseHomeViewModel.expandable] */
     private val expandableSearches: MutableMap<String, ExpandableSearchList> = mutableMapOf()
 
     private var currentSearchIndex = 0
@@ -121,7 +121,7 @@ class SearchViewModel : ViewModel() {
     private val lock: MutableSet<String> = mutableSetOf()
 
     // ExpandableHomepageList because the home adapter is reused in the search fragment
-    suspend fun expandAndReturn(name: String): HomeViewModel.ExpandableHomepageList? {
+    suspend fun expandAndReturn(name: String): BaseHomeViewModel.ExpandableHomepageList? {
         if (lock.contains(name)) return null
         val query = lastQuery ?: return null
         val repo = repos.find { it.name == name } ?: return null
@@ -162,7 +162,7 @@ class SearchViewModel : ViewModel() {
         lock -= name
 
         val item = expandableSearches[name] ?: return null
-        return HomeViewModel.ExpandableHomepageList(
+        return BaseHomeViewModel.ExpandableHomepageList(
             HomePageList(name, item.list),
             item.currentPage,
             item.hasNext

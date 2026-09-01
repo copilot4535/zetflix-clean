@@ -60,6 +60,7 @@ abstract class BasePlugin {
             filename = value
         }
     var filename: String? = null
+    var version: Int? = null
 
     @Serializable
     class Manifest {

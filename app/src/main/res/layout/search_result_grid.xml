@@ -70,7 +70,7 @@
                 style="@style/SearchBox"
                 android:layout_gravity="end"
                 android:background="@color/transparent"
-                android:textSize="20sp"
+                android:textSize="@dimen/text_size_h3"
                 android:visibility="gone"
                 tools:text="🇸🇪"
                 tools:visibility="visible" />

@@ -1,6 +1,7 @@
 package com.lagradost.cloudstream3.plugins
 
 import android.Manifest
+import com.lagradost.cloudstream3.utils.DataStoreHelper
 import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
@@ -194,14 +195,14 @@ object PluginManager {
 
     // Maps filepath to plugin
     val plugins: MutableMap<String, BasePlugin> =
-        LinkedHashMap<String, BasePlugin>()
+        java.util.concurrent.ConcurrentHashMap<String, BasePlugin>()
 
     // Maps urls to plugin
     val urlPlugins: MutableMap<String, BasePlugin> =
-        LinkedHashMap<String, BasePlugin>()
+        java.util.concurrent.ConcurrentHashMap<String, BasePlugin>()
 
     private val classLoaders: MutableMap<PathClassLoader, BasePlugin> =
-        HashMap<PathClassLoader, BasePlugin>()
+        java.util.concurrent.ConcurrentHashMap<PathClassLoader, BasePlugin>()
 
     var loadedLocalPlugins = false
         private set
@@ -209,17 +210,24 @@ object PluginManager {
     var loadedOnlinePlugins = false
         private set
 
-    private suspend fun maybeLoadPlugin(context: Context, file: File, quiet: Boolean = false) {
+    private suspend fun maybeLoadPlugin(
+        context: Context,
+        file: File,
+        quiet: Boolean = false,
+        saveToPrefs: Boolean = true
+    ): PluginData? {
         val name = file.name
         if (file.extension == "zip" || file.extension == "cs3") {
-            loadPlugin(
+            return loadPlugin(
                 context,
                 file,
                 PluginData(name, null, false, file.absolutePath, PLUGIN_VERSION_NOT_SET),
-                quiet = quiet
+                quiet = quiet,
+                saveToPrefs = saveToPrefs
             )
         } else {
             Log.i(TAG, "Skipping invalid plugin file: $file")
+            return null
         }
     }
 
@@ -257,7 +265,7 @@ object PluginManager {
                 context,
                 File(savedData.filePath),
                 savedData
-            )
+            ) != null
         } ?: false
     }
 
@@ -467,14 +475,45 @@ object PluginManager {
     suspend fun ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(context: Context) = withContext(Dispatchers.IO) {
         assertNonRecursiveCallstack()
 
-        // Load all plugins as fast as possible!
-        (getPluginsOnline()).toList().amap { pluginData ->
+        val allPlugins = getPluginsOnline().toList()
+        val currentHome = DataStoreHelper.currentHomePage
+        val pinned = DataStoreHelper.pinnedProviders.toSet()
+        val livePriorityKeywords = listOf("football", "cricket", "sports", "soccer", "live", "iptv")
+
+        // Tier 1: Current Home
+        val (tier1, tier234) = allPlugins.partition { it.internalName == currentHome }
+        
+        // Tier 2: Pinned
+        val (tier2, tier34) = tier234.partition { pinned.contains(it.internalName) }
+        
+        // Tier 3: Livestream Priority
+        val (tier3, tier4) = tier34.partition { plugin ->
+            livePriorityKeywords.any { plugin.internalName.lowercase().contains(it) }
+        }
+
+        // Tiers 1-3: Fast Parallel Load (Limited)
+        (tier1 + tier2 + tier3).amap { pluginData ->
             loadPlugin(
                 context,
                 File(pluginData.filePath),
                 pluginData,
-                quiet = true
+                quiet = true,
+                saveToPrefs = false
             )
+        }
+
+        // Tier 4: Sequential Staggered Load
+        tier4.forEach { pluginData ->
+            loadPlugin(
+                context,
+                File(pluginData.filePath),
+                pluginData,
+                quiet = true,
+                saveToPrefs = false
+            )
+            // Breathing room for UI and Tier 1-3 processing
+            kotlinx.coroutines.delay(100)
+            kotlinx.coroutines.yield()
         }
     }
 
@@ -537,10 +576,7 @@ object PluginManager {
             pluginDirectory.mkdirs() // Ensure the plugins directory exists
         }
 
-        // Make sure all local plugins are fully refreshed.
-        removeKey(PLUGINS_KEY_LOCAL)
-
-        sortedPlugins?.sortedBy { it.name }?.amap { file ->
+        val loadedLocalPluginsList = sortedPlugins?.sortedBy { it.name }?.amap { file ->
             try {
                 val destinationFile = File(pluginDirectory, file.name)
 
@@ -561,11 +597,19 @@ object PluginManager {
                 }
 
                 // Load the plugin after it has been copied
-                maybeLoadPlugin(context, destinationFile, quiet = true)
+                maybeLoadPlugin(context, destinationFile, quiet = true, saveToPrefs = false)
             } catch (t: Throwable) {
                 Log.e(TAG, "Failed to copy the file")
                 logError(t)
+                null
+            } finally {
+                kotlinx.coroutines.yield()
             }
+        }?.filterNotNull() ?: emptyList()
+
+        // Batch save local plugins
+        lock.withLock {
+            setKey(PLUGINS_KEY_LOCAL, loadedLocalPluginsList.toTypedArray())
         }
 
         loadedLocalPlugins = true
@@ -593,11 +637,23 @@ object PluginManager {
     }
 
     /**
-     * @return True if successful, false if not
+     * @return Data about the plugin if successful, null if not
      * */
-    private suspend fun loadPlugin(context: Context, file: File, data: PluginData, quiet: Boolean = false): Boolean = withContext(Dispatchers.IO) {
+    private suspend fun loadPlugin(
+        context: Context,
+        file: File,
+        data: PluginData,
+        quiet: Boolean = false,
+        saveToPrefs: Boolean = true
+    ): PluginData? = withContext(Dispatchers.IO) {
         val fileName = file.nameWithoutExtension
         val filePath = file.absolutePath
+
+        if (plugins.containsKey(filePath)) {
+            Log.i(TAG, "Plugin with name $fileName already exists at $filePath")
+            return@withContext plugins[filePath]?.let { data.copy(version = it.version ?: data.version) } ?: data
+        }
+
         currentlyLoading = fileName
         Log.i(TAG, "Loading plugin: $data")
 
@@ -618,14 +674,15 @@ object PluginManager {
             loader.getResourceAsStream("manifest.json").use { stream ->
                 if (stream == null) {
                     Log.e(TAG, "Failed to load plugin  $fileName: No manifest found")
-                    return@withContext false
+                    return@withContext null
                 }
                 InputStreamReader(stream).use { reader ->
                     manifest = parseJson<BasePlugin.Manifest>(reader.readText())
                 }
             }
 
-            val name: String = manifest.name ?: "NO NAME".also {
+            val name: String = manifest.name ?: "NO NAME"
+            if (manifest.name == null) {
                 Log.d(TAG, "No manifest name for ${data.internalName}")
             }
             val version: Int = manifest.version ?: PLUGIN_VERSION_NOT_SET.also {
@@ -637,13 +694,12 @@ object PluginManager {
                 loader.loadClass(manifest.pluginClassName) as Class<out BasePlugin?>
             val pluginInstance: BasePlugin =
                 pluginClass.getDeclaredConstructor().newInstance() as BasePlugin
+            pluginInstance.version = version
 
+            val newData = data.copy(version = version)
             // Sets with the proper version
-            setPluginData(data.copy(version = version))
-
-            if (plugins.containsKey(filePath)) {
-                Log.i(TAG, "Plugin with name $name already exists")
-                return@withContext true
+            if (saveToPrefs && data.version != version) {
+                setPluginData(newData)
             }
 
             pluginInstance.filename = file.absolutePath
@@ -662,15 +718,9 @@ object PluginManager {
                     context.resources.configuration
                 )
             }
-            synchronized(plugins) {
-                plugins[filePath] = pluginInstance
-            }
-            synchronized(classLoaders) {
-                classLoaders[loader] = pluginInstance
-            }
-            synchronized(urlPlugins) {
-                urlPlugins[data.url ?: filePath] = pluginInstance
-            }
+            plugins[filePath] = pluginInstance
+            classLoaders[loader] = pluginInstance
+            urlPlugins[data.url ?: filePath] = pluginInstance
             if (pluginInstance is Plugin) {
                 pluginInstance.load(context)
             } else {
@@ -678,7 +728,7 @@ object PluginManager {
             }
             Log.i(TAG, "Loaded plugin ${data.internalName} successfully")
             currentlyLoading = null
-            true
+            newData
         } catch (e: Throwable) {
             Log.e(TAG, "Failed to load $file: ${Log.getStackTraceString(e)}")
             if (!quiet) {
@@ -691,7 +741,7 @@ object PluginManager {
                 }
             }
             currentlyLoading = null
-            false
+            null
         }
     }
 
@@ -726,17 +776,9 @@ object PluginManager {
             VideoClickActionHolder.allVideoClickActions.removeAll { action -> action.sourcePlugin == plugin.filename }
         }
 
-        synchronized(classLoaders) {
-            classLoaders.values.removeIf { v -> v == plugin }
-        }
-
-        synchronized(plugins) {
-            plugins.remove(absolutePath)
-        }
-
-        synchronized(urlPlugins) {
-            urlPlugins.values.removeIf { v -> v == plugin }
-        }
+        classLoaders.values.removeIf { v -> v == plugin }
+        plugins.remove(absolutePath)
+        urlPlugins.values.removeIf { v -> v == plugin }
     }
 
     /**
@@ -805,7 +847,7 @@ object PluginManager {
                     newFile,
                     data,
                     quiet = quiet
-                )
+                ) != null
             } else {
                 setPluginData(data)
                 true
