@@ -22,6 +22,8 @@ import com.lagradost.cloudstream3.utils.LIVESTREAM_CACHE_KEY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 class LiveStreamViewModel : BaseHomeViewModel() {
@@ -36,6 +38,8 @@ class LiveStreamViewModel : BaseHomeViewModel() {
     private val searchQuery = MutableLiveData<String?>(null)
     private val _searchPage = MutableLiveData<Resource<Map<String, ExpandableHomepageList>>>()
     private val searchExpandable: MutableMap<String, ExpandableHomepageList> = java.util.LinkedHashMap()
+    private val searchLock = Mutex()
+    private val homeLock = Mutex()
 
     private val _filteredPage = MediatorLiveData<Resource<Map<String, ExpandableHomepageList>>>()
     val filteredPage: LiveData<Resource<Map<String, ExpandableHomepageList>>> = _filteredPage
@@ -80,11 +84,16 @@ class LiveStreamViewModel : BaseHomeViewModel() {
 
     private suspend fun expandSearch(name: String, query: String) {
         if (lock.contains(name)) return
-        lock += name
+        searchLock.withLock {
+            if (lock.contains(name)) return
+            lock += name
+        }
 
         val api = getFilteredApis().find { it.name == name }
         if (api != null) {
-            searchExpandable[name]?.let { current ->
+            searchLock.withLock {
+                searchExpandable[name]
+            }?.let { current ->
                 val nextPage = current.currentPage + 1
                 val repo = APIRepository(api)
                 val search = repo.search(query, nextPage)
@@ -95,18 +104,24 @@ class LiveStreamViewModel : BaseHomeViewModel() {
                         it.type == TvType.Live || (it.type != TvType.Movie && it.type != TvType.AnimeMovie && it.type != TvType.TvSeries && it.type != TvType.AsianDrama)
                     }
                     
-                    current.list.list += liveItems
-                    current.list.list = current.list.list.distinctBy { it.url }
-                    current.currentPage = nextPage
-                    current.hasNext = searchResult.hasNext
+                    searchLock.withLock {
+                        current.list.list += liveItems
+                        current.list.list = current.list.list.distinctBy { it.url }
+                        current.currentPage = nextPage
+                        current.hasNext = searchResult.hasNext
+                    }
                 } else {
-                    current.hasNext = false
+                    searchLock.withLock {
+                        current.hasNext = false
+                    }
                 }
                 _searchPage.postValue(Resource.Success(searchExpandable))
             }
         }
 
-        lock -= name
+        searchLock.withLock {
+            lock -= name
+        }
     }
 
     fun search(query: String?) {
@@ -125,7 +140,9 @@ class LiveStreamViewModel : BaseHomeViewModel() {
             _searchLoading.postValue(true)
             delay(500)
             
-            searchExpandable.clear()
+            searchLock.withLock {
+                searchExpandable.clear()
+            }
             _searchPage.postValue(Resource.Loading())
             
             val filteredApis = getFilteredApis()
@@ -142,15 +159,17 @@ class LiveStreamViewModel : BaseHomeViewModel() {
                         }
                         
                         if (liveItems.isNotEmpty()) {
-                            searchExpandable[api.name] = ExpandableHomepageList(
-                                HomePageList(api.name, liveItems),
-                                1,
-                                searchResult.hasNext
-                            )
+                            searchLock.withLock {
+                                searchExpandable[api.name] = ExpandableHomepageList(
+                                    HomePageList(api.name, liveItems),
+                                    1,
+                                    searchResult.hasNext
+                                )
+                            }
                         }
                     }
-                    _searchPage.postValue(Resource.Success(searchExpandable))
                 }
+                _searchPage.postValue(Resource.Success(searchExpandable))
             }
             _searchLoading.postValue(false)
         }
@@ -184,19 +203,21 @@ class LiveStreamViewModel : BaseHomeViewModel() {
                             }
 
                             if (liveItems.isNotEmpty()) {
-                                searchExpandable[api.name] = (searchExpandable[api.name] ?: ExpandableHomepageList(
-                                    HomePageList(api.name, emptyList()),
-                                    currentSearchPage,
-                                    searchResult.hasNext
-                                )).apply {
-                                    list.list = (list.list + liveItems).distinctBy { it.url }
-                                    hasNext = searchResult.hasNext
-                                    currentPage = currentSearchPage
+                                searchLock.withLock {
+                                    searchExpandable[api.name] = (searchExpandable[api.name] ?: ExpandableHomepageList(
+                                        HomePageList(api.name, emptyList()),
+                                        currentSearchPage,
+                                        searchResult.hasNext
+                                    )).apply {
+                                        list.list = (list.list + liveItems).distinctBy { it.url }
+                                        hasNext = searchResult.hasNext
+                                        currentPage = currentSearchPage
+                                    }
                                 }
                             }
                         }
-                        _searchPage.postValue(Resource.Success(searchExpandable))
                     }
+                    _searchPage.postValue(Resource.Success(searchExpandable))
                 }
             } else {
                 currentHomePage++
@@ -229,72 +250,75 @@ class LiveStreamViewModel : BaseHomeViewModel() {
         }
     }
 
-    override fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>) {
+    override suspend fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>) {
         if (resource is Resource.Success) {
             val freshApis = resource.value.flatMap { it?.items ?: emptyList() }
                 .flatMap { it.list }
                 .map { it.apiName }
                 .distinct()
 
-            // 0. Remove stale cached items from these specific providers
-            if (freshApis.isNotEmpty()) {
-                expandable.values.forEach { expandableList ->
-                    expandableList.list.list = expandableList.list.list.filterNot { 
-                        freshApis.contains(it.apiName) 
+            homeLock.withLock {
+                // 0. Remove stale cached items from these specific providers
+                if (freshApis.isNotEmpty()) {
+                    expandable.values.forEach { expandableList ->
+                        expandableList.list.list = expandableList.list.list.filterNot {
+                            freshApis.contains(it.apiName)
+                        }
                     }
                 }
-            }
 
-            resource.value.forEach { home ->
-                home?.items?.forEach { list ->
-                    val categoryName = list.name.lowercase()
-                    
-                    // 1. Identify if this is a Live list
-                    // - Explicitly marked as Live by the provider
-                    // - Category name contains live/sports keywords
-                    val isLiveList = list.list.any { it.type == TvType.Live } || 
-                                     sportKeywords.any { categoryName.contains(it) }
+                resource.value.forEach { home ->
+                    home?.items?.forEach { list ->
+                        val categoryName = list.name.lowercase()
 
-                    if (!isLiveList) return@forEach
+                        // 1. Identify if this is a Live list
+                        // - Explicitly marked as Live by the provider
+                        // - Category name contains live/sports keywords
+                        val isLiveList = list.list.any { it.type == TvType.Live } ||
+                                sportKeywords.any { categoryName.contains(it) }
 
-                    // 2. Strictly filter out any individual items marked as Movie or TvSeries
-                    val strictlyLiveItems = list.list.filter { 
-                        it.type == TvType.Live || (it.type != TvType.Movie && it.type != TvType.AnimeMovie && it.type != TvType.TvSeries && it.type != TvType.AsianDrama)
-                    }
-                    
-                    if (strictlyLiveItems.isEmpty()) return@forEach
+                        if (!isLiveList) return@forEach
 
-                    val noMoviesList = list.copy(list = strictlyLiveItems)
-                    val filteredList = context?.filterHomePageListByFilmQuality(noMoviesList) ?: noMoviesList
-                    val key = list.name
-                    val existing = expandable[key]
-                    if (existing != null) {
-                        existing.list.list += filteredList.list
-                        existing.list.list = existing.list.list.distinctBy { it.url }
-                    } else {
-                        expandable[key] = ExpandableHomepageList(
-                            filteredList.copy(list = filteredList.list.toList()),
-                            1,
-                            false
-                        )
+                        // 2. Strictly filter out any individual items marked as Movie or TvSeries
+                        val strictlyLiveItems = list.list.filter {
+                            it.type == TvType.Live || (it.type != TvType.Movie && it.type != TvType.AnimeMovie && it.type != TvType.TvSeries && it.type != TvType.AsianDrama)
+                        }
+
+                        if (strictlyLiveItems.isEmpty()) return@forEach
+
+                        val noMoviesList = list.copy(list = strictlyLiveItems)
+                        val filteredList =
+                            context?.filterHomePageListByFilmQuality(noMoviesList) ?: noMoviesList
+                        val key = list.name
+                        val existing = expandable[key]
+                        if (existing != null) {
+                            existing.list.list += filteredList.list
+                            existing.list.list = existing.list.list.distinctBy { it.url }
+                        } else {
+                            expandable[key] = ExpandableHomepageList(
+                                filteredList.copy(list = filteredList.list.toList()),
+                                1,
+                                false
+                            )
+                        }
                     }
                 }
-            }
-            
-            // Priority sorting for UI rows
-            val sortedEntries = expandable.entries.sortedByDescending { (name, _) ->
-                val n = name.lowercase()
-                when {
-                    n.contains("football") || n.contains("soccer") -> 3
-                    n.contains("cricket") -> 2
-                    n.contains("sports") -> 1
-                    else -> 0
+
+                // Priority sorting for UI rows
+                val sortedEntries = expandable.entries.sortedByDescending { (name, _) ->
+                    val n = name.lowercase()
+                    when {
+                        n.contains("football") || n.contains("soccer") -> 3
+                        n.contains("cricket") -> 2
+                        n.contains("sports") -> 1
+                        else -> 0
+                    }
                 }
-            }
-            
-            expandable.clear()
-            sortedEntries.forEach { (name, list) ->
-                expandable[name] = list
+
+                expandable.clear()
+                sortedEntries.forEach { (name, list) ->
+                    expandable[name] = list
+                }
             }
         }
     }

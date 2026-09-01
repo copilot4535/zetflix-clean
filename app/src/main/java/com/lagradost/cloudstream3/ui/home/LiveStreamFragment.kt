@@ -70,6 +70,7 @@ class LiveStreamFragment : BaseHomeFragment<FragmentLivestreamBinding>(
 
             binding.livestreamLoadMoreButton.isEnabled = !loading
             binding.livestreamLoadMoreButton.text = if (loading) "" else "Load More"
+            binding.livestreamLoadMoreButton.setIconResource(if (loading) 0 else R.drawable.ic_baseline_autorenew_24)
             binding.livestreamLoadMoreProgress.isVisible = loading
         }
     }

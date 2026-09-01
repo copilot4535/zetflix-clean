@@ -32,7 +32,7 @@ class HomeViewModel : BaseHomeViewModel() {
         }
     }
 
-    override fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>) {
+    override suspend fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>) {
         if (resource is Resource.Success) {
             val currentHome = DataStoreHelper.currentHomePage
             resource.value.forEach { home ->

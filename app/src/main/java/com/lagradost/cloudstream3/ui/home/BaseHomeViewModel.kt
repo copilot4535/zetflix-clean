@@ -322,7 +322,7 @@ abstract class BaseHomeViewModel : ViewModel() {
         }
     }
 
-    protected abstract fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>)
+    protected abstract suspend fun mergeHomeResult(resource: Resource<List<HomePageResponse?>>)
 
     protected abstract val currentApiName: String
     protected abstract val cacheKey: String?
