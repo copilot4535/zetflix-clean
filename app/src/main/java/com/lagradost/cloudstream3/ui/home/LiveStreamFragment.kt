@@ -63,28 +63,8 @@ class LiveStreamFragment : BaseHomeFragment<FragmentLivestreamBinding>(
     override fun fixLayout(view: View) {
         fixSystemBarsPadding(
             view,
-            padTop = false,
             padBottom = isLandscape(),
             padLeft = false
         )
-
-        binding?.stickyHeader?.let {
-            fixSystemBarsPadding(
-                it,
-                padBottom = false,
-                padLeft = false,
-                padRight = false
-            )
-        }
-
-        binding?.homeMasterRecycler?.let {
-            fixSystemBarsPadding(
-                it,
-                padTop = true,
-                padBottom = false,
-                padLeft = false,
-                padRight = false
-            )
-        }
     }
 }

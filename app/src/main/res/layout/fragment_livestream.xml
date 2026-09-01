@@ -1,123 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/home_root"
+    android:id="@+id/home_root_linear"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/primaryGrayBackground"
     tools:context=".ui.home.LiveStreamFragment">
 
-    <FrameLayout
-        android:id="@+id/home_loading"
+    <TextView
+        android:id="@+id/livestream_title"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        tools:visibility="visible">
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="12dp"
+        android:text="@string/livestream"
+        android:textColor="?attr/textColor"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:background="?attr/primaryGrayBackground" />
 
-        <com.facebook.shimmer.ShimmerFrameLayout
-            android:id="@+id/home_loading_shimmer"
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <FrameLayout
+            android:id="@+id/home_loading"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginTop="@dimen/grid_2"
-            android:orientation="vertical"
-            android:paddingTop="40dp"
-            app:shimmer_auto_start="true"
-            app:shimmer_base_alpha="0.2"
-            app:shimmer_duration="@integer/loading_time"
-            app:shimmer_highlight_alpha="0.3">
+            android:visibility="gone"
+            tools:visibility="visible">
 
-            <LinearLayout
+            <com.facebook.shimmer.ShimmerFrameLayout
+                android:id="@+id/home_loading_shimmer"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                app:shimmer_auto_start="true"
+                app:shimmer_base_alpha="0.2"
+                app:shimmer_duration="@integer/loading_time"
+                app:shimmer_highlight_alpha="0.3">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/result_padding"
-                    android:layout_marginTop="@dimen/result_padding"
-                    android:layout_marginEnd="@dimen/result_padding"
                     android:orientation="vertical">
 
-                    <include layout="@layout/loading_list" />
-                    <include layout="@layout/loading_list" />
-                    <include layout="@layout/loading_list" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/result_padding"
+                        android:layout_marginTop="@dimen/result_padding"
+                        android:layout_marginEnd="@dimen/result_padding"
+                        android:orientation="vertical">
+
+                        <include layout="@layout/loading_list" />
+                        <include layout="@layout/loading_list" />
+                        <include layout="@layout/loading_list" />
+                    </LinearLayout>
                 </LinearLayout>
-            </LinearLayout>
-        </com.facebook.shimmer.ShimmerFrameLayout>
-    </FrameLayout>
+            </com.facebook.shimmer.ShimmerFrameLayout>
+        </FrameLayout>
 
-    <LinearLayout
-        android:id="@+id/home_loading_error"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/home_reload_connectionerror"
-            style="@style/WhiteButton"
-            android:layout_width="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="5dp"
-            android:minWidth="200dp"
-            android:text="@string/reload_error"
-            app:icon="@drawable/ic_baseline_autorenew_24" />
-
-        <TextView
-            android:id="@+id/result_error_text"
+        <LinearLayout
+            android:id="@+id/home_loading_error"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_margin="5dp"
-            android:gravity="center"
-            android:textColor="?attr/textColor" />
-    </LinearLayout>
+            android:orientation="vertical"
+            android:visibility="gone">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/home_master_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clipToPadding="false"
-        android:descendantFocusability="afterDescendants"
-        android:nextFocusLeft="@id/nav_rail_view"
-        android:paddingTop="@dimen/home_header_height"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/homepage_parent" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/home_reload_connectionerror"
+                style="@style/WhiteButton"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="5dp"
+                android:minWidth="200dp"
+                android:text="@string/reload_error"
+                app:icon="@drawable/ic_baseline_autorenew_24" />
 
-    <View
-        android:id="@+id/home_header_scrim"
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:background="@drawable/home_header_scrim"
-        android:visibility="gone" />
+            <TextView
+                android:id="@+id/result_error_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="5dp"
+                android:gravity="center"
+                android:textColor="?attr/textColor" />
+        </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/sticky_header"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:background="?attr/primaryGrayBackground">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/home_master_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:descendantFocusability="afterDescendants"
+            android:nextFocusLeft="@id/nav_rail_view"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/homepage_parent" />
 
-        <TextView
-            android:id="@+id/livestream_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="24dp"
-            android:paddingBottom="12dp"
-            android:text="@string/livestream"
-            android:textColor="?attr/textColor"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+    </FrameLayout>
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-    </LinearLayout>
-
-</FrameLayout>
+</LinearLayout>
