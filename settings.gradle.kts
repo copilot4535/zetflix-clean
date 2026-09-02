@@ -22,3 +22,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "CloudStream"
 include(":app", ":library", ":docs")
+
+include(":musicmodules:kotlinYtmusicScraper")
+include(":musicmodules:domain")
+include(":musicmodules:common")
+include(":musicmodules:ktorExt")

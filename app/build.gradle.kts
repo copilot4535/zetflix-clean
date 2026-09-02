@@ -222,6 +222,10 @@ android {
             // Enables legacy JNI packaging to reduce APK size (similar to builds before minSdk 23).
             // Note: This may increase app startup time slightly.
             useLegacyPackaging = true
+            pickFirsts.add("lib/arm64-v8a/libquickjs.so")
+            pickFirsts.add("lib/armeabi-v7a/libquickjs.so")
+            pickFirsts.add("lib/x86/libquickjs.so")
+            pickFirsts.add("lib/x86_64/libquickjs.so")
         }
     }
 
@@ -303,6 +307,10 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     implementation(project(":library"))
+    implementation(project(":musicmodules:kotlinYtmusicScraper"))
+    implementation(project(":musicmodules:domain"))
+    implementation(project(":musicmodules:common"))
+    implementation(project(":musicmodules:ktorExt"))
 }
 
 tasks.register<Jar>("androidSourcesJar") {

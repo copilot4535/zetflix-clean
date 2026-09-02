@@ -225,4 +225,15 @@
             android:layout_height="wrap_content"
             android:visibility="gone" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/home_music_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/music"
+        app:tint="@android:color/white"
+        app:backgroundTint="@color/zetflix_accent"
+        app:srcCompat="@drawable/baseline_headphones_24" />
+
 </FrameLayout>
