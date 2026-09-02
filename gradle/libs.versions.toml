@@ -20,13 +20,33 @@ espressoCore = "3.7.0"
 fragmentKtx = "1.8.9"
 instancioCore = "5.6.0"
 jacksonModuleKotlin = { strictly = "2.13.1" } # Later versions don't support minSdk <26 (Crashes on Android TV's and FireSticks)
+guava = "33.0.0-android"
+coroutines-guava = "1.7.3"
+concurrent-futures = "1.2.0"
+activity-compose = "1.9.1"
+navigation-compose = "2.8.0"
+datastore = "1.1.1"
+lifecycle-viewmodel-compose = "2.8.4"
+compose-shimmer = "1.0.3"
+coil-compose = "2.6.0"
 json = "20260522"
 jsoup = "1.22.1"
 junit = "4.13.2"
 junitKtx = "1.3.0"
 junitVersion = "1.3.0"
 juniversalchardet = "2.5.0"
-kotlinGradlePlugin = "2.4.0"
+kotlinGradlePlugin = "2.0.21"
+compose = "1.7.0"
+compose-compiler = "2.0.21"
+hilt = "2.60.1"
+room = "2.6.1"
+ksp = "2.0.21-1.0.28"
+squigglyslider = "1.0.0"
+reorderable = "2.3.1"
+apache-lang3 = "3.12.0"
+brotli = "0.1.2"
+opencc4j = "1.8.1"
+timber = "5.0.1"
 kotlinxAtomicfu = "0.33.0"
 kotlinxCollectionsImmutable = "0.4.0"
 kotlinxCoroutines = "1.11.0"
@@ -55,6 +75,7 @@ tvprovider = "1.1.0"
 video = "1.0.0"
 workRuntimeKtx = "2.11.2"
 zipline = "1.27.0"
+koin = "4.0.0"
 
 jvmTarget = "1.8"
 jdkToolchain = "17"
@@ -100,7 +121,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIOCore" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleKtx" }
@@ -136,15 +157,65 @@ video = { module = "com.google.android.mediahome:video", version.ref = "video" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 zipline = { module = "app.cash.zipline:zipline-android", version.ref = "zipline" }
 
+# InnerTune missing dependencies
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+coroutines-guava = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-guava", version.ref = "coroutines-guava" }
+concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures-ktx", version.ref = "concurrent-futures" }
+activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
+datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle-viewmodel-compose" }
+compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version.ref = "compose-shimmer" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil-compose" }
+
+# InnerTune dependencies
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "compose" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "compose" }
+compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "compose" }
+compose-ui-util = { group = "androidx.compose.ui", name = "ui-util", version.ref = "compose" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "compose" }
+compose-animation = { group = "androidx.compose.animation", name = "animation-graphics", version.ref = "compose" }
+compose-animation-graphics = { group = "androidx.compose.animation", name = "animation-graphics", version.ref = "compose" }
+compose-reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+
+material3 = { group = "androidx.compose.material3", name = "material3", version = "1.3.0" }
+material3-windowsize = { group = "androidx.compose.material3", name = "material3-window-size-class", version = "1.3.0" }
+squigglyslider = { group = "me.saket.squigglyslider", name = "squigglyslider", version.ref = "squigglyslider" }
+
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+
+hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.2.0" }
+
+apache-lang3 = { group = "org.apache.commons", name = "commons-lang3", version.ref = "apache-lang3" }
+brotli = { group = "org.brotli", name = "dec", version.ref = "brotli" }
+opencc4j = { group = "com.github.houbb", name = "opencc4j", version.ref = "opencc4j" }
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-encoding = { group = "io.ktor", name = "ktor-client-encoding", version.ref = "ktor" }
+ktor-serialization-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 android-lint = { id = "com.android.lint", version.ref = "androidGradlePlugin" }
 android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "androidGradlePlugin" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfigGradlePlugin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokkaGradlePlugin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm" , version.ref = "kotlinGradlePlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinGradlePlugin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlinGradlePlugin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlinGradlePlugin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinGradlePlugin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinGradlePlugin" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 
 [bundles]
 coil = ["coil", "coil-network-okhttp"]

@@ -18,11 +18,9 @@ plugins {
 val javaTarget = JvmTarget.fromTarget(libs.versions.jvmTarget.get())
 
 kotlin {
-    version = "1.0.1"
-
     applyDefaultHierarchyTemplate()
 
-    android {
+    androidLibrary {
         // If this is the same com.lagradost.cloudstream3.R stops working
         namespace = "com.lagradost.api"
 
@@ -60,7 +58,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.io.core)
-            implementation(libs.kotlinx.serialization.json) // JSON Parser
+            implementation(libs.kotlinxSerializationJson)
             implementation(libs.ksoup) // HTML Parser
             implementation(libs.ktor.http)
             implementation(libs.nicehttp) // HTTP Library

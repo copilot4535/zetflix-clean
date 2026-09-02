@@ -1,0 +1,16 @@
+- `[/]` Update build configuration
+    - `[ ]` [libs.versions.toml](file:///home/user/zetflix-clean/gradle/libs.versions.toml): Ensure Koin and remove Hilt refs if possible
+    - `[ ]` [build.gradle.kts (music)](file:///home/user/zetflix-clean/music/build.gradle.kts): Replace Hilt with Koin
+- `[ ]` Refactor DI module
+    - `[ ]` [AppModule.kt](file:///home/user/zetflix-clean/music/src/main/java/com/zetflix/music/di/AppModule.kt): Convert to Koin module
+- `[ ]` Update Initialization
+    - `[ ]` [MusicInitializer.kt](file:///home/user/zetflix-clean/music/src/main/java/com/zetflix/music/MusicInitializer.kt): Start Koin
+- `[ ]` Refactor Components (Activities/Services)
+    - `[ ]` [MainActivity.kt](file:///home/user/zetflix-clean/music/src/main/java/com/zetflix/music/MainActivity.kt)
+    - `[ ]` [MusicService.kt](file:///home/user/zetflix-clean/music/src/main/java/com/zetflix/music/playback/MusicService.kt)
+    - `[ ]` [ExoDownloadService.kt](file:///home/user/zetflix-clean/music/src/main/java/com/zetflix/music/playback/ExoDownloadService.kt)
+- `[ ]` Refactor ViewModels
+    - `[ ]` Remove `@Inject` from all ViewModel constructors
+    - `[ ]` Register all ViewModels in Koin module
+- `[ ]` Update Composables
+    - `[ ]` Replace `hiltViewModel()` with `koinViewModel()` in all UI files

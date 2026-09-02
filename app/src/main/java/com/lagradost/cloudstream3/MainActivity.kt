@@ -522,6 +522,16 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         val destinationId = item.itemId
 
+        if (destinationId == R.id.navigation_music) {
+            try {
+                val intent = Intent(this, Class.forName("com.zetflix.music.MainActivity"))
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("NavigationError", "Failed to launch music activity: ${e.message}")
+            }
+            return false
+        }
+
         // Check if we are already at the selected destination
         if (navController.currentDestination?.id == destinationId) {
             when (destinationId) {

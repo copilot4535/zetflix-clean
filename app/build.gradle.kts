@@ -248,7 +248,7 @@ dependencies {
     implementation(libs.bundles.lifecycle)
     implementation(libs.bundles.navigation)
     implementation(libs.kotlinx.collections.immutable)
-    implementation(libs.kotlinx.serialization.json) // JSON Parser
+    implementation(libs.kotlinxSerializationJson) // JSON Parser
 
     // Design & UI
     implementation(libs.preference.ktx)
@@ -303,6 +303,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     implementation(project(":library"))
+    implementation(project(":music"))
 }
 
 tasks.register<Jar>("androidSourcesJar") {
