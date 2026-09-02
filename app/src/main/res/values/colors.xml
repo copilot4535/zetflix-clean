@@ -3,6 +3,7 @@
     <!-- ZetFlix Netflix-style palette -->
     <color name="zetflix_background">#0b0b0f</color>       <!-- Main background -->
     <color name="zetflix_surface">#1a1a24</color>          <!-- Cards/inputs -->
+    <color name="zetflix_card_bg">#1a1a24</color>           <!-- Music cards background -->
     <color name="zetflix_surface_light">#121218</color>    <!-- Elevated surfaces -->
     <color name="zetflix_border">#2c2c3a</color>           <!-- Borders -->
     <color name="zetflix_text_primary">#ffffff</color>     <!-- Primary text -->

@@ -11,6 +11,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
@@ -21,7 +22,6 @@ import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
-import com.lagradost.cloudstream3.utils.UIHelper.navigate
 
 class MusicFragment : BaseFragment<FragmentMusicBinding>(
     BindingCreator.Inflate(FragmentMusicBinding::inflate)
@@ -57,7 +57,7 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
         }
         
         binding?.musicMiniPlayer?.setOnClickListener {
-            activity?.navigate(R.id.action_navigation_music_to_navigation_music_player)
+            findNavController().navigate(R.id.action_music_search_to_music_player)
         }
 
         binding?.musicMiniPlayPause?.setOnClickListener {
@@ -67,7 +67,7 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
         }
 
         binding?.musicLyricsButton?.setOnClickListener {
-            activity?.navigate(R.id.action_navigation_music_to_navigation_lyrics)
+            findNavController().navigate(R.id.action_music_search_to_music_lyrics)
         }
     }
 

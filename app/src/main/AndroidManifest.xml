@@ -86,6 +86,11 @@
         Not exported to prevent bypassing the AccountSelectActivity
         -->
         <activity
+            android:name=".ui.music.MusicActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode" />
+
+        <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode"
             android:exported="false"

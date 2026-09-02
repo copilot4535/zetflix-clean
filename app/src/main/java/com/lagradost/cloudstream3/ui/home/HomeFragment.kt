@@ -553,7 +553,8 @@ class HomeFragment : BaseHomeFragment<FragmentHomeBinding>(
             }
 
             homeMusicFab.setOnClickListener {
-                activity.navigate(R.id.action_navigation_home_to_navigation_music_home)
+                val intent = Intent(it.context, com.lagradost.cloudstream3.ui.music.MusicActivity::class.java)
+                startActivity(intent)
             }
 
             val headerColor = context?.colorFromAttribute(R.attr.primaryBlackBackground) ?: android.graphics.Color.BLACK

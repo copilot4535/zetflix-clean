@@ -202,77 +202,7 @@
             app:exitAnim="@anim/exit_anim"
             app:popEnterAnim="@anim/enter_anim"
             app:popExitAnim="@anim/exit_anim" />
-        <action
-            android:id="@+id/action_navigation_home_to_navigation_music_home"
-            app:destination="@id/navigation_music_home"
-            app:enterAnim="@anim/enter_anim"
-            app:exitAnim="@anim/exit_anim"
-            app:popEnterAnim="@anim/enter_anim"
-            app:popExitAnim="@anim/exit_anim" />
     </fragment>
-
-    <fragment
-        android:id="@+id/navigation_music_home"
-        android:name="com.lagradost.cloudstream3.ui.music.MusicHomeFragment"
-        android:label="@string/music"
-        app:enterAnim="@anim/enter_anim"
-        app:exitAnim="@anim/exit_anim"
-        app:popEnterAnim="@anim/enter_anim"
-        app:popExitAnim="@anim/exit_anim"
-        tools:layout="@layout/fragment_music_home">
-        <action
-            android:id="@+id/action_navigation_music_home_to_navigation_music"
-            app:destination="@id/navigation_music"
-            app:enterAnim="@anim/enter_anim"
-            app:exitAnim="@anim/exit_anim"
-            app:popEnterAnim="@anim/enter_anim"
-            app:popExitAnim="@anim/exit_anim" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/navigation_music"
-        android:name="com.lagradost.cloudstream3.ui.music.MusicFragment"
-        android:label="@string/music"
-        app:enterAnim="@anim/enter_anim"
-        app:exitAnim="@anim/exit_anim"
-        app:popEnterAnim="@anim/enter_anim"
-        app:popExitAnim="@anim/exit_anim"
-        tools:layout="@layout/fragment_music">
-        <action
-            android:id="@+id/action_navigation_music_to_navigation_lyrics"
-            app:destination="@id/navigation_lyrics"
-            app:enterAnim="@anim/enter_anim"
-            app:exitAnim="@anim/exit_anim"
-            app:popEnterAnim="@anim/enter_anim"
-            app:popExitAnim="@anim/exit_anim" />
-        <action
-            android:id="@+id/action_navigation_music_to_navigation_music_player"
-            app:destination="@id/navigation_music_player"
-            app:enterAnim="@anim/enter_anim"
-            app:exitAnim="@anim/exit_anim"
-            app:popEnterAnim="@anim/enter_anim"
-            app:popExitAnim="@anim/exit_anim" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/navigation_music_player"
-        android:name="com.lagradost.cloudstream3.ui.music.MusicPlayerFragment"
-        android:label="Player"
-        app:enterAnim="@anim/enter_anim"
-        app:exitAnim="@anim/exit_anim"
-        app:popEnterAnim="@anim/enter_anim"
-        app:popExitAnim="@anim/exit_anim"
-        tools:layout="@layout/fragment_music_player" />
-
-    <fragment
-        android:id="@+id/navigation_lyrics"
-        android:name="com.lagradost.cloudstream3.ui.music.LyricsFragment"
-        android:label="Lyrics"
-        app:enterAnim="@anim/enter_anim"
-        app:exitAnim="@anim/exit_anim"
-        app:popEnterAnim="@anim/enter_anim"
-        app:popExitAnim="@anim/exit_anim"
-        tools:layout="@layout/fragment_lyrics" />
 
     <fragment
         android:id="@+id/navigation_livestream"

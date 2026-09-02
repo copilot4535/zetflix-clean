@@ -5,6 +5,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentMusicHomeBinding
@@ -12,7 +13,6 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
-import com.lagradost.cloudstream3.utils.UIHelper.navigate
 
 class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
     BindingCreator.Inflate(FragmentMusicHomeBinding::inflate)
@@ -53,13 +53,13 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                     val args = Bundle().apply {
                         putString("album_id", item.id)
                     }
-                    activity?.navigate(R.id.action_navigation_music_home_to_navigation_music, args)
+                    findNavController().navigate(R.id.action_music_home_to_music_search, args)
                 }
                 MusicItemType.PLAYLIST -> {
                     val args = Bundle().apply {
                         putString("playlist_id", item.id)
                     }
-                    activity?.navigate(R.id.action_navigation_music_home_to_navigation_music, args)
+                    findNavController().navigate(R.id.action_music_home_to_music_search, args)
                 }
                 MusicItemType.ARTIST -> {
                     // Could handle artist browsing later
@@ -81,7 +81,7 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                     val args = Bundle().apply {
                         putString("search_query", query)
                     }
-                    activity?.navigate(R.id.action_navigation_music_home_to_navigation_music, args)
+                    findNavController().navigate(R.id.action_music_home_to_music_search, args)
                 }
                 true
             } else {

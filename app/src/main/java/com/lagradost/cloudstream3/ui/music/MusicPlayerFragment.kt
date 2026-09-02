@@ -6,13 +6,14 @@ import android.view.View
 import androidx.fragment.app.activityViewModels
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import androidx.navigation.fragment.findNavController
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentMusicPlayerBinding
 import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
-import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
 
 class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     BindingCreator.Inflate(FragmentMusicPlayerBinding::inflate)
@@ -33,6 +34,10 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         
         binding?.musicPlayerBack?.setOnClickListener {
             activity?.onBackPressed()
+        }
+
+        binding?.musicPlayerLyrics?.setOnClickListener {
+            findNavController().navigate(R.id.action_music_player_to_music_lyrics)
         }
     }
 

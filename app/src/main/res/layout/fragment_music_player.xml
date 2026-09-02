@@ -61,6 +61,19 @@
         app:layout_constraintTop_toBottomOf="@id/music_player_title"
         tools:text="Artist Name" />
 
+    <ImageButton
+        android:id="@+id/music_player_lyrics"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/baseline_description_24"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/music_player_artist"
+        app:tint="?attr/textColor"
+        tools:ignore="ContentDescription" />
+
     <androidx.media3.ui.PlayerView
         android:id="@+id/music_player_view"
         android:layout_width="match_parent"
