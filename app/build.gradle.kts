@@ -253,6 +253,7 @@ dependencies {
     implementation(libs.bundles.navigation)
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.serialization.json) // JSON Parser
+    implementation(libs.kotlinx.serialization.protobuf) // Protobuf Parser
 
     // Design & UI
     implementation(libs.preference.ktx)

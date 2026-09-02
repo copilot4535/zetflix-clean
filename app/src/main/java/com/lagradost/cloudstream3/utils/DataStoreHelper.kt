@@ -912,4 +912,15 @@ object DataStoreHelper {
     var pinnedProviders: Array<String>
         get() = getKey<Array<String>>(USER_PINNED_PROVIDERS) ?: emptyArray<String>()
         set(value) = setKey(USER_PINNED_PROVIDERS, value)
+
+    var spotifySpDc: String?
+        get() = getKey<String>("$currentAccount/spotify_sp_dc")
+        set(value) {
+            val key = "$currentAccount/spotify_sp_dc"
+            if (value == null) {
+                removeKey(key)
+            } else {
+                setKey(key, value)
+            }
+        }
 }

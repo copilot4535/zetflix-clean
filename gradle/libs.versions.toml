@@ -35,6 +35,7 @@ kotlinxCoroutines = "1.11.0"
 kotlinxDatetime = "0.8.0"
 kotlinxIOCore = "0.9.1"
 kotlinxSerializationJson = "1.11.0"
+kotlinxSerializationProtobuf = "1.11.0"
 ksoup = "0.2.6"
 ksoup-rejeb = "0.6.0"
 brotli = "0.1.2"
@@ -115,6 +116,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIOCore" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinxSerializationProtobuf" }
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 ksoup-html = { group = "com.mohamedrejeb.ksoup", name = "ksoup-html", version.ref = "ksoup-rejeb" }

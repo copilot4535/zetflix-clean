@@ -12,9 +12,9 @@
     android:focusable="true">
 
     <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/music_song_thumbnail"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:id="@+id/song_thumbnail"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:scaleType="centerCrop"
         app:shapeAppearanceOverlay="@style/RoundedImageView"
         tools:src="@drawable/default_cover" />
@@ -23,14 +23,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="16dp"
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/music_song_title"
+            android:id="@+id/song_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?attr/textColor"
+            android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
             android:maxLines="1"
@@ -38,15 +38,24 @@
             tools:text="Song Title" />
 
         <TextView
-            android:id="@+id/music_song_artist"
+            android:id="@+id/song_artist"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?attr/textColor"
+            android:textColor="@color/white"
             android:textSize="14sp"
-            android:alpha="0.7"
+            android:alpha="0.6"
             android:maxLines="1"
             android:ellipsize="end"
             tools:text="Artist Name" />
     </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/song_more"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_baseline_more_vert_24"
+        app:tint="@color/white"
+        tools:ignore="ContentDescription" />
 
 </LinearLayout>

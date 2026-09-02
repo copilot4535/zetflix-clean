@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/primaryBlackBackground">
+    android:background="@color/zetflix_background">
 
     <ImageView
         android:id="@+id/lyrics_background_blur"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:alpha="0.3"
+        android:alpha="0.2"
         tools:src="@drawable/default_cover" />
 
     <LinearLayout
@@ -24,22 +24,21 @@
             android:layout_height="wrap_content"
             android:padding="16dp">
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/lyrics_close"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_baseline_close_24"
-                android:contentDescription="@string/go_back_img_des"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackgroundBorderless" />
+                app:tint="@color/white"
+                tools:ignore="ContentDescription" />
 
             <TextView
                 android:id="@+id/lyrics_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:textColor="?attr/textColor"
+                android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:maxLines="1"
@@ -57,7 +56,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingVertical="100dp"
+                android:paddingVertical="150dp"
                 android:visibility="gone"
                 tools:listitem="@layout/item_lyrics_line"
                 tools:visibility="visible" />
@@ -72,10 +71,11 @@
                     android:id="@+id/lyrics_plain_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="24dp"
-                    android:textSize="18sp"
-                    android:textColor="?attr/textColor"
+                    android:padding="32dp"
+                    android:textSize="22sp"
+                    android:textColor="@color/white"
                     android:gravity="center"
+                    android:textStyle="bold"
                     tools:text="Plain lyrics go here..." />
             </ScrollView>
 
@@ -91,7 +91,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:textColor="?attr/textColor"
+                android:textColor="@color/white"
                 android:text="No lyrics available"
                 android:visibility="gone" />
         </FrameLayout>

@@ -13,23 +13,13 @@
         <action
             android:id="@+id/action_music_home_to_music_search"
             app:destination="@id/music_nav_search" />
-        <action
-            android:id="@+id/action_music_home_to_music_player"
-            app:destination="@id/music_nav_player" />
     </fragment>
 
     <fragment
         android:id="@+id/music_nav_search"
-        android:name="com.lagradost.cloudstream3.ui.music.MusicFragment"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicSearchFragment"
         android:label="Search"
-        tools:layout="@layout/fragment_music">
-        <action
-            android:id="@+id/action_music_search_to_music_player"
-            app:destination="@id/music_nav_player" />
-        <action
-            android:id="@+id/action_music_search_to_music_lyrics"
-            app:destination="@id/music_nav_lyrics" />
-    </fragment>
+        tools:layout="@layout/fragment_music_search" />
 
     <fragment
         android:id="@+id/music_nav_library"
@@ -41,11 +31,7 @@
         android:id="@+id/music_nav_player"
         android:name="com.lagradost.cloudstream3.ui.music.MusicPlayerFragment"
         android:label="Player"
-        tools:layout="@layout/fragment_music_player">
-        <action
-            android:id="@+id/action_music_player_to_music_lyrics"
-            app:destination="@id/music_nav_lyrics" />
-    </fragment>
+        tools:layout="@layout/fragment_music_player" />
 
     <fragment
         android:id="@+id/music_nav_lyrics"

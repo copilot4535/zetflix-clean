@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
@@ -50,9 +51,13 @@ class MusicService : MediaSessionService() {
             val artist = intent.getStringExtra(EXTRA_ARTIST)
             val thumbnail = intent.getStringExtra(EXTRA_THUMBNAIL)
 
-            if (url != null) {
+            Log.d("MusicService", "Received ACTION_PLAY for: $title, URL: $url")
+
+            if (url != null && url.startsWith("http")) {
                 showNotification(title, artist)
                 play(url, title, artist, thumbnail)
+            } else {
+                Log.e("MusicService", "Invalid or null URL received in ACTION_PLAY")
             }
         }
         return super.onStartCommand(intent, flags, startId)

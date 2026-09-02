@@ -11,10 +11,9 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.launchSafe
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
-import org.schabi.newpipe.extractor.search.SearchInfo
 import org.schabi.newpipe.extractor.stream.StreamInfo
-import org.schabi.newpipe.extractor.stream.StreamInfoItem
-import org.schabi.newpipe.extractor.stream.StreamType
+import com.lagradost.cloudstream3.ui.music.spotify.SpotifyRepository
+import com.lagradost.cloudstream3.utils.DataStoreHelper
 
 data class MusicSearchResponse(
     val title: String,
@@ -25,6 +24,7 @@ data class MusicSearchResponse(
 
 class MusicViewModel : ViewModel() {
     private val repository = MusicRepository()
+    private val spotifyRepository = SpotifyRepository()
 
     private val _searchResult = MutableLiveData<Resource<List<MusicSearchResponse>>>()
     val searchResult: LiveData<Resource<List<MusicSearchResponse>>> = _searchResult
@@ -40,6 +40,9 @@ class MusicViewModel : ViewModel() {
 
     private val _currentPlayingSong = MutableLiveData<MusicSearchResponse?>()
     val currentPlayingSong: LiveData<MusicSearchResponse?> = _currentPlayingSong
+
+    private val _canvasUrl = MutableLiveData<String?>()
+    val canvasUrl: LiveData<String?> = _canvasUrl
 
     private fun initNewPipe() {
         try {
@@ -110,21 +113,49 @@ class MusicViewModel : ViewModel() {
     fun loadStreamAndPlay(song: MusicSearchResponse) {
         _streamUrl.postValue(Resource.Loading())
         _currentPlayingSong.postValue(song)
+        _canvasUrl.postValue(null) // Reset canvas
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
+                Log.d("MusicViewModel", "Extracting stream for ${song.title} (${song.videoId})")
+                
+                // Primary: Try YouTube player (InnerTube)
+                val playerResult = YouTubeInstance.youtube.player(song.videoId)
+                val triple = playerResult.getOrNull()
+                val playerResponse = triple?.second
+                
+                if (playerResponse?.playabilityStatus?.status == "OK") {
+                    val audioUrl = playerResponse.streamingData?.adaptiveFormats
+                        ?.filter { it.isAudio }
+                        ?.maxByOrNull { it.bitrate }?.url
+                    
+                    if (audioUrl != null && audioUrl.startsWith("http")) {
+                        Log.d("MusicViewModel", "Found audio URL via InnerTube: $audioUrl")
+                        _streamUrl.postValue(Resource.Success(audioUrl to song))
+                        fetchLyrics(song)
+                        fetchCanvas(song)
+                        return@launchSafe
+                    }
+                }
+
+                Log.w("MusicViewModel", "InnerTube extraction failed (status: ${playerResponse?.playabilityStatus?.status}) or returned invalid URL, falling back to NewPipe")
+
+                // Secondary: Fallback to NewPipe
                 initNewPipe()
                 val service = ServiceList.YouTube
                 val info = StreamInfo.getInfo(service, song.videoId)
                 val audioStream = info.audioStreams.firstOrNull()
-                if (audioStream != null) {
+                if (audioStream != null && audioStream.content.startsWith("http")) {
+                    Log.d("MusicViewModel", "Found audio URL via NewPipe: ${audioStream.content}")
                     _streamUrl.postValue(Resource.Success(audioStream.content to song))
-                    // Fetch lyrics as well
                     fetchLyrics(song)
+                    fetchCanvas(song)
                 } else {
-                    _streamUrl.postValue(Resource.Failure(false, "No audio stream found"))
+                    Log.e("MusicViewModel", "All extraction methods failed for ${song.videoId}")
+                    _streamUrl.postValue(Resource.Failure(false, "Could not extract audio stream"))
                 }
             } catch (e: Exception) {
-                _streamUrl.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
+                Log.e("MusicViewModel", "Exception during stream extraction for ${song.videoId}", e)
+                _streamUrl.postValue(Resource.Failure(false, "Error: ${e.message ?: "Unknown error"}"))
             }
         }
     }
@@ -141,6 +172,27 @@ class MusicViewModel : ViewModel() {
                 _lyrics.postValue(Resource.Success(lyricsData))
             } catch (e: Exception) {
                 _lyrics.postValue(Resource.Failure(false, "Lyrics not found"))
+            }
+        }
+    }
+
+    private fun fetchCanvas(song: MusicSearchResponse) {
+        val spDc = DataStoreHelper.spotifySpDc ?: return
+        
+        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val accessToken = spotifyRepository.getAccessToken(spDc) ?: return@launchSafe
+                val clientToken = spotifyRepository.getClientToken() ?: return@launchSafe
+                
+                val query = "${song.title} ${song.artist ?: ""}"
+                val trackId = spotifyRepository.searchTrack(query, accessToken, clientToken) ?: return@launchSafe
+                
+                val canvasUrl = spotifyRepository.getCanvasUrl(trackId, accessToken, clientToken)
+                if (canvasUrl != null) {
+                    _canvasUrl.postValue(canvasUrl)
+                }
+            } catch (e: Exception) {
+                Log.e("MusicViewModel", "Failed to fetch canvas", e)
             }
         }
     }
