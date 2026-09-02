@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -30,6 +32,23 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
     private lateinit var musicAdapter: MusicSearchAdapter
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val progressRunnable = object : Runnable {
+        override fun run() {
+            updateProgress()
+            handler.postDelayed(this, 500)
+        }
+    }
+
+    private fun updateProgress() {
+        mediaController?.let {
+            if (it.isPlaying) {
+                binding?.miniPlayerProgress?.max = it.duration.toInt()
+                binding?.miniPlayerProgress?.progress = it.currentPosition.toInt()
+            }
+        }
+    }
 
     override fun fixLayout(view: View) {
         // Implement fixLayout if needed
@@ -69,6 +88,8 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
         binding?.musicLyricsButton?.setOnClickListener {
             findNavController().navigate(R.id.action_music_search_to_music_lyrics)
         }
+
+        handler.post(progressRunnable)
     }
 
     private fun setupRecyclerView() {
@@ -166,6 +187,7 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
     }
 
     override fun onDestroyView() {
+        handler.removeCallbacks(progressRunnable)
         controllerFuture?.let {
             MediaController.releaseFuture(it)
         }

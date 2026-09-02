@@ -23,5 +23,9 @@ class MusicActivity : AppCompatActivity() {
         val navController = navHostFragment.navController
         
         binding.musicBottomNav.setupWithNavController(navController)
+
+        binding.fabBackToZetflix.setOnClickListener {
+            finish()
+        }
     }
 }

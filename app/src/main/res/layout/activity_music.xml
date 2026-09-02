@@ -30,4 +30,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/music_bottom_nav_menu" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_back_to_zetflix"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_zetflix_logo"
+        app:backgroundTint="@color/zetflix_card_bg"
+        app:tint="@color/zetflix_accent"
+        app:layout_constraintBottom_toTopOf="@id/music_bottom_nav"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Return to ZetFlix" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
