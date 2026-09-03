@@ -112,18 +112,38 @@ class MusicViewModel : ViewModel() {
         _currentPlayingSong.postValue(song)
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                initNewPipe()
-                val service = ServiceList.YouTube
-                val info = StreamInfo.getInfo(service, song.videoId)
-                val audioStream = info.audioStreams.firstOrNull()
-                if (audioStream != null) {
-                    _streamUrl.postValue(Resource.Success(audioStream.content to song))
+                // 1. Try InnerTube (YouTubeInstance) primary extraction
+                var streamUrlFound: String? = null
+                try {
+                    val playerResult = YouTubeInstance.youtube.player(song.videoId, null, false).getOrNull()
+                    val formats = playerResult?.second?.streamingData?.adaptiveFormats
+                    streamUrlFound = formats?.filter { it.isAudio }?.maxByOrNull { it.bitrate }?.url
+                } catch (e: Exception) {
+                    Log.e("MusicViewModel", "InnerTube extraction failed for ${song.videoId}", e)
+                }
+
+                // 2. Fallback to NewPipe if InnerTube failed or URL is null
+                if (streamUrlFound.isNullOrBlank()) {
+                    try {
+                        initNewPipe()
+                        val service = ServiceList.YouTube
+                        val info = StreamInfo.getInfo(service, song.videoId)
+                        streamUrlFound = info.audioStreams.firstOrNull()?.content
+                    } catch (e: Exception) {
+                        Log.e("MusicViewModel", "NewPipe fallback failed for ${song.videoId}", e)
+                    }
+                }
+
+                // 3. Post result if URL is valid
+                if (!streamUrlFound.isNullOrBlank() && (streamUrlFound.startsWith("http://") || streamUrlFound.startsWith("https://"))) {
+                    _streamUrl.postValue(Resource.Success(streamUrlFound to song))
                     // Fetch lyrics as well
                     fetchLyrics(song)
                 } else {
-                    _streamUrl.postValue(Resource.Failure(false, "No audio stream found"))
+                    _streamUrl.postValue(Resource.Failure(false, "Could not extract audio stream for: ${song.title}"))
                 }
             } catch (e: Exception) {
+                Log.e("MusicViewModel", "Total stream extraction failure", e)
                 _streamUrl.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
             }
         }

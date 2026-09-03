@@ -54,6 +54,7 @@ import com.lagradost.cloudstream3.ui.search.SearchHelper.handleSearchClickCallba
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.MainActivity
+import com.lagradost.cloudstream3.ui.music.MusicActivity
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
 import com.lagradost.cloudstream3.utils.AppContextUtils.getApiProviderLangSettings
 import com.lagradost.cloudstream3.utils.AppContextUtils.isNetworkAvailable
@@ -553,7 +554,8 @@ class HomeFragment : BaseHomeFragment<FragmentHomeBinding>(
             }
 
             homeMusicFab.setOnClickListener {
-                activity.navigate(R.id.action_navigation_home_to_navigation_music_home)
+                val intent = Intent(it.context, MusicActivity::class.java)
+                it.context.startActivity(intent)
             }
 
             val headerColor = context?.colorFromAttribute(R.attr.primaryBlackBackground) ?: android.graphics.Color.BLACK

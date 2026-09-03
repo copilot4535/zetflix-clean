@@ -1,3 +1,5 @@
+package com.lagradost.cloudstream3.ui.music
+
 import android.content.ComponentName
 import android.os.Bundle
 import android.view.View
@@ -14,8 +16,6 @@ import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
-import com.lagradost.cloudstream3.ui.music.MusicViewModel
-import com.lagradost.cloudstream3.ui.music.MusicSearchResponse
 
 class MusicLibraryFragment : BaseFragment<FragmentMusicLibraryBinding>(
     BindingCreator.Inflate(FragmentMusicLibraryBinding::inflate)

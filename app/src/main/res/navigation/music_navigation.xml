@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/music_navigation"
+    app:startDestination="@+id/navigation_music_home">
+
+    <fragment
+        android:id="@+id/navigation_music_home"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicHomeFragment"
+        android:label="@string/music"
+        tools:layout="@layout/fragment_music_home">
+        <action
+            android:id="@+id/action_navigation_music_home_to_navigation_music"
+            app:destination="@id/navigation_music" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_music"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicFragment"
+        android:label="@string/music"
+        tools:layout="@layout/fragment_music">
+        <action
+            android:id="@+id/action_navigation_music_to_navigation_music_player"
+            app:destination="@id/navigation_music_player" />
+        <action
+            android:id="@+id/action_navigation_music_to_navigation_lyrics"
+            app:destination="@id/navigation_lyrics" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_music_player"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicPlayerFragment"
+        android:label="Player"
+        tools:layout="@layout/fragment_music_player" />
+
+    <fragment
+        android:id="@+id/navigation_music_library"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicLibraryFragment"
+        android:label="Library"
+        tools:layout="@layout/fragment_music_library" />
+
+    <fragment
+        android:id="@+id/navigation_lyrics"
+        android:name="com.lagradost.cloudstream3.ui.music.LyricsFragment"
+        android:label="Lyrics"
+        tools:layout="@layout/fragment_lyrics" />
+
+</navigation>

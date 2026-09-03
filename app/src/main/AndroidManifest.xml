@@ -86,6 +86,12 @@
         Not exported to prevent bypassing the AccountSelectActivity
         -->
         <activity
+            android:name=".ui.music.MusicActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode"
+            android:exported="false"
+            android:theme="@style/Theme.ZetFlix.Music" />
+
+        <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode"
             android:exported="false"
