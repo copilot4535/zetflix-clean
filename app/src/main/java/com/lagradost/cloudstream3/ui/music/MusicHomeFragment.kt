@@ -2,7 +2,6 @@ package com.lagradost.cloudstream3.ui.music
 
 import android.os.Bundle
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
@@ -12,7 +11,6 @@ import com.lagradost.cloudstream3.databinding.FragmentMusicHomeBinding
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.BaseFragment
-import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 
 class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
@@ -29,7 +27,6 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
         super.onViewReady(view, savedInstanceState)
         
         setupRecyclerView()
-        setupSearch()
         observeViewModel()
         
         if (viewModel.homeSections.value !is Resource.Success) {
@@ -79,23 +76,7 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
         }
     }
 
-    private fun setupSearch() {
-        binding?.musicSearchEditText?.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                val query = binding?.musicSearchEditText?.text?.toString()
-                if (!query.isNullOrBlank()) {
-                    hideKeyboard()
-                    val args = Bundle().apply {
-                        putString("search_query", query)
-                    }
-                    activity?.navigate(R.id.music_nav_search, args)
-                }
-                true
-            } else {
-                false
-            }
-        }
-    }
+
 
     private fun observeViewModel() {
         observe(viewModel.queueReady) { resource ->

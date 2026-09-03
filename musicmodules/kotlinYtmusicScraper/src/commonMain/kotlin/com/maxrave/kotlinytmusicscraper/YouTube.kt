@@ -945,6 +945,10 @@ class YouTube {
     ): Result<BrowseResult> =
         runCatching {
             val response = ytMusic.browse(WEB_REMIX, browseId = browseId, params = params).body<BrowseResponse>()
+            val sectionListRenderer = response.contents?.singleColumnBrowseResultsRenderer
+                ?.tabs?.firstOrNull()?.tabRenderer?.content?.sectionListRenderer
+                ?: response.contents?.sectionListRenderer
+
             BrowseResult(
                 title =
                     response.header
@@ -954,14 +958,7 @@ class YouTube {
                         ?.firstOrNull()
                         ?.text,
                 items =
-                    response.contents
-                        ?.singleColumnBrowseResultsRenderer
-                        ?.tabs
-                        ?.firstOrNull()
-                        ?.tabRenderer
-                        ?.content
-                        ?.sectionListRenderer
-                        ?.contents
+                    sectionListRenderer?.contents
                         ?.mapNotNull { content ->
                             when {
                                 content.gridRenderer != null -> {
@@ -990,9 +987,35 @@ class YouTube {
                                                 ?.firstOrNull()
                                                 ?.text,
                                         items =
-                                            content.musicCarouselShelfRenderer.contents
-                                                .mapNotNull(MusicCarouselShelfRenderer.Content::musicTwoRowItemRenderer)
-                                                .mapNotNull(RelatedPage.Companion::fromMusicTwoRowItemRenderer),
+                                            content.musicCarouselShelfRenderer.contents.mapNotNull { item ->
+                                                item.musicTwoRowItemRenderer?.let {
+                                                    RelatedPage.fromMusicTwoRowItemRenderer(it)
+                                                } ?: item.musicResponsiveListItemRenderer?.let {
+                                                    SearchPage.toYTItem(it)
+                                                }
+                                            },
+                                    )
+                                }
+
+                                content.musicShelfRenderer != null -> {
+                                    BrowseResult.Item(
+                                        title = content.musicShelfRenderer.title?.runs?.firstOrNull()?.text,
+                                        items = content.musicShelfRenderer.contents?.mapNotNull { item ->
+                                            item.musicResponsiveListItemRenderer?.let {
+                                                SearchPage.toYTItem(it)
+                                            }
+                                        } ?: emptyList(),
+                                    )
+                                }
+
+                                content.musicPlaylistShelfRenderer != null -> {
+                                    BrowseResult.Item(
+                                        title = null, // MusicPlaylistShelfRenderer doesn't have a title field in the model
+                                        items = content.musicPlaylistShelfRenderer.contents?.mapNotNull { item ->
+                                            item.musicResponsiveListItemRenderer?.let {
+                                                SearchPage.toYTItem(it)
+                                            }
+                                        } ?: emptyList(),
                                     )
                                 }
 

@@ -4,6 +4,10 @@ import android.util.Log
 import com.maxrave.kotlinytmusicscraper.YouTube
 import com.maxrave.kotlinytmusicscraper.models.YouTubeLocale
 import com.maxrave.kotlinytmusicscraper.models.SongItem
+import com.maxrave.kotlinytmusicscraper.models.VideoItem
+import com.maxrave.kotlinytmusicscraper.models.AlbumItem
+import com.maxrave.kotlinytmusicscraper.models.PlaylistItem
+import com.maxrave.kotlinytmusicscraper.models.ArtistItem
 import com.maxrave.kotlinytmusicscraper.models.YTItemType
 import com.maxrave.kotlinytmusicscraper.pages.BrowseResult
 import kotlinx.coroutines.Dispatchers
@@ -44,10 +48,10 @@ class MusicRepository {
             val thumb = item.thumbnail
             val artist = when (item.type) {
                 YTItemType.SONG -> (item as? SongItem)?.artists?.joinToString(", ") { it.name }
-                YTItemType.VIDEO -> (item as? com.maxrave.kotlinytmusicscraper.models.VideoItem)?.artists?.joinToString(", ") { it.name }
-                YTItemType.ALBUM -> (item as? com.maxrave.kotlinytmusicscraper.models.AlbumItem)?.artists?.joinToString(", ") { it.name }
-                YTItemType.PLAYLIST -> (item as? com.maxrave.kotlinytmusicscraper.models.PlaylistItem)?.author?.name
-                YTItemType.ARTIST -> (item as? com.maxrave.kotlinytmusicscraper.models.ArtistItem)?.subscribers
+                YTItemType.VIDEO -> (item as? VideoItem)?.artists?.joinToString(", ") { it.name }
+                YTItemType.ALBUM -> (item as? AlbumItem)?.artists?.joinToString(", ") { it.name }
+                YTItemType.PLAYLIST -> (item as? PlaylistItem)?.author?.name
+                YTItemType.ARTIST -> (item as? ArtistItem)?.subscribers
                 else -> null
             }
             if (id.isNotEmpty()) {
@@ -65,7 +69,7 @@ class MusicRepository {
             }
             Log.d("MusicHome", "InnerTube returned ${browseResult.items.size} sections")
             
-            browseResult.items.map { section ->
+            browseResult.items.filter { it.items.isNotEmpty() }.map { section ->
                 Log.d("MusicHome", "Processing section: ${section.title} with ${section.items.size} items")
                 MusicHomeSection(
                     title = section.title ?: "Recommended",
@@ -74,10 +78,10 @@ class MusicRepository {
                             title = item.title,
                             subtitle = when (item.type) {
                                 YTItemType.SONG -> (item as? SongItem)?.artists?.joinToString(", ") { it.name }
-                                YTItemType.VIDEO -> (item as? com.maxrave.kotlinytmusicscraper.models.VideoItem)?.artists?.joinToString(", ") { it.name }
-                                YTItemType.ALBUM -> (item as? com.maxrave.kotlinytmusicscraper.models.AlbumItem)?.artists?.joinToString(", ") { it.name }
-                                YTItemType.PLAYLIST -> (item as? com.maxrave.kotlinytmusicscraper.models.PlaylistItem)?.author?.name
-                                YTItemType.ARTIST -> (item as? com.maxrave.kotlinytmusicscraper.models.ArtistItem)?.subscribers
+                                YTItemType.VIDEO -> (item as? VideoItem)?.artists?.joinToString(", ") { it.name }
+                                YTItemType.ALBUM -> (item as? AlbumItem)?.artists?.joinToString(", ") { it.name }
+                                YTItemType.PLAYLIST -> (item as? PlaylistItem)?.author?.name
+                                YTItemType.ARTIST -> (item as? ArtistItem)?.subscribers
                             },
                             id = item.id,
                             thumbnailUrl = item.thumbnail,

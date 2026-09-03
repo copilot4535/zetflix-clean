@@ -26,35 +26,7 @@
                 android:text="@string/music"
                 android:textColor="@color/white"
                 android:textSize="28sp"
-                android:fontFamily="@font/metropolis_bold"
-                android:layout_marginBottom="16dp" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/music_search_bar"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/search"
-                app:hintTextColor="@color/music_text_secondary"
-                app:placeholderTextColor="@color/music_text_secondary"
-                app:startIconDrawable="@drawable/search_icon"
-                app:startIconTint="@color/white"
-                app:boxStrokeColor="@color/zetflix_accent"
-                app:boxCornerRadiusTopStart="8dp"
-                app:boxCornerRadiusTopEnd="8dp"
-                app:boxCornerRadiusBottomStart="8dp"
-                app:boxCornerRadiusBottomEnd="8dp"
-                app:boxBackgroundColor="@color/music_surface_dark">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/music_search_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:fontFamily="@font/metropolis_medium"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
+                android:fontFamily="@font/metropolis_bold" />
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
