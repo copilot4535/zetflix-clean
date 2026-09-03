@@ -35,6 +35,9 @@ class MusicViewModel : ViewModel() {
     private val _homeSections = MutableLiveData<Resource<List<MusicHomeSection>>>()
     val homeSections: LiveData<Resource<List<MusicHomeSection>>> = _homeSections
 
+    private val _relatedSongs = MutableLiveData<Resource<List<MusicSearchResponse>>>()
+    val relatedSongs: LiveData<Resource<List<MusicSearchResponse>>> = _relatedSongs
+
     private val _streamUrl = MutableLiveData<Resource<Pair<String, MusicSearchResponse>>>()
     val streamUrl: LiveData<Resource<Pair<String, MusicSearchResponse>>> = _streamUrl
 
@@ -58,6 +61,9 @@ class MusicViewModel : ViewModel() {
 
     private val _searchSuggestions = MutableLiveData<List<String>>()
     val searchSuggestions: LiveData<List<String>> = _searchSuggestions
+
+    private val _searchHistory = MutableLiveData<List<String>>()
+    val searchHistory: LiveData<List<String>> = _searchHistory
 
     private val _downloadedSongs = MutableLiveData<List<MusicSearchResponse>>()
     val downloadedSongs: LiveData<List<MusicSearchResponse>> = _downloadedSongs
@@ -86,6 +92,7 @@ class MusicViewModel : ViewModel() {
         _history.postValue(MusicPersistence.getHistory())
         _playlists.postValue(MusicPersistence.getPlaylists())
         _downloadedSongs.postValue(MusicPersistence.getDownloadedSongs())
+        _searchHistory.postValue(MusicPersistence.getSearchHistory())
     }
 
     @androidx.media3.common.util.UnstableApi
@@ -214,6 +221,18 @@ class MusicViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("MusicViewModel", "Failed to load playlist songs", e)
                 _searchResult.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
+            }
+        }
+    }
+
+    fun loadRelatedSongs(videoId: String) {
+        _relatedSongs.postValue(Resource.Loading())
+        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val songs = repository.getRelatedSongs(videoId)
+                _relatedSongs.postValue(Resource.Success(songs))
+            } catch (e: Exception) {
+                _relatedSongs.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
             }
         }
     }

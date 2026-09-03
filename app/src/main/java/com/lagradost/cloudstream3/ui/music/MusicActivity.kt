@@ -34,6 +34,19 @@ class MusicActivity : AppCompatActivity() {
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
 
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val progressRunnable = object : Runnable {
+        override fun run() {
+            mediaController?.let {
+                if (it.isPlaying && it.duration > 0) {
+                    val progress = (it.currentPosition * 100 / it.duration).toInt()
+                    binding.globalMiniPlayer.musicMiniProgress.progress = progress
+                }
+            }
+            handler.postDelayed(this, 1000)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdgeCompat()
@@ -64,6 +77,7 @@ class MusicActivity : AppCompatActivity() {
         setupGlobalMiniPlayer()
         setupController()
         observeViewModel()
+        handler.post(progressRunnable)
     }
 
     private fun setupGlobalMiniPlayer() {
@@ -131,6 +145,7 @@ class MusicActivity : AppCompatActivity() {
 
     private fun updateMiniPlayerMetadata(metadata: MediaMetadata) {
         binding.globalMiniPlayer.musicMiniTitle.text = metadata.title
+        binding.globalMiniPlayer.musicMiniTitle.isSelected = true
         binding.globalMiniPlayer.musicMiniArtist.text = metadata.artist
         binding.globalMiniPlayer.musicMiniThumbnail.loadImage(metadata.artworkUri?.toString())
     }
@@ -192,6 +207,7 @@ class MusicActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        handler.removeCallbacks(progressRunnable)
         controllerFuture?.let {
             MediaController.releaseFuture(it)
         }

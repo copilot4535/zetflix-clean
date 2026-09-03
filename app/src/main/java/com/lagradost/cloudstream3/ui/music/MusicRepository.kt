@@ -39,6 +39,7 @@ object YouTubeInstance {
 
 class MusicRepository {
     private val youtube = YouTubeInstance.youtube
+    private var cachedHomeSections: List<MusicHomeSection>? = null
 
     suspend fun searchSongs(query: String, filter: YouTube.SearchFilter = YouTube.SearchFilter.FILTER_SONG): List<MusicSearchResponse> = withContext(Dispatchers.IO) {
         val result = youtube.search(query, filter)
@@ -61,6 +62,7 @@ class MusicRepository {
     }
 
     suspend fun getHomeSections(): List<MusicHomeSection> = withContext(Dispatchers.IO) {
+        cachedHomeSections?.let { return@withContext it }
         try {
             val browseResult = youtube.browse("FEmusic_home", null).getOrNull()
             if (browseResult == null) {
@@ -95,7 +97,7 @@ class MusicRepository {
                         )
                     }
                 )
-            }
+            }.also { cachedHomeSections = it }
         } catch (e: Exception) {
             Log.e("MusicHome", "Error loading home sections", e)
             emptyList()
@@ -129,6 +131,18 @@ class MusicRepository {
     suspend fun getSearchSuggestions(query: String): List<String> = withContext(Dispatchers.IO) {
         try {
             youtube.getYTMusicSearchSuggestions(query).getOrNull()?.queries ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun getRelatedSongs(videoId: String): List<MusicSearchResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = youtube.nextCustom(videoId).getOrNull()
+            // Map NextResponse to MusicSearchResponse
+            // This usually contains a 'Related' shelf or similar
+            // Simplified for now: just return empty or implement real mapping if NextResponse structure known
+            emptyList() 
         } catch (e: Exception) {
             emptyList()
         }

@@ -27,6 +27,51 @@
                 android:textColor="@color/white"
                 android:textSize="28sp"
                 android:fontFamily="@font/metropolis_bold" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/music_home_genre_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleLine="true">
+
+                    <com.google.android.material.chip.Chip
+                        style="@style/ChipFilledSemiTransparent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Relax" />
+
+                    <com.google.android.material.chip.Chip
+                        style="@style/ChipFilledSemiTransparent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Energize" />
+
+                    <com.google.android.material.chip.Chip
+                        style="@style/ChipFilledSemiTransparent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Workout" />
+
+                    <com.google.android.material.chip.Chip
+                        style="@style/ChipFilledSemiTransparent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Focus" />
+
+                    <com.google.android.material.chip.Chip
+                        style="@style/ChipFilledSemiTransparent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Commute" />
+
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 

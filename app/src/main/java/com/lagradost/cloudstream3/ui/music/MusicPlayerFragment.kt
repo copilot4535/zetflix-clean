@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageButton
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -19,6 +20,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentMusicPlayerBinding
+import com.lagradost.cloudstream3.mvvm.Resource
+import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
@@ -34,6 +37,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     BindingCreator.Inflate(FragmentMusicPlayerBinding::inflate)
 ) {
     private val viewModel: MusicViewModel by activityViewModels()
+    private lateinit var relatedAdapter: MusicSearchAdapter
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
     private var isLiked = false
@@ -47,11 +51,27 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         setupGestures()
         setupController()
         observeViewModel()
+
+        binding?.musicPlayerView?.apply {
+            showController()
+            controllerAutoShow = true
+            controllerHideOnTouch = false
+            controllerShowTimeoutMs = 0
+        }
     }
 
     private fun setupUI() {
         binding?.musicPlayerBack?.setOnClickListener {
-            activity?.onBackPressedDispatcher?.onBackPressed()
+            activity?.onBackPressed()
+        }
+
+        relatedAdapter = MusicSearchAdapter({ index ->
+            viewModel.playQueue(relatedAdapter.currentList, index)
+        }, { _, _ -> })
+
+        binding?.musicPlayerRelatedRecycler?.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = relatedAdapter
         }
 
         binding?.musicPlayerMore?.setOnClickListener { view ->
@@ -147,8 +167,11 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                         if (diffY < 0) {
                             // Up swipe
                             activity?.navigate(R.id.global_to_navigation_lyrics)
-                            return true
+                        } else {
+                            // Down swipe
+                            activity?.onBackPressed()
                         }
+                        return true
                     }
                 }
                 return false
@@ -268,6 +291,13 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 }
                 updateLikeIcon(MusicPersistence.isSongLiked(song.videoId))
                 updateDownloadIcon(MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId })
+                viewModel.loadRelatedSongs(song.videoId)
+            }
+        }
+
+        viewModel.relatedSongs.observe(viewLifecycleOwner) { resource ->
+            if (resource is Resource.Success) {
+                relatedAdapter.submitList(resource.value)
             }
         }
 

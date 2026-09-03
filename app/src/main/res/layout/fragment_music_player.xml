@@ -54,39 +54,73 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/music_player_back" />
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/music_player_album_art_card"
-        android:layout_width="0dp"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/music_player_scroll_view"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="32dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="8dp"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/music_player_title"
         app:layout_constraintTop_toBottomOf="@id/music_player_back">
 
-        <ImageView
-            android:id="@+id/music_player_album_art"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            tools:src="@drawable/default_cover"
-            tools:ignore="ContentDescription" />
-    </com.google.android.material.card.MaterialCardView>
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/music_player_album_art_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="48dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="32dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="12dp">
+
+                <ImageView
+                    android:id="@+id/music_player_album_art"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    app:layout_constraintDimensionRatio="1:1"
+                    android:scaleType="centerCrop"
+                    tools:layout_height="300dp"
+                    tools:src="@drawable/default_cover"
+                    tools:ignore="ContentDescription" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/music_player_related_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:fontFamily="@font/metropolis_bold"
+                android:text="Up Next"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/music_player_related_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false"
+                android:paddingBottom="32dp"
+                tools:listitem="@layout/item_music_song" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <TextView
         android:id="@+id/music_player_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
-        android:layout_marginTop="32dp"
         android:textColor="@color/white"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:fontFamily="@font/metropolis_bold"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@+id/music_player_artist"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/music_player_album_art_card"
         tools:text="Song Title" />
 
     <TextView
@@ -94,24 +128,25 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:textColor="@color/music_text_secondary"
         android:textSize="16sp"
         android:fontFamily="@font/metropolis_regular"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@+id/music_player_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/music_player_title"
         tools:text="Artist Name" />
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/music_player_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:surface_type="none"
         app:use_controller="true"
         app:controller_layout_id="@layout/custom_music_controls"
-        app:show_timeout="0" />
+        app:show_timeout="0"
+        app:hide_on_touch="false" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

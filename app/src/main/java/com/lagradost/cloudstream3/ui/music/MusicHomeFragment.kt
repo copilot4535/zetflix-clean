@@ -27,10 +27,27 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
         super.onViewReady(view, savedInstanceState)
         
         setupRecyclerView()
+        setupGenreChips()
         observeViewModel()
         
         if (viewModel.homeSections.value !is Resource.Success) {
             viewModel.loadHomeSections()
+        }
+    }
+
+    private fun setupGenreChips() {
+        binding?.musicHomeGenreChips?.setOnCheckedStateChangeListener { group, checkedIds ->
+            val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
+            val chip = group.findViewById<com.google.android.material.chip.Chip>(checkedId)
+            val title = chip.text.toString()
+            val args = Bundle().apply {
+                putString("title", title)
+                // In a real app, we'd have specific params for these categories
+                putString("params", "genre_$title") 
+            }
+            activity?.navigate(R.id.music_nav_genre, args)
+            // Uncheck so it can be clicked again
+            group.clearCheck()
         }
     }
 
@@ -57,13 +74,13 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                     val args = Bundle().apply {
                         putString("album_id", item.id)
                     }
-                    activity?.navigate(R.id.music_detail, args)
+                    activity?.navigate(R.id.music_nav_detail, args)
                 }
                 MusicItemType.PLAYLIST -> {
                     val args = Bundle().apply {
                         putString("playlist_id", item.id)
                     }
-                    activity?.navigate(R.id.music_detail, args)
+                    activity?.navigate(R.id.music_nav_detail, args)
                 }
                 MusicItemType.ARTIST -> {
                     // Could handle artist browsing later

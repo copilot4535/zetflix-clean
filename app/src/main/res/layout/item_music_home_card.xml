@@ -1,66 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="160dp"
+    android:layout_width="170dp"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp"
-    android:background="?attr/selectableItemBackground"
+    android:layout_margin="6dp"
+    app:cardBackgroundColor="@color/transparent"
+    app:cardElevation="0dp"
+    app:cardCornerRadius="12dp"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="144dp"
-        android:layout_height="144dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/music_surface_dark"
-        app:cardPreventCornerOverlap="false">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <FrameLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1:1"
+            android:layout_weight="1"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/music_surface_dark"
+            app:cardPreventCornerOverlap="false">
 
-            <ImageView
-                android:id="@+id/card_thumbnail"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                tools:src="@drawable/default_cover" />
+                android:layout_height="154dp">
 
-            <ImageView
-                android:id="@+id/card_play_overlay"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_play_circle"
-                app:tint="@color/zetflix_accent"
-                android:alpha="0.8" />
-        </FrameLayout>
-    </com.google.android.material.card.MaterialCardView>
+                <ImageView
+                    android:id="@+id/card_thumbnail"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    tools:src="@drawable/default_cover" />
 
-    <TextView
-        android:id="@+id/card_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        android:fontFamily="@font/metropolis_bold"
-        android:maxLines="1"
-        android:ellipsize="end"
-        tools:text="Song Title" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/bg_music_card_scrim" />
 
-    <TextView
-        android:id="@+id/card_subtitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@color/music_text_secondary"
-        android:textSize="12sp"
-        android:fontFamily="@font/metropolis_regular"
-        android:maxLines="1"
-        android:ellipsize="end"
-        tools:text="Artist Name" />
+                <ImageView
+                    android:id="@+id/card_play_overlay"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="8dp"
+                    android:src="@drawable/ic_baseline_play_arrow_24"
+                    android:background="@drawable/bg_music_play_circle"
+                    android:padding="6dp"
+                    app:tint="@color/white"
+                    android:elevation="4dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/card_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:fontFamily="@font/metropolis_bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="Song Title" />
+
+        <TextView
+            android:id="@+id/card_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/music_text_secondary"
+            android:textSize="13sp"
+            android:fontFamily="@font/metropolis_regular"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="Artist Name" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

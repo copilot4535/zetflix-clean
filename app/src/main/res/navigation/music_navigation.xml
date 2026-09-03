@@ -13,9 +13,9 @@
 
     <fragment
         android:id="@+id/music_nav_search"
-        android:name="com.lagradost.cloudstream3.ui.music.MusicFragment"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicSearchFragment"
         android:label="@string/title_search"
-        tools:layout="@layout/fragment_music">
+        tools:layout="@layout/fragment_music_search">
         <argument
             android:name="search_query"
             android:defaultValue="@null"
@@ -29,12 +29,12 @@
         android:label="Library"
         tools:layout="@layout/fragment_music_library" />
 
-    <!-- Detail View (Reuses MusicFragment class) -->
+    <!-- Detail View for Albums and Playlists -->
     <fragment
-        android:id="@+id/music_detail"
-        android:name="com.lagradost.cloudstream3.ui.music.MusicFragment"
+        android:id="@+id/music_nav_detail"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicDetailFragment"
         android:label="Detail"
-        tools:layout="@layout/fragment_music">
+        tools:layout="@layout/fragment_music_detail">
         <argument
             android:name="album_id"
             android:defaultValue="@null"
@@ -45,6 +45,31 @@
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
+    </fragment>
+
+    <!-- Artist Profile -->
+    <fragment
+        android:id="@+id/music_nav_artist"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicArtistFragment"
+        android:label="Artist"
+        tools:layout="@layout/fragment_music_artist">
+        <argument
+            android:name="artist_id"
+            app:argType="string" />
+    </fragment>
+
+    <!-- Genre / Mood Page -->
+    <fragment
+        android:id="@+id/music_nav_genre"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicGenreFragment"
+        android:label="Mood"
+        tools:layout="@layout/fragment_music_genre">
+        <argument
+            android:name="params"
+            app:argType="string" />
+        <argument
+            android:name="title"
+            app:argType="string" />
     </fragment>
 
     <!-- Player Destinations -->

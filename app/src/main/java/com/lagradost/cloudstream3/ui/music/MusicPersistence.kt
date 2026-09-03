@@ -17,6 +17,7 @@ object MusicPersistence {
     private const val MUSIC_HISTORY = "music_history"
     private const val MUSIC_PLAYLISTS = "music_playlists"
     private const val MUSIC_DOWNLOADED_SONGS = "music_downloaded_songs"
+    private const val MUSIC_SEARCH_HISTORY = "music_search_history"
 
     fun getLikedSongs(): List<MusicSearchResponse> {
         return getKey(currentAccount, MUSIC_LIKED_SONGS) ?: emptyList()
@@ -102,5 +103,19 @@ object MusicPersistence {
         val songs = getDownloadedSongs().toMutableList()
         songs.removeAll { it.videoId == videoId }
         setDownloadedSongs(songs)
+    }
+
+    fun getSearchHistory(): List<String> {
+        return getKey(currentAccount, MUSIC_SEARCH_HISTORY) ?: emptyList()
+    }
+
+    fun addSearchQuery(query: String) {
+        val history = getSearchHistory().toMutableList()
+        history.remove(query)
+        history.add(0, query)
+        if (history.size > 10) {
+            history.removeAt(history.size - 1)
+        }
+        setKey(currentAccount, MUSIC_SEARCH_HISTORY, history)
     }
 }
