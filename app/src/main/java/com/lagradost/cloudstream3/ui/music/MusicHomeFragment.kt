@@ -38,12 +38,15 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
     private fun setupGenreChips() {
         binding?.musicHomeGenreChips?.setOnCheckedStateChangeListener { group, checkedIds ->
             val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
-            val chip = group.findViewById<com.google.android.material.chip.Chip>(checkedId)
-            val title = chip.text.toString()
-            val args = Bundle().apply {
-                putString("title", title)
-                // In a real app, we'd have specific params for these categories
-                putString("params", "genre_$title") 
+            val args = Bundle()
+            if (checkedId == R.id.chip_moods_and_genres) {
+                args.putString("title", "Moods & Genres")
+                args.putString("params", "moods_and_genres")
+            } else {
+                val chip = group.findViewById<com.google.android.material.chip.Chip>(checkedId)
+                val title = chip.text.toString()
+                args.putString("title", title)
+                args.putString("params", "genre_$title")
             }
             activity?.navigate(R.id.music_nav_genre, args)
             // Uncheck so it can be clicked again
@@ -52,7 +55,7 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
     }
 
     private fun setupRecyclerView() {
-        homeAdapter = MusicHomeAdapter { section, index ->
+        homeAdapter = MusicHomeAdapter({ section, index ->
             val item = section.items[index]
             android.util.Log.d("MusicHome", "Clicked item: ${item.title}, type: ${item.type}, id: ${item.id}")
             when (item.type) {
@@ -73,20 +76,31 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                 MusicItemType.ALBUM -> {
                     val args = Bundle().apply {
                         putString("album_id", item.id)
+                        putString("album_name", item.title)
                     }
                     activity?.navigate(R.id.music_nav_detail, args)
                 }
                 MusicItemType.PLAYLIST -> {
                     val args = Bundle().apply {
                         putString("playlist_id", item.id)
+                        putString("playlist_name", item.title)
                     }
                     activity?.navigate(R.id.music_nav_detail, args)
                 }
                 MusicItemType.ARTIST -> {
-                    // Could handle artist browsing later
+                    val args = Bundle().apply {
+                        putString("artist_id", item.id)
+                        putString("artist_name", item.title)
+                    }
+                    activity?.navigate(R.id.music_nav_artist, args)
                 }
             }
-        }
+        }, { section ->
+            val args = Bundle().apply {
+                putString("title", section.title)
+            }
+            activity?.navigate(R.id.music_nav_genre, args)
+        })
         binding?.musicHomeRecycler?.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = homeAdapter

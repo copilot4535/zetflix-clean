@@ -8,7 +8,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentMusicQueueBinding
 import com.lagradost.cloudstream3.ui.BaseFragment
-import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
+import com.lagradost.cloudstream3.utils.UIHelper.navigate
+import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @androidx.media3.common.util.UnstableApi
 class MusicQueueFragment : BaseFragment<FragmentMusicQueueBinding>(
@@ -24,6 +27,10 @@ class MusicQueueFragment : BaseFragment<FragmentMusicQueueBinding>(
         
         setupRecyclerView()
         observeViewModel()
+
+        binding?.musicQueueToolbar?.setNavigationOnClickListener {
+            activity?.onBackPressed()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -36,8 +43,8 @@ class MusicQueueFragment : BaseFragment<FragmentMusicQueueBinding>(
                     viewModel.playQueue(songs, index)
                 }
             }
-        }, { view, song ->
-            showSongMenu(view, song)
+        }, { _, song ->
+            showSongMenu(song)
         })
         binding?.musicQueueRecycler?.apply {
             layoutManager = LinearLayoutManager(context)
@@ -45,47 +52,39 @@ class MusicQueueFragment : BaseFragment<FragmentMusicQueueBinding>(
         }
     }
 
-    private fun showSongMenu(view: View, song: MusicSearchResponse) {
-        val isLiked = MusicPersistence.isSongLiked(song.videoId)
-        val isDownloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }
-        
-        val options = mutableListOf<Pair<Int, String>>()
-        options.add(0 to if (isLiked) "Remove from Liked" else "Like")
-        options.add(1 to if (isDownloaded) "Remove Download" else "Download")
-        options.add(2 to "Add to Playlist")
-
-        view.popupMenuNoIconsAndNoStringRes(options) {
-            when (itemId) {
-                0 -> viewModel.toggleLikeSong(song)
-                1 -> {
-                    if (isDownloaded) viewModel.removeDownload(song.videoId)
-                    else viewModel.downloadSong(song)
-                }
-                2 -> showAddToPlaylistDialog(song)
-            }
+    private fun showSongMenu(song: MusicSearchResponse) {
+        val args = Bundle().apply {
+            putString("track", Json.encodeToString(song))
         }
-    }
-
-    private fun showAddToPlaylistDialog(song: MusicSearchResponse) {
-        val playlists = MusicPersistence.getPlaylists()
-        if (playlists.isEmpty()) {
-            Toast.makeText(context, "No playlists created", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val names = playlists.map { it.name }.toTypedArray()
-        androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
-            .setTitle("Add to Playlist")
-            .setItems(names) { _, which ->
-                viewModel.addSongToPlaylist(names[which], song)
-            }
-            .show()
+        activity?.navigate(R.id.navigation_track_options, args)
     }
 
     private fun observeViewModel() {
+        viewModel.currentPlayingSong.observe(viewLifecycleOwner) { song ->
+            if (song != null) {
+                binding?.musicQueueCurrentItem?.musicSongTitle?.text = song.title
+                binding?.musicQueueCurrentItem?.musicSongArtist?.text = song.artist
+                binding?.musicQueueCurrentItem?.musicSongThumbnail?.loadImage(song.thumbnailUrl)
+                binding?.musicQueueCurrentItem?.musicSongMenu?.setOnClickListener {
+                    showSongMenu(song)
+                }
+            }
+        }
+
         viewModel.queueReady.observe(viewLifecycleOwner) { resource ->
             if (resource is com.lagradost.cloudstream3.mvvm.Resource.Success) {
                 val songs = resource.value.first.map { it.first }
-                queueAdapter.submitList(songs)
+                val currentIndex = resource.value.second
+                // Filter out current song from "Up Next"
+                val upNext = if (currentIndex in songs.indices) {
+                    songs.subList(currentIndex + 1, songs.size)
+                } else {
+                    songs
+                }
+                queueAdapter.submitList(upNext)
+                
+                // Update Up Next header visibility
+                // binding?.upNextHeader?.isVisible = upNext.isNotEmpty()
             }
         }
     }

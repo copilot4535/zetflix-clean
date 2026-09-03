@@ -10,8 +10,10 @@ import com.lagradost.cloudstream3.databinding.ItemMusicHomeCardBinding
 import com.lagradost.cloudstream3.databinding.ItemMusicHomeSectionBinding
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 
-class MusicHomeAdapter(private val onSectionItemClick: (MusicHomeSection, Int) -> Unit) :
-    ListAdapter<MusicHomeSection, MusicHomeAdapter.SectionViewHolder>(SectionDiffCallback()) {
+class MusicHomeAdapter(
+    private val onSectionItemClick: (MusicHomeSection, Int) -> Unit,
+    private val onSeeAllClick: (MusicHomeSection) -> Unit = {}
+) : ListAdapter<MusicHomeSection, MusicHomeAdapter.SectionViewHolder>(SectionDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SectionViewHolder {
         val binding = ItemMusicHomeSectionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -27,6 +29,7 @@ class MusicHomeAdapter(private val onSectionItemClick: (MusicHomeSection, Int) -
 
         fun bind(section: MusicHomeSection) {
             binding.sectionTitle.text = section.title
+            binding.sectionSeeAll.setOnClickListener { onSeeAllClick(section) }
             val itemAdapter = MusicHomeItemAdapter { index ->
                 onSectionItemClick(section, index)
             }

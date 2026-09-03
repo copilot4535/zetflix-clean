@@ -100,17 +100,38 @@
                 </com.google.android.material.chip.ChipGroup>
             </HorizontalScrollView>
 
-            <TextView
-                android:id="@+id/music_search_header"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/music_search_header_layout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:fontFamily="@font/metropolis_bold"
-                android:textColor="@color/white"
-                android:textSize="18sp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:visibility="gone"
-                tools:text="Trending Now"
-                tools:visibility="visible" />
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/music_search_header"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/metropolis_bold"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    tools:text="Recent Searches" />
+
+                <TextView
+                    android:id="@+id/music_search_clear_history"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clear"
+                    android:textColor="@color/zetflix_accent"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/metropolis_bold"
+                    android:padding="8dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+            </LinearLayout>
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 

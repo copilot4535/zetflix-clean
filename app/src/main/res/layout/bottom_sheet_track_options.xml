@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/zetflix_background"
+    android:orientation="vertical"
+    android:paddingBottom="16dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/zetflix_border" />
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/track_thumbnail"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:scaleType="centerCrop"
+            app:shapeAppearanceOverlay="@style/RoundedCorner5"
+            tools:src="@tools:sample/avatars" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/track_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
+                android:textColor="@color/zetflix_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="Track Title" />
+
+            <TextView
+                android:id="@+id/track_metadata"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/zetflix_text_secondary"
+                android:textSize="14sp"
+                tools:text="Artist • Album" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/zetflix_border" />
+
+    <!-- Options -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/option_play_next"
+                style="@style/TrackOptionItem"
+                android:drawableStart="@drawable/ic_baseline_play_arrow_24"
+                android:text="Play Next" />
+
+            <TextView
+                android:id="@+id/option_add_queue"
+                style="@style/TrackOptionItem"
+                android:drawableStart="@drawable/ic_baseline_playlist_play_24"
+                android:text="Add to Queue" />
+
+            <TextView
+                android:id="@+id/option_go_artist"
+                style="@style/TrackOptionItem"
+                android:drawableStart="@drawable/ic_baseline_people_24"
+                android:text="Go to Artist" />
+
+            <TextView
+                android:id="@+id/option_go_album"
+                style="@style/TrackOptionItem"
+                android:drawableStart="@drawable/baseline_headphones_24"
+                android:text="Go to Album" />
+
+            <TextView
+                android:id="@+id/option_add_playlist"
+                style="@style/TrackOptionItem"
+                android:drawableStart="@drawable/ic_baseline_add_24"
+                android:text="Add to Playlist" />
+
+            <TextView
+                android:id="@+id/option_download"
+                style="@style/TrackOptionItem"
+                android:drawableStart="@drawable/netflix_download"
+                android:text="Download" />
+
+            <TextView
+                android:id="@+id/option_share"
+                style="@style/TrackOptionItem"
+                android:drawableStart="@drawable/ic_outline_share_24"
+                android:text="Share" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

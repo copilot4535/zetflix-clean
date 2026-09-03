@@ -140,9 +140,68 @@ class MusicRepository {
         try {
             val response = youtube.nextCustom(videoId).getOrNull()
             // Map NextResponse to MusicSearchResponse
-            // This usually contains a 'Related' shelf or similar
-            // Simplified for now: just return empty or implement real mapping if NextResponse structure known
-            emptyList() 
+            // Look for the "Up Next" section
+            response?.contents?.singleColumnMusicWatchNextResultsRenderer?.tabbedRenderer?.watchNextTabbedResultsRenderer?.tabs
+                ?.firstOrNull()?.tabRenderer?.content?.musicQueueRenderer?.content?.playlistPanelRenderer?.contents
+                ?.mapNotNull { it.track }
+                ?.map { 
+                    MusicSearchResponse(
+                        it.title?.runs?.firstOrNull()?.text ?: "",
+                        it.longBylineText?.runs?.firstOrNull()?.text,
+                        it.videoId ?: "",
+                        it.thumbnail?.thumbnails?.firstOrNull()?.url
+                    )
+                } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun getArtistDetails(artistId: String): List<MusicHomeSection> = withContext(Dispatchers.IO) {
+        try {
+            val artistPage = youtube.artist(artistId).getOrNull()
+            artistPage?.sections?.map { section ->
+                MusicHomeSection(
+                    title = section.title ?: "Section",
+                    items = section.items.map { item ->
+                        MusicHomeItem(
+                            item.title,
+                            "", // Subtitle mapping can be refined
+                            item.id,
+                            item.thumbnail,
+                            when (item.type) {
+                                com.maxrave.kotlinytmusicscraper.models.YTItemType.SONG -> MusicItemType.SONG
+                                com.maxrave.kotlinytmusicscraper.models.YTItemType.ALBUM -> MusicItemType.ALBUM
+                                com.maxrave.kotlinytmusicscraper.models.YTItemType.PLAYLIST -> MusicItemType.PLAYLIST
+                                com.maxrave.kotlinytmusicscraper.models.YTItemType.ARTIST -> MusicItemType.ARTIST
+                                com.maxrave.kotlinytmusicscraper.models.YTItemType.VIDEO -> MusicItemType.SONG
+                            }
+                        )
+                    }
+                )
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun getMoodAndGenres(): List<MusicHomeSection> = withContext(Dispatchers.IO) {
+        try {
+            val moods = youtube.moodAndGenres().getOrNull()
+            moods?.map { mood ->
+                MusicHomeSection(
+                    title = mood.title,
+                    items = mood.items.map { item ->
+                        MusicHomeItem(
+                            item.title,
+                            null,
+                            item.endpoint.params ?: "",
+                            null, // Genres usually don't have thumbnails in this model
+                            MusicItemType.PLAYLIST // Treat as playlist/params for browsing
+                        )
+                    }
+                )
+            } ?: emptyList()
         } catch (e: Exception) {
             emptyList()
         }

@@ -8,6 +8,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageButton
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.media3.common.Player
@@ -27,6 +28,8 @@ import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.utils.drawableToBitmap
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.math.abs
 
 import androidx.appcompat.app.AlertDialog
@@ -75,12 +78,11 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
 
         binding?.musicPlayerMore?.setOnClickListener { view ->
-            val options = listOf(0 to "Sleep Timer", 1 to "Share")
-            view.popupMenuNoIconsAndNoStringRes(options) {
-                when (itemId) {
-                    0 -> showSleepTimerDialog()
-                    1 -> shareCurrentSong()
+            viewModel.currentPlayingSong.value?.let { song ->
+                val args = Bundle().apply {
+                    putString("track", Json.encodeToString(song))
                 }
+                activity?.navigate(R.id.navigation_track_options, args)
             }
         }
         
@@ -185,19 +187,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     }
 
     private fun showSleepTimerDialog() {
-        val options = arrayOf("Off", "15 minutes", "30 minutes", "60 minutes", "Custom")
-        AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
-            .setTitle("Sleep Timer")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> viewModel.startSleepTimer(0)
-                    1 -> viewModel.startSleepTimer(15)
-                    2 -> viewModel.startSleepTimer(30)
-                    3 -> viewModel.startSleepTimer(60)
-                    4 -> showCustomSleepTimerDialog()
-                }
-            }
-            .show()
+        activity?.navigate(R.id.navigation_sleep_timer)
     }
 
     private fun showCustomSleepTimerDialog() {
@@ -310,6 +300,17 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         viewModel.downloadedSongs.observe(viewLifecycleOwner) { downloads ->
             viewModel.currentPlayingSong.value?.let { song ->
                 updateDownloadIcon(downloads.any { it.videoId == song.videoId })
+            }
+        }
+
+        viewModel.sleepTimerTimeLeft.observe(viewLifecycleOwner) { millis ->
+            if (millis != null && millis > 0) {
+                binding?.musicPlayerSleepTimer?.isVisible = true
+                val minutes = millis / 1000 / 60
+                val seconds = (millis / 1000) % 60
+                binding?.musicPlayerSleepTimer?.text = String.format(java.util.Locale.US, "%02d:%02d", minutes, seconds)
+            } else {
+                binding?.musicPlayerSleepTimer?.isVisible = false
             }
         }
     }

@@ -237,6 +237,30 @@ class MusicViewModel : ViewModel() {
         }
     }
 
+    fun loadArtistDetails(artistId: String) {
+        _homeSections.postValue(Resource.Loading())
+        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val sections = repository.getArtistDetails(artistId)
+                _homeSections.postValue(Resource.Success(sections))
+            } catch (e: Exception) {
+                _homeSections.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
+            }
+        }
+    }
+
+    fun loadMoodAndGenres() {
+        _homeSections.postValue(Resource.Loading())
+        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val sections = repository.getMoodAndGenres()
+                _homeSections.postValue(Resource.Success(sections))
+            } catch (e: Exception) {
+                _homeSections.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
+            }
+        }
+    }
+
     fun loadStreamAndPlay(song: MusicSearchResponse) {
         _streamUrl.postValue(Resource.Loading())
         _currentPlayingSong.postValue(song)

@@ -41,6 +41,15 @@
                     app:singleLine="true">
 
                     <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_moods_and_genres"
+                        style="@style/ChipFilled"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Explore All"
+                        app:chipIcon="@drawable/ic_baseline_public_24"
+                        app:chipIconTint="@color/white" />
+
+                    <com.google.android.material.chip.Chip
                         style="@style/ChipFilledSemiTransparent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

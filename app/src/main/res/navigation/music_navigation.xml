@@ -72,6 +72,20 @@
             app:argType="string" />
     </fragment>
 
+    <!-- Music Settings -->
+    <fragment
+        android:id="@+id/music_nav_settings"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicSettingsFragment"
+        android:label="Music Settings"
+        tools:layout="@layout/fragment_music_settings" />
+
+    <!-- Music Downloads -->
+    <fragment
+        android:id="@+id/music_nav_downloads"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicDownloadsFragment"
+        android:label="Downloads"
+        tools:layout="@layout/fragment_music_downloads" />
+
     <!-- Player Destinations -->
     <fragment
         android:id="@+id/navigation_music_player"
@@ -90,6 +104,20 @@
         android:name="com.lagradost.cloudstream3.ui.music.MusicQueueFragment"
         android:label="Queue"
         tools:layout="@layout/fragment_music_queue" />
+
+    <dialog
+        android:id="@+id/navigation_track_options"
+        android:name="com.lagradost.cloudstream3.ui.music.TrackOptionsBottomSheetFragment"
+        android:label="Track Options">
+        <argument
+            android:name="track"
+            app:argType="string" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/navigation_sleep_timer"
+        android:name="com.lagradost.cloudstream3.ui.music.SleepTimerBottomSheetFragment"
+        android:label="Sleep Timer" />
 
     <!-- Global actions for easy access from any fragment in the music graph -->
     <action

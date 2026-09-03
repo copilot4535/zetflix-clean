@@ -12,7 +12,9 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
-import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
+import com.lagradost.cloudstream3.utils.UIHelper.navigate
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @androidx.media3.common.util.UnstableApi
 class MusicDetailFragment : BaseFragment<FragmentMusicDetailBinding>(
@@ -34,10 +36,20 @@ class MusicDetailFragment : BaseFragment<FragmentMusicDetailBinding>(
         val albumId = arguments?.getString("album_id")
         val playlistId = arguments?.getString("playlist_id")
 
-        if (albumId != null && albumId != "null") {
+        if (playlistId?.startsWith("local_") == true) {
+            val playlistName = playlistId.removePrefix("local_")
+            viewModel.playlists.value?.find { it.name == playlistName }?.let {
+                musicAdapter.submitList(it.songs)
+                binding?.musicDetailTitle?.text = it.name
+                binding?.musicDetailSubtitle?.text = "${it.songs.size} songs"
+                binding?.musicDetailHeaderImage?.loadImage(it.songs.firstOrNull()?.thumbnailUrl)
+            }
+        } else if (albumId != null && albumId != "null") {
             viewModel.loadAlbumSongs(albumId)
+            binding?.musicDetailTitle?.text = arguments?.getString("album_name")
         } else if (playlistId != null && playlistId != "null") {
             viewModel.loadPlaylistSongs(playlistId)
+            binding?.musicDetailTitle?.text = arguments?.getString("playlist_name")
         }
 
         binding?.musicDetailToolbar?.setNavigationOnClickListener {
@@ -49,8 +61,8 @@ class MusicDetailFragment : BaseFragment<FragmentMusicDetailBinding>(
         musicAdapter = MusicSearchAdapter({ index ->
             val songs = musicAdapter.currentList
             viewModel.playQueue(songs, index)
-        }, { view, song ->
-            showSongMenu(view, song)
+        }, { _, song ->
+            showSongMenu(song)
         })
         binding?.musicDetailRecycler?.apply {
             layoutManager = LinearLayoutManager(context)
@@ -70,40 +82,11 @@ class MusicDetailFragment : BaseFragment<FragmentMusicDetailBinding>(
         }
     }
 
-    private fun showSongMenu(view: View, song: MusicSearchResponse) {
-        val isLiked = MusicPersistence.isSongLiked(song.videoId)
-        val isDownloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }
-        
-        val options = mutableListOf<Pair<Int, String>>()
-        options.add(0 to if (isLiked) "Remove from Liked" else "Like")
-        options.add(1 to if (isDownloaded) "Remove Download" else "Download")
-        options.add(2 to "Add to Playlist")
-
-        view.popupMenuNoIconsAndNoStringRes(options) {
-            when (itemId) {
-                0 -> viewModel.toggleLikeSong(song)
-                1 -> {
-                    if (isDownloaded) viewModel.removeDownload(song.videoId)
-                    else viewModel.downloadSong(song)
-                }
-                2 -> showAddToPlaylistDialog(song)
-            }
+    private fun showSongMenu(song: MusicSearchResponse) {
+        val args = Bundle().apply {
+            putString("track", Json.encodeToString(song))
         }
-    }
-
-    private fun showAddToPlaylistDialog(song: MusicSearchResponse) {
-        val playlists = MusicPersistence.getPlaylists()
-        if (playlists.isEmpty()) {
-            Toast.makeText(context, "No playlists created", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val names = playlists.map { it.name }.toTypedArray()
-        androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
-            .setTitle("Add to Playlist")
-            .setItems(names) { _, which ->
-                viewModel.addSongToPlaylist(names[which], song)
-            }
-            .show()
+        activity?.navigate(R.id.navigation_track_options, args)
     }
 
     private fun observeViewModel() {
