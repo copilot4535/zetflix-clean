@@ -1,36 +1,24 @@
 package com.lagradost.cloudstream3.ui.music
 
-import android.content.ComponentName
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentMusicBinding
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.observe
-import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
-import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
-import com.lagradost.cloudstream3.utils.UIHelper.navigate
 
 class MusicFragment : BaseFragment<FragmentMusicBinding>(
     BindingCreator.Inflate(FragmentMusicBinding::inflate)
 ) {
     private val viewModel: MusicViewModel by activityViewModels()
     private lateinit var musicAdapter: MusicSearchAdapter
-    private var controllerFuture: ListenableFuture<MediaController>? = null
-    private var mediaController: MediaController? = null
 
     override fun fixLayout(view: View) {
         // Implement fixLayout if needed
@@ -41,36 +29,29 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
         
         setupRecyclerView()
         setupSearch()
-        setupController()
         observeViewModel()
 
-        arguments?.getString("search_query")?.let { query ->
-            binding?.musicSearchEditText?.setText(query)
-            viewModel.search(query)
-        }
+        val searchQuery = arguments?.getString("search_query")
+        val albumId = arguments?.getString("album_id")
+        val playlistId = arguments?.getString("playlist_id")
 
-        arguments?.getString("album_id")?.let { albumId ->
+        if (searchQuery != null && searchQuery != "null") {
+            binding?.musicSearchEditText?.setText(searchQuery)
+            viewModel.search(searchQuery)
+        } else if (albumId != null && albumId != "null") {
             viewModel.loadAlbumSongs(albumId)
-        }
-
-        arguments?.getString("playlist_id")?.let { playlistId ->
+        } else if (playlistId != null && playlistId != "null") {
             viewModel.loadPlaylistSongs(playlistId)
-        }
-        
-        binding?.musicMiniPlayerInclude?.musicMiniPlayer?.setOnClickListener {
-            activity?.navigate(R.id.action_navigation_music_to_navigation_music_player)
-        }
-
-        binding?.musicMiniPlayerInclude?.musicMiniPlayPause?.setOnClickListener {
-            mediaController?.let {
-                if (it.isPlaying) it.pause() else it.play()
-            }
+        } else {
+            // Load trending songs if no arguments provided
+            viewModel.loadTrendingSongs()
         }
     }
 
     private fun setupRecyclerView() {
-        musicAdapter = MusicSearchAdapter { song ->
-            viewModel.loadStreamAndPlay(song)
+        musicAdapter = MusicSearchAdapter { index ->
+            val songs = musicAdapter.currentList
+            viewModel.playQueue(songs, index)
         }
         binding?.musicRecyclerView?.apply {
             layoutManager = LinearLayoutManager(context)
@@ -83,6 +64,7 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = binding?.musicSearchEditText?.text?.toString()
                 if (!query.isNullOrBlank()) {
+                    binding?.musicSearchHeader?.isVisible = false
                     viewModel.search(query)
                     hideKeyboard()
                 }
@@ -99,85 +81,27 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
             binding?.musicErrorText?.isVisible = resource is Resource.Failure
             binding?.musicRecyclerView?.isVisible = resource is Resource.Success
 
-            when (resource) {
-                is Resource.Success -> {
-                    musicAdapter.submitList(resource.value)
+            if (resource is Resource.Success) {
+                musicAdapter.submitList(resource.value)
+                
+                // Show "Trending" header only if it was a trending load (query empty)
+                val query = binding?.musicSearchEditText?.text?.toString()
+                binding?.musicSearchHeader?.isVisible = query.isNullOrBlank()
+                if (query.isNullOrBlank()) {
+                    binding?.musicSearchHeader?.text = "Trending Now"
                 }
+            } else if (resource is Resource.Failure) {
+                binding?.musicErrorText?.text = resource.errorString
+            }
+        }
+
+        observe(viewModel.queueReady) { resource ->
+            when (resource) {
                 is Resource.Failure -> {
-                    binding?.musicErrorText?.text = resource.errorString
+                    Toast.makeText(context, "Queue Error: ${resource.errorString}", Toast.LENGTH_LONG).show()
                 }
                 else -> {}
             }
         }
-
-        observe(viewModel.currentPlayingSong) { song ->
-            if (song != null) {
-                binding?.musicMiniPlayerInclude?.musicMiniPlayer?.isVisible = true
-                binding?.musicMiniPlayerInclude?.musicMiniTitle?.text = song.title
-                binding?.musicMiniPlayerInclude?.musicMiniArtist?.text = song.artist
-                binding?.musicMiniPlayerInclude?.musicMiniThumbnail?.loadImage(song.thumbnailUrl)
-            }
-        }
-
-        observe(viewModel.streamUrl) { resource ->
-            binding?.musicLoadingProgress?.isVisible = resource is Resource.Loading
-            
-            when (resource) {
-                is Resource.Success -> {
-                    val (url, song) = resource.value
-                    startMusicService(url, song)
-                    
-                    binding?.musicMiniPlayerInclude?.musicMiniPlayer?.isVisible = true
-                    binding?.musicMiniPlayerInclude?.musicMiniTitle?.text = song.title
-                    binding?.musicMiniPlayerInclude?.musicMiniArtist?.text = song.artist
-                    binding?.musicMiniPlayerInclude?.musicMiniThumbnail?.loadImage(song.thumbnailUrl)
-                }
-                is Resource.Failure -> {
-                    Toast.makeText(context, "Error: ${resource.errorString}", Toast.LENGTH_LONG).show()
-                }
-                else -> {}
-            }
-        }
-    }
-
-    private fun startMusicService(url: String, song: MusicSearchResponse) {
-        val intent = Intent(context, MusicService::class.java).apply {
-            action = MusicService.ACTION_PLAY
-            putExtra(MusicService.EXTRA_URL, url)
-            putExtra(MusicService.EXTRA_TITLE, song.title)
-            putExtra(MusicService.EXTRA_ARTIST, song.artist)
-            putExtra(MusicService.EXTRA_THUMBNAIL, song.thumbnailUrl)
-        }
-        context?.let {
-            ContextCompat.startForegroundService(it, intent)
-        }
-    }
-
-    private fun setupController() {
-        val context = context ?: return
-        val sessionToken = SessionToken(context, ComponentName(context, MusicService::class.java))
-        controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        controllerFuture?.addListener({
-            mediaController = controllerFuture?.get()
-            updateMiniPlayerControls()
-        }, MoreExecutors.directExecutor())
-    }
-
-    private fun updateMiniPlayerControls() {
-        mediaController?.addListener(object : androidx.media3.common.Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                binding?.musicMiniPlayerInclude?.musicMiniPlayPause?.setImageResource(
-                    if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
-                )
-            }
-        })
-    }
-
-    override fun onDestroyView() {
-        controllerFuture?.let {
-            MediaController.releaseFuture(it)
-        }
-        mediaController = null
-        super.onDestroyView()
     }
 }

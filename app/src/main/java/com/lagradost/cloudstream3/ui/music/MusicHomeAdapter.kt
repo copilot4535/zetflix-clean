@@ -10,7 +10,7 @@ import com.lagradost.cloudstream3.databinding.ItemMusicHomeCardBinding
 import com.lagradost.cloudstream3.databinding.ItemMusicHomeSectionBinding
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 
-class MusicHomeAdapter(private val onItemClick: (MusicHomeItem) -> Unit) :
+class MusicHomeAdapter(private val onSectionItemClick: (MusicHomeSection, Int) -> Unit) :
     ListAdapter<MusicHomeSection, MusicHomeAdapter.SectionViewHolder>(SectionDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SectionViewHolder {
@@ -25,17 +25,15 @@ class MusicHomeAdapter(private val onItemClick: (MusicHomeItem) -> Unit) :
     inner class SectionViewHolder(private val binding: ItemMusicHomeSectionBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        private val itemAdapter = MusicHomeItemAdapter(onItemClick)
-
-        init {
+        fun bind(section: MusicHomeSection) {
+            binding.sectionTitle.text = section.title
+            val itemAdapter = MusicHomeItemAdapter { index ->
+                onSectionItemClick(section, index)
+            }
             binding.sectionRecycler.apply {
                 layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
                 adapter = itemAdapter
             }
-        }
-
-        fun bind(section: MusicHomeSection) {
-            binding.sectionTitle.text = section.title
             itemAdapter.submitList(section.items)
         }
     }
@@ -46,7 +44,7 @@ class MusicHomeAdapter(private val onItemClick: (MusicHomeItem) -> Unit) :
     }
 }
 
-class MusicHomeItemAdapter(private val onItemClick: (MusicHomeItem) -> Unit) :
+class MusicHomeItemAdapter(private val onItemClick: (Int) -> Unit) :
     ListAdapter<MusicHomeItem, MusicHomeItemAdapter.ItemViewHolder>(ItemDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
@@ -55,17 +53,17 @@ class MusicHomeItemAdapter(private val onItemClick: (MusicHomeItem) -> Unit) :
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), position)
     }
 
     inner class ItemViewHolder(private val binding: ItemMusicHomeCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: MusicHomeItem) {
+        fun bind(item: MusicHomeItem, position: Int) {
             binding.cardTitle.text = item.title
             binding.cardSubtitle.text = item.subtitle
             binding.cardThumbnail.loadImage(item.thumbnailUrl)
-            binding.root.setOnClickListener { onItemClick(item) }
+            binding.root.setOnClickListener { onItemClick(position) }
         }
     }
 

@@ -20,10 +20,18 @@ import org.schabi.newpipe.extractor.NewPipe
 class MusicService : MediaSessionService() {
     companion object {
         const val ACTION_PLAY = "com.lagradost.cloudstream3.services.music.ACTION_PLAY"
+        const val ACTION_PLAY_QUEUE = "com.lagradost.cloudstream3.services.music.ACTION_PLAY_QUEUE"
+        const val ACTION_STOP = "com.lagradost.cloudstream3.services.music.ACTION_STOP"
         const val EXTRA_URL = "EXTRA_URL"
         const val EXTRA_TITLE = "EXTRA_TITLE"
         const val EXTRA_ARTIST = "EXTRA_ARTIST"
         const val EXTRA_THUMBNAIL = "EXTRA_THUMBNAIL"
+
+        const val EXTRA_URLS = "EXTRA_URLS"
+        const val EXTRA_TITLES = "EXTRA_TITLES"
+        const val EXTRA_ARTISTS = "EXTRA_ARTISTS"
+        const val EXTRA_THUMBNAILS = "EXTRA_THUMBNAILS"
+        const val EXTRA_START_INDEX = "EXTRA_START_INDEX"
     }
 
     private var mediaSession: MediaSession? = null
@@ -45,6 +53,11 @@ class MusicService : MediaSessionService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_STOP) {
+            stopForeground(true)
+            stopSelf()
+            return START_NOT_STICKY
+        }
         if (intent?.action == ACTION_PLAY) {
             val url = intent.getStringExtra(EXTRA_URL)
             val title = intent.getStringExtra(EXTRA_TITLE)
@@ -60,6 +73,45 @@ class MusicService : MediaSessionService() {
                 Log.e("MusicService", "Invalid or null URL received. Stopping service.")
                 stopForeground(true)
                 stopSelf()
+            }
+        } else if (intent?.action == ACTION_PLAY_QUEUE) {
+            val urls = intent.getStringArrayListExtra(EXTRA_URLS)
+            val titles = intent.getStringArrayListExtra(EXTRA_TITLES)
+            val artists = intent.getStringArrayListExtra(EXTRA_ARTISTS)
+            val thumbnails = intent.getStringArrayListExtra(EXTRA_THUMBNAILS)
+            val startIndex = intent.getIntExtra(EXTRA_START_INDEX, 0)
+
+            if (!urls.isNullOrEmpty()) {
+                val mediaItems = mutableListOf<MediaItem>()
+                for (i in urls.indices) {
+                    val url = urls[i]
+                    val title = titles?.getOrNull(i)
+                    val artist = artists?.getOrNull(i)
+                    val thumbnail = thumbnails?.getOrNull(i)
+
+                    val metadata = MediaMetadata.Builder()
+                        .setTitle(title)
+                        .setArtist(artist)
+                        .setArtworkUri(thumbnail?.toUri())
+                        .build()
+
+                    mediaItems.add(
+                        MediaItem.Builder()
+                            .setUri(url)
+                            .setMediaMetadata(metadata)
+                            .build()
+                    )
+                }
+
+                val currentTitle = titles?.getOrNull(startIndex) ?: "Playing Queue"
+                val currentArtist = artists?.getOrNull(startIndex) ?: ""
+                showNotification(currentTitle, currentArtist)
+
+                player?.let {
+                    it.setMediaItems(mediaItems, startIndex, 0)
+                    it.prepare()
+                    it.play()
+                }
             }
         }
         return super.onStartCommand(intent, flags, startId)
@@ -106,6 +158,11 @@ class MusicService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
         return mediaSession
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // Continue playing in background even if task is removed from recents
+        // super.onTaskRemoved(rootIntent) // By default MediaSessionService stops playback
     }
 
     override fun onDestroy() {

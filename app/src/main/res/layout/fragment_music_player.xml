@@ -6,6 +6,18 @@
     android:layout_height="match_parent"
     android:background="@color/music_background_black">
 
+    <View
+        android:id="@+id/music_player_background_gradient"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.3" />
+
+    <View
+        android:id="@+id/music_player_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_player_metadata_scrim_netflix" />
+
     <ImageButton
         android:id="@+id/music_player_back"
         android:layout_width="48dp"
@@ -87,6 +99,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:surface_type="none"
         app:use_controller="true"
-        app:controller_layout_id="@layout/custom_music_controls" />
+        app:controller_layout_id="@layout/custom_music_controls"
+        app:show_timeout="0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.lagradost.cloudstream3.databinding.ItemMusicSongBinding
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 
-class MusicSearchAdapter(private val onSongClick: (MusicSearchResponse) -> Unit) :
+class MusicSearchAdapter(private val onSongClick: (Int) -> Unit) :
     ListAdapter<MusicSearchResponse, MusicSearchAdapter.MusicViewHolder>(MusicDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MusicViewHolder {
@@ -17,18 +17,18 @@ class MusicSearchAdapter(private val onSongClick: (MusicSearchResponse) -> Unit)
     }
 
     override fun onBindViewHolder(holder: MusicViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), position)
     }
 
     inner class MusicViewHolder(private val binding: ItemMusicSongBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(song: MusicSearchResponse) {
+        fun bind(song: MusicSearchResponse, position: Int) {
             binding.musicSongTitle.text = song.title
             binding.musicSongArtist.text = song.artist ?: "Unknown Artist"
             binding.musicSongThumbnail.loadImage(song.thumbnailUrl)
             binding.root.setOnClickListener {
-                onSongClick(song)
+                onSongClick(position)
             }
         }
     }

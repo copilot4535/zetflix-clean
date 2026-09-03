@@ -1,23 +1,17 @@
 package com.lagradost.cloudstream3.ui.music
 
-import android.content.ComponentName
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentMusicHomeBinding
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.observe
-import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
-import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 
@@ -26,8 +20,6 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
 ) {
     private val viewModel: MusicViewModel by activityViewModels()
     private lateinit var homeAdapter: MusicHomeAdapter
-    private var controllerFuture: ListenableFuture<MediaController>? = null
-    private var mediaController: MediaController? = null
 
     override fun fixLayout(view: View) {
         // Any layout fixes
@@ -38,48 +30,43 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
         
         setupRecyclerView()
         setupSearch()
-        setupController()
         observeViewModel()
         
         if (viewModel.homeSections.value !is Resource.Success) {
             viewModel.loadHomeSections()
         }
-
-        binding?.musicMiniPlayerInclude?.musicMiniPlayer?.setOnClickListener {
-            activity?.navigate(R.id.action_navigation_music_to_navigation_music_player)
-        }
-
-        binding?.musicMiniPlayerInclude?.musicMiniPlayPause?.setOnClickListener {
-            mediaController?.let {
-                if (it.isPlaying) it.pause() else it.play()
-            }
-        }
     }
 
     private fun setupRecyclerView() {
-        homeAdapter = MusicHomeAdapter { item ->
+        homeAdapter = MusicHomeAdapter { section, index ->
+            val item = section.items[index]
+            android.util.Log.d("MusicHome", "Clicked item: ${item.title}, type: ${item.type}, id: ${item.id}")
             when (item.type) {
                 MusicItemType.SONG -> {
-                    viewModel.loadStreamAndPlay(
+                    // Filter section items to only include songs for the queue
+                    val songItems = section.items.filter { it.type == MusicItemType.SONG }
+                    val songs = songItems.map {
                         MusicSearchResponse(
-                            title = item.title,
-                            artist = item.subtitle,
-                            videoId = item.id,
-                            thumbnailUrl = item.thumbnailUrl
+                            title = it.title,
+                            artist = it.subtitle,
+                            videoId = it.id,
+                            thumbnailUrl = it.thumbnailUrl
                         )
-                    )
+                    }
+                    val songIndex = songItems.indexOf(item).coerceAtLeast(0)
+                    viewModel.playQueue(songs, songIndex)
                 }
                 MusicItemType.ALBUM -> {
                     val args = Bundle().apply {
                         putString("album_id", item.id)
                     }
-                    activity?.navigate(R.id.action_navigation_music_home_to_navigation_music, args)
+                    activity?.navigate(R.id.music_detail, args)
                 }
                 MusicItemType.PLAYLIST -> {
                     val args = Bundle().apply {
                         putString("playlist_id", item.id)
                     }
-                    activity?.navigate(R.id.action_navigation_music_home_to_navigation_music, args)
+                    activity?.navigate(R.id.music_detail, args)
                 }
                 MusicItemType.ARTIST -> {
                     // Could handle artist browsing later
@@ -101,7 +88,7 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                     val args = Bundle().apply {
                         putString("search_query", query)
                     }
-                    activity?.navigate(R.id.action_navigation_music_home_to_navigation_music, args)
+                    activity?.navigate(R.id.music_nav_search, args)
                 }
                 true
             } else {
@@ -111,12 +98,12 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
     }
 
     private fun observeViewModel() {
-        observe(viewModel.currentPlayingSong) { song ->
-            if (song != null) {
-                binding?.musicMiniPlayerInclude?.musicMiniPlayer?.isVisible = true
-                binding?.musicMiniPlayerInclude?.musicMiniTitle?.text = song.title
-                binding?.musicMiniPlayerInclude?.musicMiniArtist?.text = song.artist
-                binding?.musicMiniPlayerInclude?.musicMiniThumbnail?.loadImage(song.thumbnailUrl)
+        observe(viewModel.queueReady) { resource ->
+            when (resource) {
+                is Resource.Failure -> {
+                    Toast.makeText(context, "Queue Error: ${resource.errorString}", Toast.LENGTH_LONG).show()
+                }
+                else -> {}
             }
         }
 
@@ -136,33 +123,5 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                 else -> {}
             }
         }
-    }
-
-    private fun setupController() {
-        val context = context ?: return
-        val sessionToken = SessionToken(context, ComponentName(context, MusicService::class.java))
-        controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        controllerFuture?.addListener({
-            mediaController = controllerFuture?.get()
-            updateMiniPlayerControls()
-        }, MoreExecutors.directExecutor())
-    }
-
-    private fun updateMiniPlayerControls() {
-        mediaController?.addListener(object : androidx.media3.common.Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                binding?.musicMiniPlayerInclude?.musicMiniPlayPause?.setImageResource(
-                    if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
-                )
-            }
-        })
-    }
-
-    override fun onDestroyView() {
-        controllerFuture?.let {
-            MediaController.releaseFuture(it)
-        }
-        mediaController = null
-        super.onDestroyView()
     }
 }

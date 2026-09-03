@@ -56,6 +56,9 @@ import kotlinx.serialization.Serializable
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.abs
 
+import com.lagradost.cloudstream3.ui.music.MusicActivity
+import android.content.Intent
+
 class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     BindingCreator.Bind(FragmentLibraryBinding::bind)
 ) {
@@ -105,6 +108,13 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     ) {
         binding.sortFab.setOnClickListener(sortChangeClickListener)
         binding.librarySort.setOnClickListener(sortChangeClickListener)
+
+        binding.libraryMusicShortcut.setOnClickListener {
+            val intent = Intent(it.context, MusicActivity::class.java).apply {
+                putExtra(MusicActivity.EXTRA_OPEN_TAB, "library")
+            }
+            it.context.startActivity(intent)
+        }
 
         libraryViewModel.reloadPages(false)
 

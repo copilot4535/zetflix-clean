@@ -53,8 +53,12 @@ class MusicRepository {
             val browseResult = youtube.browse("FEmusic_home", null).getOrNull()
             if (browseResult == null) {
                 Log.e("MusicHome", "Browse result is null for FEmusic_home")
+                return@withContext emptyList()
             }
-            browseResult?.items?.map { section ->
+            Log.d("MusicHome", "InnerTube returned ${browseResult.items.size} sections")
+            
+            browseResult.items.map { section ->
+                Log.d("MusicHome", "Processing section: ${section.title} with ${section.items.size} items")
                 MusicHomeSection(
                     title = section.title ?: "Recommended",
                     items = section.items.map { item ->
@@ -79,7 +83,7 @@ class MusicRepository {
                         )
                     }
                 )
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             Log.e("MusicHome", "Error loading home sections", e)
             emptyList()

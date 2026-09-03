@@ -12,8 +12,15 @@
         android:layout_height="0dp"
         app:defaultNavHost="true"
         app:navGraph="@navigation/music_navigation"
-        app:layout_constraintBottom_toTopOf="@+id/music_bottom_nav"
+        app:layout_constraintBottom_toTopOf="@+id/global_mini_player"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <include
+        layout="@layout/view_music_mini_player"
+        android:id="@+id/global_mini_player"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/music_bottom_nav" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/music_bottom_nav"

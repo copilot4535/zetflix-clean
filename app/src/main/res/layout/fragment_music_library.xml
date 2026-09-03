@@ -105,10 +105,4 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <include
-        layout="@layout/view_music_mini_player"
-        android:id="@+id/music_mini_player_include"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
 </LinearLayout>

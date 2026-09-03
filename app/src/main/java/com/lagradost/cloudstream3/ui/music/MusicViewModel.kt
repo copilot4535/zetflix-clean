@@ -41,6 +41,9 @@ class MusicViewModel : ViewModel() {
     private val _currentPlayingSong = MutableLiveData<MusicSearchResponse?>()
     val currentPlayingSong: LiveData<MusicSearchResponse?> = _currentPlayingSong
 
+    private val _queueReady = MutableLiveData<Resource<Pair<List<Pair<MusicSearchResponse, String>>, Int>>>()
+    val queueReady: LiveData<Resource<Pair<List<Pair<MusicSearchResponse, String>>, Int>>> = _queueReady
+
     private fun initNewPipe() {
         try {
             NewPipe.getDownloader()
@@ -52,6 +55,10 @@ class MusicViewModel : ViewModel() {
     }
 
     fun search(query: String) {
+        if (query.isBlank()) {
+            loadTrendingSongs()
+            return
+        }
         _searchResult.postValue(Resource.Loading())
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
@@ -72,11 +79,27 @@ class MusicViewModel : ViewModel() {
         _homeSections.postValue(Resource.Loading())
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
+                Log.d("MusicViewModel", "Loading home sections with visitorData: ${YouTubeInstance.youtube.visitorData}")
                 val sections = repository.getHomeSections()
+                Log.d("MusicViewModel", "Loaded ${sections.size} sections")
                 _homeSections.postValue(Resource.Success(sections))
             } catch (e: Exception) {
                 Log.e("MusicViewModel", "Failed to load home sections", e)
                 _homeSections.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
+            }
+        }
+    }
+
+    fun loadTrendingSongs() {
+        _searchResult.postValue(Resource.Loading())
+        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                // Fetch curated trending songs (fallback to popular search)
+                val songs = repository.searchSongs("trending music")
+                _searchResult.postValue(Resource.Success(songs))
+            } catch (e: Exception) {
+                Log.e("MusicViewModel", "Failed to load trending songs", e)
+                _searchResult.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
             }
         }
     }
@@ -112,32 +135,10 @@ class MusicViewModel : ViewModel() {
         _currentPlayingSong.postValue(song)
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                // 1. Try InnerTube (YouTubeInstance) primary extraction
-                var streamUrlFound: String? = null
-                try {
-                    val playerResult = YouTubeInstance.youtube.player(song.videoId, null, false).getOrNull()
-                    val formats = playerResult?.second?.streamingData?.adaptiveFormats
-                    streamUrlFound = formats?.filter { it.isAudio }?.maxByOrNull { it.bitrate }?.url
-                } catch (e: Exception) {
-                    Log.e("MusicViewModel", "InnerTube extraction failed for ${song.videoId}", e)
-                }
+                val streamUrlFound = extractStreamUrl(song.videoId)
 
-                // 2. Fallback to NewPipe if InnerTube failed or URL is null
-                if (streamUrlFound.isNullOrBlank()) {
-                    try {
-                        initNewPipe()
-                        val service = ServiceList.YouTube
-                        val info = StreamInfo.getInfo(service, song.videoId)
-                        streamUrlFound = info.audioStreams.firstOrNull()?.content
-                    } catch (e: Exception) {
-                        Log.e("MusicViewModel", "NewPipe fallback failed for ${song.videoId}", e)
-                    }
-                }
-
-                // 3. Post result if URL is valid
-                if (!streamUrlFound.isNullOrBlank() && (streamUrlFound.startsWith("http://") || streamUrlFound.startsWith("https://"))) {
+                if (!streamUrlFound.isNullOrBlank()) {
                     _streamUrl.postValue(Resource.Success(streamUrlFound to song))
-                    // Fetch lyrics as well
                     fetchLyrics(song)
                 } else {
                     _streamUrl.postValue(Resource.Failure(false, "Could not extract audio stream for: ${song.title}"))
@@ -145,6 +146,89 @@ class MusicViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("MusicViewModel", "Total stream extraction failure", e)
                 _streamUrl.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
+            }
+        }
+    }
+
+    private suspend fun extractStreamUrl(videoId: String): String? {
+        // 1. Try InnerTube
+        try {
+            val playerResult = YouTubeInstance.youtube.player(videoId, null, false).getOrNull()
+            val formats = playerResult?.second?.streamingData?.adaptiveFormats
+            val url = formats?.filter { it.isAudio }?.maxByOrNull { it.bitrate }?.url
+            if (!url.isNullOrBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
+                return url
+            }
+        } catch (e: Exception) {
+            Log.e("MusicViewModel", "InnerTube extraction failed for $videoId", e)
+        }
+
+        // 2. Fallback to NewPipe
+        try {
+            initNewPipe()
+            val service = ServiceList.YouTube
+            val info = StreamInfo.getInfo(service, videoId)
+            val url = info.audioStreams.firstOrNull()?.content
+            if (!url.isNullOrBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
+                return url
+            }
+        } catch (e: Exception) {
+            Log.e("MusicViewModel", "NewPipe fallback failed for $videoId", e)
+        }
+
+        return null
+    }
+
+    fun playQueue(songs: List<MusicSearchResponse>, startIndex: Int) {
+        _queueReady.postValue(Resource.Loading())
+        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                if (songs.isEmpty()) {
+                    _queueReady.postValue(Resource.Failure(false, "Empty song list"))
+                    return@launchSafe
+                }
+
+                val safeStartIndex = if (startIndex in songs.indices) startIndex else 0
+                val selectedSong = songs[safeStartIndex]
+
+                // 1. Extract selected song immediately for fast start
+                val firstUrl = extractStreamUrl(selectedSong.videoId)
+                if (firstUrl != null) {
+                    // Post initial single-item queue to start playback ASAP
+                    val initialQueue = listOf(selectedSong to firstUrl)
+                    _queueReady.postValue(Resource.Success(initialQueue to 0))
+                    
+                    // Update current song UI
+                    _currentPlayingSong.postValue(selectedSong)
+                    fetchLyrics(selectedSong)
+
+                    // 2. Extract remaining songs in the background
+                    val fullQueue = mutableListOf<Pair<MusicSearchResponse, String>>()
+                    val maxQueueSize = 30
+                    val subset = songs.take(maxQueueSize)
+
+                    for (song in subset) {
+                        if (song.videoId == selectedSong.videoId) {
+                            fullQueue.add(song to firstUrl)
+                            continue
+                        }
+                        val url = extractStreamUrl(song.videoId)
+                        if (url != null) {
+                            fullQueue.add(song to url)
+                        }
+                    }
+
+                    if (fullQueue.size > 1) {
+                        val adjustedStartIndex = fullQueue.indexOfFirst { it.first.videoId == selectedSong.videoId }.coerceAtLeast(0)
+                        // Post the full populated queue
+                        _queueReady.postValue(Resource.Success(fullQueue to adjustedStartIndex))
+                    }
+                } else {
+                    _queueReady.postValue(Resource.Failure(false, "Could not extract audio for: ${selectedSong.title}"))
+                }
+            } catch (e: Exception) {
+                Log.e("MusicViewModel", "Failed to build queue", e)
+                _queueReady.postValue(Resource.Failure(false, e.message ?: "Queue error"))
             }
         }
     }
