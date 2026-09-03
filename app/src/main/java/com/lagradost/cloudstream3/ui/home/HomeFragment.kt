@@ -554,7 +554,7 @@ class HomeFragment : BaseHomeFragment<FragmentHomeBinding>(
             }
 
             homeMusicFab.setOnClickListener {
-                val intent = Intent(it.context, MusicActivity::class.java)
+                val intent = Intent(it.context, SimpMusicActivity::class.java)
                 it.context.startActivity(intent)
             }
 

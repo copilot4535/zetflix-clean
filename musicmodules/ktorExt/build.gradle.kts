@@ -1,55 +1,29 @@
-import com.android.build.gradle.internal.tasks.CompileArtProfileTask
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.multiplatform.library)
-    alias(libs.plugins.android.lint)
+    id("com.android.library")
 }
 
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
-    android {
-        namespace = "com.maxrave.ktorext"
-        compileSdk = 37
+android {
+    namespace = "com.maxrave.ktorext"
+    compileSdk = 37
+
+    defaultConfig {
         minSdk = 23
     }
 
-    jvm()
-
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.kotlin.stdlib)
-                api(libs.ktor.client.core)
-                api(libs.ktor.client.cio)
-                implementation(libs.ktor.client.encoding)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
-        }
-
-        androidMain {
-            dependencies {
-                implementation(libs.ktor.client.okhttp)
-                implementation(libs.brotli.dec)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                implementation(libs.ktor.client.okhttp)
-                implementation(libs.brotli.dec)
-            }
-        }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
-tasks.withType<CompileArtProfileTask> {
-    enabled = false
+dependencies {
+    implementation(libs.kotlin.stdlib)
+    api(libs.ktor.client.core)
+    api(libs.ktor.client.cio)
+    implementation(libs.ktor.client.encoding)
+
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.brotli.dec)
+
+    testImplementation(libs.kotlin.test)
 }

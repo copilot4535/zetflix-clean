@@ -1,42 +1,28 @@
-import com.android.build.gradle.internal.tasks.CompileArtProfileTask
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.multiplatform.library)
-    alias(libs.plugins.android.lint)
+    id("com.android.library")
     alias(libs.plugins.kotlin.serialization)
 }
 
-kotlin {
-    jvmToolchain(17)
-    android {
-        namespace = "com.maxrave.domain"
-        compileSdk = 37
+android {
+    namespace = "com.maxrave.domain"
+    compileSdk = 37
+
+    defaultConfig {
         minSdk = 23
     }
 
-    jvm {
-    }
-
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.kotlin.stdlib)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(project(":musicmodules:common"))
-                api(libs.androidx.paging.common)
-                implementation(libs.room.runtime)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
-        }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
-tasks.withType<CompileArtProfileTask> {
-    enabled = false
+dependencies {
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(project(":musicmodules:common"))
+    api(libs.androidx.paging.common)
+    implementation(libs.room.runtime)
+
+    testImplementation(libs.kotlin.test)
 }

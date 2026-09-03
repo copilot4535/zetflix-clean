@@ -17,11 +17,14 @@ dependencyResolutionManagement {
         mavenCentral()
         mavenLocal()
         maven("https://jitpack.io")
+        maven("https://central.sonatype.com/repository/maven-snapshots/")
+        maven("https://jogamp.org/deployment/maven")
+        maven("https://raw.githubusercontent.com/bravepipeproject/maven-repo/master/repository")
     }
 }
 
 rootProject.name = "CloudStream"
-include(":app", ":library", ":docs")
+include(":app", ":library", ":docs", ":music_full")
 
 include(":musicmodules:kotlinYtmusicScraper")
 include(":musicmodules:domain")

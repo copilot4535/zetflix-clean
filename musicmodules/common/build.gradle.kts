@@ -1,40 +1,26 @@
-import com.android.build.gradle.internal.tasks.CompileArtProfileTask
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.multiplatform.library)
-    alias(libs.plugins.android.lint)
+    id("com.android.library")
 }
 
-kotlin {
-    jvmToolchain(17)
-    android {
-        namespace = "com.maxrave.common"
-        compileSdk = 37
+android {
+    namespace = "com.maxrave.common"
+    compileSdk = 37
+
+    defaultConfig {
         minSdk = 23
     }
 
-    jvm {
-    }
-
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.kotlin.stdlib)
-                implementation(libs.kermit.logging)
-                api(libs.kotlinx.datetime)
-                api(libs.uri)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
-        }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
-tasks.withType<CompileArtProfileTask> {
-    enabled = false
+dependencies {
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kermit.logging)
+    api(libs.kotlinx.datetime)
+    api(libs.uri)
+
+    testImplementation(libs.kotlin.test)
 }

@@ -308,10 +308,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     implementation(project(":library"))
-    implementation(project(":musicmodules:kotlinYtmusicScraper"))
-    implementation(project(":musicmodules:domain"))
-    implementation(project(":musicmodules:common"))
-    implementation(project(":musicmodules:ktorExt"))
+    implementation(project(":music_full"))
 }
 
 tasks.register<Jar>("androidSourcesJar") {
