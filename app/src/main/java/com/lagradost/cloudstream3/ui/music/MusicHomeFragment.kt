@@ -108,7 +108,15 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
         }
 
         observe(viewModel.homeSections) { resource ->
-            binding?.musicHomeLoading?.isVisible = resource is Resource.Loading
+            binding?.musicHomeShimmerView?.musicHomeShimmer?.let { shimmer ->
+                if (resource is Resource.Loading) {
+                    binding?.musicHomeShimmerView?.root?.isVisible = true
+                    shimmer.startShimmer()
+                } else {
+                    shimmer.stopShimmer()
+                    binding?.musicHomeShimmerView?.root?.isVisible = false
+                }
+            }
             binding?.musicHomeErrorText?.isVisible = resource is Resource.Failure
             
             when (resource) {

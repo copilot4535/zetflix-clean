@@ -1,5 +1,6 @@
 package com.lagradost.cloudstream3.ui.music
 
+import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,13 +10,14 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.DownloaderTestImpl
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.launchSafe
+import com.maxrave.kotlinytmusicscraper.YouTube
+import com.lagradost.cloudstream3.services.music.MusicService
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
-import org.schabi.newpipe.extractor.search.SearchInfo
 import org.schabi.newpipe.extractor.stream.StreamInfo
-import org.schabi.newpipe.extractor.stream.StreamInfoItem
-import org.schabi.newpipe.extractor.stream.StreamType
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class MusicSearchResponse(
     val title: String,
     val artist: String?,
@@ -44,6 +46,23 @@ class MusicViewModel : ViewModel() {
     private val _queueReady = MutableLiveData<Resource<Pair<List<Pair<MusicSearchResponse, String>>, Int>>>()
     val queueReady: LiveData<Resource<Pair<List<Pair<MusicSearchResponse, String>>, Int>>> = _queueReady
 
+    private val _likedSongs = MutableLiveData<List<MusicSearchResponse>>()
+    val likedSongs: LiveData<List<MusicSearchResponse>> = _likedSongs
+
+    private val _history = MutableLiveData<List<MusicSearchResponse>>()
+    val history: LiveData<List<MusicSearchResponse>> = _history
+
+    private val _playlists = MutableLiveData<List<MusicPlaylist>>()
+    val playlists: LiveData<List<MusicPlaylist>> = _playlists
+
+    private val _searchSuggestions = MutableLiveData<List<String>>()
+    val searchSuggestions: LiveData<List<String>> = _searchSuggestions
+
+    private val _sleepTimerTimeLeft = MutableLiveData<Long?>()
+    val sleepTimerTimeLeft: LiveData<Long?> = _sleepTimerTimeLeft
+
+    private var sleepTimerJob: kotlinx.coroutines.Job? = null
+
     private fun initNewPipe() {
         try {
             NewPipe.getDownloader()
@@ -54,7 +73,37 @@ class MusicViewModel : ViewModel() {
         }
     }
 
-    fun search(query: String) {
+    init {
+        loadPersistenceData()
+    }
+
+    fun loadPersistenceData() {
+        _likedSongs.postValue(MusicPersistence.getLikedSongs())
+        _history.postValue(MusicPersistence.getHistory())
+        _playlists.postValue(MusicPersistence.getPlaylists())
+    }
+
+    fun toggleLikeSong(song: MusicSearchResponse) {
+        MusicPersistence.toggleLikeSong(song)
+        _likedSongs.postValue(MusicPersistence.getLikedSongs())
+    }
+
+    fun addToHistory(song: MusicSearchResponse) {
+        MusicPersistence.addSongToHistory(song)
+        _history.postValue(MusicPersistence.getHistory())
+    }
+
+    fun createPlaylist(name: String) {
+        MusicPersistence.createPlaylist(name)
+        _playlists.postValue(MusicPersistence.getPlaylists())
+    }
+
+    fun addSongToPlaylist(playlistName: String, song: MusicSearchResponse) {
+        MusicPersistence.addSongToPlaylist(playlistName, song)
+        _playlists.postValue(MusicPersistence.getPlaylists())
+    }
+
+    fun search(query: String, filter: YouTube.SearchFilter = YouTube.SearchFilter.FILTER_SONG) {
         if (query.isBlank()) {
             loadTrendingSongs()
             return
@@ -62,7 +111,7 @@ class MusicViewModel : ViewModel() {
         _searchResult.postValue(Resource.Loading())
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                val results = repository.searchSongs(query)
+                val results = repository.searchSongs(query, filter)
                 if (results.isEmpty()) {
                     _searchResult.postValue(Resource.Failure(false, "No results found"))
                 } else {
@@ -72,6 +121,17 @@ class MusicViewModel : ViewModel() {
                 Log.e("MusicSearch", "Search failed for query: $query", e)
                 _searchResult.postValue(Resource.Failure(false, "Search failed: ${e.message ?: e.javaClass.simpleName}"))
             }
+        }
+    }
+
+    fun loadSearchSuggestions(query: String) {
+        if (query.isBlank()) {
+            _searchSuggestions.postValue(emptyList())
+            return
+        }
+        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+            val suggestions = repository.getSearchSuggestions(query)
+            _searchSuggestions.postValue(suggestions)
         }
     }
 
@@ -140,6 +200,7 @@ class MusicViewModel : ViewModel() {
                 if (!streamUrlFound.isNullOrBlank()) {
                     _streamUrl.postValue(Resource.Success(streamUrlFound to song))
                     fetchLyrics(song)
+                    addToHistory(song)
                 } else {
                     _streamUrl.postValue(Resource.Failure(false, "Could not extract audio stream for: ${song.title}"))
                 }
@@ -201,6 +262,7 @@ class MusicViewModel : ViewModel() {
                     // Update current song UI
                     _currentPlayingSong.postValue(selectedSong)
                     fetchLyrics(selectedSong)
+                    addToHistory(selectedSong)
 
                     // 2. Extract remaining songs in the background
                     val fullQueue = mutableListOf<Pair<MusicSearchResponse, String>>()
@@ -231,6 +293,36 @@ class MusicViewModel : ViewModel() {
                 _queueReady.postValue(Resource.Failure(false, e.message ?: "Queue error"))
             }
         }
+    }
+
+    fun startSleepTimer(minutes: Int) {
+        sleepTimerJob?.cancel()
+        if (minutes <= 0) {
+            _sleepTimerTimeLeft.postValue(null)
+            return
+        }
+
+        val millis = minutes * 60 * 1000L
+        _sleepTimerTimeLeft.postValue(millis)
+
+        sleepTimerJob = viewModelScope.launchSafe {
+            var remaining = millis
+            while (remaining > 0) {
+                kotlinx.coroutines.delay(1000)
+                remaining -= 1000
+                _sleepTimerTimeLeft.postValue(remaining)
+            }
+            _sleepTimerTimeLeft.postValue(null)
+            stopPlayback()
+        }
+    }
+
+    private fun stopPlayback() {
+        val context = com.lagradost.cloudstream3.CloudStreamApp.context ?: return
+        val intent = Intent(context, MusicService::class.java).apply {
+            action = MusicService.ACTION_STOP
+        }
+        context.startService(intent)
     }
 
     private fun fetchLyrics(song: MusicSearchResponse) {

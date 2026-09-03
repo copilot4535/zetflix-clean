@@ -25,6 +25,9 @@ import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.utils.drawableToBitmap
 import kotlin.math.abs
 
+import androidx.appcompat.app.AlertDialog
+import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
+
 class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     BindingCreator.Inflate(FragmentMusicPlayerBinding::inflate)
 ) {
@@ -47,6 +50,16 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     private fun setupUI() {
         binding?.musicPlayerBack?.setOnClickListener {
             activity?.onBackPressedDispatcher?.onBackPressed()
+        }
+
+        binding?.musicPlayerMore?.setOnClickListener { view ->
+            val options = listOf(0 to "Sleep Timer", 1 to "Share")
+            view.popupMenuNoIconsAndNoStringRes(options) {
+                when (itemId) {
+                    0 -> showSleepTimerDialog()
+                    1 -> shareCurrentSong()
+                }
+            }
         }
         
         binding?.musicPlayerView?.let { playerView ->
@@ -74,12 +87,17 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             }
 
             playerView.findViewById<View>(R.id.music_player_like)?.setOnClickListener {
-                isLiked = !isLiked
-                updateLikeIcon(isLiked)
+                viewModel.currentPlayingSong.value?.let { song ->
+                    viewModel.toggleLikeSong(song)
+                }
             }
 
             playerView.findViewById<View>(R.id.music_player_share)?.setOnClickListener {
                 shareCurrentSong()
+            }
+
+            playerView.findViewById<View>(R.id.music_player_queue)?.setOnClickListener {
+                activity?.navigate(R.id.global_to_navigation_music_queue)
             }
         }
     }
@@ -129,6 +147,26 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             gestureDetector.onTouchEvent(event)
             true
         }
+    }
+
+    private fun showSleepTimerDialog() {
+        val options = arrayOf("Off", "15 minutes", "30 minutes", "60 minutes", "Custom")
+        AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
+            .setTitle("Sleep Timer")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> viewModel.startSleepTimer(0)
+                    1 -> viewModel.startSleepTimer(15)
+                    2 -> viewModel.startSleepTimer(30)
+                    3 -> viewModel.startSleepTimer(60)
+                    4 -> showCustomSleepTimerDialog()
+                }
+            }
+            .show()
+    }
+
+    private fun showCustomSleepTimerDialog() {
+        // Implement custom if needed, for now just presets
     }
 
     private fun setupController() {
@@ -208,6 +246,13 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                         }
                     })
                 }
+                updateLikeIcon(MusicPersistence.isSongLiked(song.videoId))
+            }
+        }
+
+        viewModel.likedSongs.observe(viewLifecycleOwner) { songs ->
+            viewModel.currentPlayingSong.value?.let { song ->
+                updateLikeIcon(songs.any { it.videoId == song.videoId })
             }
         }
     }

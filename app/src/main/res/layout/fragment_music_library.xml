@@ -29,6 +29,7 @@
 
             <!-- Liked Songs Row -->
             <LinearLayout
+                android:id="@+id/library_liked_songs_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
@@ -64,6 +65,13 @@
                     android:textSize="16sp" />
             </LinearLayout>
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/library_liked_songs_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                tools:listitem="@layout/item_music_song" />
+
             <!-- Playlists Section -->
             <TextView
                 android:layout_width="wrap_content"
@@ -74,7 +82,14 @@
                 android:textColor="@color/white"
                 android:textSize="18sp" />
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/library_playlists_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
             <TextView
+                android:id="@+id/library_playlists_empty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -93,7 +108,15 @@
                 android:textColor="@color/white"
                 android:textSize="18sp" />
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/library_history_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                tools:listitem="@layout/item_music_song" />
+
             <TextView
+                android:id="@+id/library_history_empty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

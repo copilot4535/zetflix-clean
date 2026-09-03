@@ -146,5 +146,19 @@
             app:tint="@color/white"
             android:contentDescription="Share" />
 
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/music_player_queue"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_baseline_playlist_play_24"
+            app:tint="@color/white"
+            android:contentDescription="Queue" />
+
     </LinearLayout>
 </LinearLayout>

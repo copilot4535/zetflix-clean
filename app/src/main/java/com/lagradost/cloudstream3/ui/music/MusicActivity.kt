@@ -44,6 +44,13 @@ class MusicActivity : AppCompatActivity() {
         val navController = navHostFragment.navController
         binding.musicBottomNav.setupWithNavController(navController)
 
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            val isFullScreen = destination.id == R.id.navigation_music_player || 
+                               destination.id == R.id.navigation_lyrics
+            binding.musicBottomNav.isVisible = !isFullScreen
+            updateMiniPlayerVisibility()
+        }
+
         val openTab = intent.getStringExtra(EXTRA_OPEN_TAB)
         if (openTab == "library") {
             binding.musicBottomNav.selectedItemId = R.id.music_nav_library
@@ -83,17 +90,27 @@ class MusicActivity : AppCompatActivity() {
                 }
                 
                 override fun onPlaybackStateChanged(playbackState: Int) {
-                    binding.globalMiniPlayer.musicMiniPlayer.isVisible = 
-                        playbackState != Player.STATE_IDLE && mediaController?.currentMediaItem != null
+                    updateMiniPlayerVisibility()
                 }
             })
             // Initial state
             mediaController?.let {
                 updatePlayPauseIcon(it.isPlaying)
                 it.currentMediaItem?.mediaMetadata?.let { metadata -> updateMiniPlayerMetadata(metadata) }
-                binding.globalMiniPlayer.musicMiniPlayer.isVisible = it.currentMediaItem != null
+                updateMiniPlayerVisibility()
             }
         }, MoreExecutors.directExecutor())
+    }
+
+    private fun updateMiniPlayerVisibility() {
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+        val destinationId = navHostFragment?.navController?.currentDestination?.id
+        val isFullScreen = destinationId == R.id.navigation_music_player || 
+                           destinationId == R.id.navigation_lyrics
+        
+        binding.globalMiniPlayer.musicMiniPlayer.isVisible = !isFullScreen && 
+            mediaController?.playbackState != Player.STATE_IDLE && 
+            mediaController?.currentMediaItem != null
     }
 
     private fun updatePlayPauseIcon(isPlaying: Boolean) {

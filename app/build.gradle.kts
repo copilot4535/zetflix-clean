@@ -279,6 +279,7 @@ dependencies {
 
     // UI Stuff
     implementation(libs.shimmer) // Shimmering Effect (Loading Skeleton)
+    implementation(libs.swiperefreshlayout)
     implementation(libs.palette.ktx) // Palette for Images -> Colors
     implementation(libs.tvprovider)
     implementation(libs.overlappingpanels) // Gestures

@@ -36,15 +36,23 @@ object YouTubeInstance {
 class MusicRepository {
     private val youtube = YouTubeInstance.youtube
 
-    suspend fun searchSongs(query: String): List<MusicSearchResponse> = withContext(Dispatchers.IO) {
-        val result = youtube.search(query, YouTube.SearchFilter.FILTER_SONG)
-        result.getOrNull()?.items?.filterIsInstance<SongItem>()?.map {
-            MusicSearchResponse(
-                title = it.title,
-                artist = it.artists.joinToString(", ") { artist -> artist.name },
-                videoId = it.id,
-                thumbnailUrl = it.thumbnail
-            )
+    suspend fun searchSongs(query: String, filter: YouTube.SearchFilter = YouTube.SearchFilter.FILTER_SONG): List<MusicSearchResponse> = withContext(Dispatchers.IO) {
+        val result = youtube.search(query, filter)
+        result.getOrNull()?.items?.mapNotNull { item ->
+            val title = item.title
+            val id = item.id
+            val thumb = item.thumbnail
+            val artist = when (item.type) {
+                YTItemType.SONG -> (item as? SongItem)?.artists?.joinToString(", ") { it.name }
+                YTItemType.VIDEO -> (item as? com.maxrave.kotlinytmusicscraper.models.VideoItem)?.artists?.joinToString(", ") { it.name }
+                YTItemType.ALBUM -> (item as? com.maxrave.kotlinytmusicscraper.models.AlbumItem)?.artists?.joinToString(", ") { it.name }
+                YTItemType.PLAYLIST -> (item as? com.maxrave.kotlinytmusicscraper.models.PlaylistItem)?.author?.name
+                YTItemType.ARTIST -> (item as? com.maxrave.kotlinytmusicscraper.models.ArtistItem)?.subscribers
+                else -> null
+            }
+            if (id.isNotEmpty()) {
+                MusicSearchResponse(title, artist, id, thumb)
+            } else null
         } ?: emptyList()
     }
 
@@ -112,5 +120,13 @@ class MusicRepository {
                 thumbnailUrl = it.thumbnail
             )
         } ?: emptyList()
+    }
+
+    suspend fun getSearchSuggestions(query: String): List<String> = withContext(Dispatchers.IO) {
+        try {
+            youtube.getYTMusicSearchSuggestions(query).getOrNull()?.queries ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 }

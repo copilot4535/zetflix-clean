@@ -6,15 +6,35 @@
     android:orientation="vertical"
     android:paddingTop="24dp">
 
-    <TextView
-        android:id="@+id/section_title"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:fontFamily="@font/metropolis_bold"
-        tools:text="Quick Picks" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp">
+
+        <TextView
+            android:id="@+id/section_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:fontFamily="@font/metropolis_bold"
+            tools:text="Quick Picks" />
+
+        <TextView
+            android:id="@+id/section_see_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="See All"
+            android:textAllCaps="true"
+            android:textColor="@color/music_text_secondary"
+            android:textSize="12sp"
+            android:fontFamily="@font/metropolis_bold"
+            android:letterSpacing="0.05"
+            android:alpha="0.7" />
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/section_recycler"
