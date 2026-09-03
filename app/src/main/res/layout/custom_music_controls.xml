@@ -6,72 +6,145 @@
     android:layout_gravity="bottom"
     android:background="@android:color/transparent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="32dp">
 
-    <LinearLayout
+    <androidx.media3.ui.DefaultTimeBar
+        android:id="@id/exo_progress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        app:scrubber_color="@color/zetflix_accent"
+        app:played_color="@color/zetflix_accent"
+        app:unplayed_color="#33FFFFFF"
+        app:bar_height="4dp"
+        app:scrubber_drawable="@drawable/rdpause"
+        app:scrubber_enabled_size="12dp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp">
 
         <TextView
             android:id="@id/exo_position"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?attr/textColor"
+            android:layout_alignParentStart="true"
+            android:fontFamily="@font/metropolis_regular"
+            android:textColor="@color/music_text_secondary"
             android:textSize="12sp" />
-
-        <androidx.media3.ui.DefaultTimeBar
-            android:id="@id/exo_progress"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            app:scrubber_color="@color/zetflix_accent"
-            app:played_color="@color/zetflix_accent"
-            app:unplayed_color="#33FFFFFF" />
 
         <TextView
             android:id="@id/exo_duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?attr/textColor"
+            android:layout_alignParentEnd="true"
+            android:fontFamily="@font/metropolis_regular"
+            android:textColor="@color/music_text_secondary"
             android:textSize="12sp" />
-    </LinearLayout>
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="24dp">
+
+        <ImageButton
+            android:id="@+id/music_player_shuffle"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/baseline_sync_24"
+            app:tint="@color/white"
+            android:alpha="0.6"
+            android:contentDescription="Shuffle" />
 
         <ImageButton
             android:id="@id/exo_prev"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginStart="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/baseline_skip_previous_24"
-            app:tint="?attr/textColor"
+            app:tint="@color/white"
             android:contentDescription="Previous" />
 
         <ImageButton
             android:id="@id/exo_play_pause"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:layout_marginHorizontal="24dp"
+            android:layout_marginHorizontal="16dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:scaleType="fitCenter"
-            app:tint="?attr/textColor"
+            app:tint="@color/white"
             android:contentDescription="Play/Pause" />
 
         <ImageButton
             android:id="@id/exo_next"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_baseline_skip_next_24"
-            app:tint="?attr/textColor"
+            app:tint="@color/white"
             android:contentDescription="Next" />
+
+        <ImageButton
+            android:id="@+id/music_player_repeat"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_refresh"
+            app:tint="@color/white"
+            android:alpha="0.6"
+            android:contentDescription="Repeat" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/music_player_like"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_baseline_favorite_border_24"
+            app:tint="@color/white"
+            android:contentDescription="Like" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/music_player_lyrics"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_mic"
+            app:tint="@color/white"
+            android:contentDescription="Lyrics" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/music_player_share"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_outline_share_24"
+            app:tint="@color/white"
+            android:contentDescription="Share" />
 
     </LinearLayout>
 </LinearLayout>

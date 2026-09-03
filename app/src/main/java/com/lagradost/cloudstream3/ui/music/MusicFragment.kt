@@ -20,6 +20,7 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
+import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 
@@ -56,18 +57,14 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
             viewModel.loadPlaylistSongs(playlistId)
         }
         
-        binding?.musicMiniPlayer?.setOnClickListener {
+        binding?.musicMiniPlayerInclude?.musicMiniPlayer?.setOnClickListener {
             activity?.navigate(R.id.action_navigation_music_to_navigation_music_player)
         }
 
-        binding?.musicMiniPlayPause?.setOnClickListener {
+        binding?.musicMiniPlayerInclude?.musicMiniPlayPause?.setOnClickListener {
             mediaController?.let {
                 if (it.isPlaying) it.pause() else it.play()
             }
-        }
-
-        binding?.musicLyricsButton?.setOnClickListener {
-            activity?.navigate(R.id.action_navigation_music_to_navigation_lyrics)
         }
     }
 
@@ -113,6 +110,15 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
             }
         }
 
+        observe(viewModel.currentPlayingSong) { song ->
+            if (song != null) {
+                binding?.musicMiniPlayerInclude?.musicMiniPlayer?.isVisible = true
+                binding?.musicMiniPlayerInclude?.musicMiniTitle?.text = song.title
+                binding?.musicMiniPlayerInclude?.musicMiniArtist?.text = song.artist
+                binding?.musicMiniPlayerInclude?.musicMiniThumbnail?.loadImage(song.thumbnailUrl)
+            }
+        }
+
         observe(viewModel.streamUrl) { resource ->
             binding?.musicLoadingProgress?.isVisible = resource is Resource.Loading
             
@@ -121,8 +127,10 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
                     val (url, song) = resource.value
                     startMusicService(url, song)
                     
-                    binding?.musicMiniPlayer?.isVisible = true
-                    binding?.musicNowPlayingText?.text = getString(R.string.playing_format, song.title)
+                    binding?.musicMiniPlayerInclude?.musicMiniPlayer?.isVisible = true
+                    binding?.musicMiniPlayerInclude?.musicMiniTitle?.text = song.title
+                    binding?.musicMiniPlayerInclude?.musicMiniArtist?.text = song.artist
+                    binding?.musicMiniPlayerInclude?.musicMiniThumbnail?.loadImage(song.thumbnailUrl)
                 }
                 is Resource.Failure -> {
                     Toast.makeText(context, "Error: ${resource.errorString}", Toast.LENGTH_LONG).show()
@@ -158,7 +166,7 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
     private fun updateMiniPlayerControls() {
         mediaController?.addListener(object : androidx.media3.common.Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
-                binding?.musicMiniPlayPause?.setImageResource(
+                binding?.musicMiniPlayerInclude?.musicMiniPlayPause?.setImageResource(
                     if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
                 )
             }

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/primaryBlackBackground">
+    android:background="@color/music_background_black">
 
     <ImageButton
         android:id="@+id/music_player_back"
@@ -12,38 +12,57 @@
         android:layout_height="48dp"
         android:layout_margin="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_baseline_arrow_back_24"
+        android:src="@drawable/ic_baseline_keyboard_arrow_down_24"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="?attr/textColor"
+        app:tint="@color/white"
         tools:ignore="ContentDescription" />
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/music_player_album_art"
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Now Playing"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:fontFamily="@font/metropolis_bold"
+        app:layout_constraintBottom_toBottomOf="@id/music_player_back"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/music_player_back" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/music_player_album_art_card"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="32dp"
-        android:scaleType="centerCrop"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="8dp"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/music_player_back"
-        app:shapeAppearanceOverlay="@style/RoundedImageView"
-        tools:src="@drawable/default_cover" />
+        app:layout_constraintTop_toBottomOf="@id/music_player_back">
+
+        <ImageView
+            android:id="@+id/music_player_album_art"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/default_cover"
+            tools:ignore="ContentDescription" />
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/music_player_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
-        android:layout_marginTop="24dp"
-        android:gravity="center"
-        android:textColor="?attr/textColor"
+        android:layout_marginTop="32dp"
+        android:textColor="@color/white"
         android:textSize="22sp"
-        android:textStyle="bold"
+        android:fontFamily="@font/metropolis_bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/music_player_album_art"
+        app:layout_constraintTop_toBottomOf="@id/music_player_album_art_card"
         tools:text="Song Title" />
 
     <TextView
@@ -52,10 +71,9 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:textColor="?attr/textColor"
-        android:textSize="18sp"
-        android:alpha="0.7"
+        android:textColor="@color/music_text_secondary"
+        android:textSize="16sp"
+        android:fontFamily="@font/metropolis_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/music_player_title"
@@ -65,7 +83,7 @@
         android:id="@+id/music_player_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:surface_type="none"
         app:use_controller="true"

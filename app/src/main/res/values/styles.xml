@@ -808,4 +808,14 @@
         <item name="android:fontFamily">@font/google_sans</item>
         <item name="android:textAllCaps">true</item>
     </style>
+
+    <!-- Music Specific Theme -->
+    <style name="Theme.ZetFlix.Music" parent="AppTheme">
+        <item name="android:fontFamily">@font/metropolis_regular</item>
+        <item name="colorPrimary">@color/zetflix_accent</item>
+        <item name="colorSecondary">@color/music_spotify_green</item>
+        <item name="android:windowBackground">@color/music_background_black</item>
+        <item name="colorSurface">@color/music_surface_dark</item>
+        <item name="android:textColorSecondary">@color/music_text_secondary</item>
+    </style>
 </resources>

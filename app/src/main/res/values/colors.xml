@@ -16,6 +16,12 @@
     <color name="zetflix_error">#ff5c5c</color>            <!-- Error text -->
     <color name="zetflix_accent">#e50914</color>           <!-- Brand red -->
 
+    <!-- Music Module Spotify-style palette -->
+    <color name="music_spotify_green">#1ED760</color>
+    <color name="music_background_black">#121212</color>
+    <color name="music_surface_dark">#191C1D</color>
+    <color name="music_text_secondary">#BFC8CA</color>
+
     <color name="colorPrimary">@color/zetflix_accent</color>
     <color name="colorPrimarySecond">@color/zetflix_accent</color>
     <color name="colorSearch">@color/zetflix_surface</color>

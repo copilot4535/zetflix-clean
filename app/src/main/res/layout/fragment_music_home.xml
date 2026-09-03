@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/primaryBlackBackground">
+    android:background="@color/music_background_black">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/music_home_appbar"
@@ -24,9 +24,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/music"
-                android:textColor="?attr/textColor"
+                android:textColor="@color/white"
                 android:textSize="28sp"
-                android:textStyle="bold"
+                android:fontFamily="@font/metropolis_bold"
                 android:layout_marginBottom="16dp" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -35,16 +35,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/search"
+                app:hintTextColor="@color/music_text_secondary"
+                app:placeholderTextColor="@color/music_text_secondary"
                 app:startIconDrawable="@drawable/search_icon"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp">
+                app:startIconTint="@color/white"
+                app:boxStrokeColor="@color/zetflix_accent"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxBackgroundColor="@color/music_surface_dark">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/music_search_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:fontFamily="@font/metropolis_medium"
                     android:imeOptions="actionSearch"
                     android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -90,5 +97,12 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Mini player can be added here as well if we want it global or in parent -->
+    <!-- Mini player -->
+    <include
+        layout="@layout/view_music_mini_player"
+        android:id="@+id/music_mini_player_include"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

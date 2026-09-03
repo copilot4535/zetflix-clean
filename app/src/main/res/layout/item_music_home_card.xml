@@ -2,30 +2,52 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="150dp"
+    android:layout_width="160dp"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="4dp"
+    android:padding="8dp"
     android:background="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/card_thumbnail"
-        android:layout_width="142dp"
-        android:layout_height="142dp"
-        android:scaleType="centerCrop"
-        app:shapeAppearanceOverlay="@style/RoundedImageView"
-        tools:src="@drawable/default_cover" />
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="144dp"
+        android:layout_height="144dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/music_surface_dark"
+        app:cardPreventCornerOverlap="false">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/card_thumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                tools:src="@drawable/default_cover" />
+
+            <ImageView
+                android:id="@+id/card_play_overlay"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_play_circle"
+                app:tint="@color/zetflix_accent"
+                android:alpha="0.8" />
+        </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/card_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="?attr/textColor"
+        android:textColor="@color/white"
         android:textSize="14sp"
-        android:textStyle="bold"
+        android:fontFamily="@font/metropolis_bold"
         android:maxLines="1"
         android:ellipsize="end"
         tools:text="Song Title" />
@@ -34,9 +56,9 @@
         android:id="@+id/card_subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="?attr/textColor"
+        android:textColor="@color/music_text_secondary"
         android:textSize="12sp"
-        android:alpha="0.6"
+        android:fontFamily="@font/metropolis_regular"
         android:maxLines="1"
         android:ellipsize="end"
         tools:text="Artist Name" />
