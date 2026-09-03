@@ -1,9 +1,11 @@
 package com.lagradost.cloudstream3.ui.music
 
 import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.MediaMetadata
@@ -16,6 +18,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.ActivityMusicBinding
+import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.enableEdgeToEdgeCompat
@@ -87,6 +90,13 @@ class MusicActivity : AppCompatActivity() {
 
                 override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
                     updateMiniPlayerMetadata(mediaMetadata)
+                    // Sync with ViewModel for other observers
+                    viewModel.currentPlayingSong.value?.let { current ->
+                        if (current.title != mediaMetadata.title.toString()) {
+                            // This is a bit tricky since we don't have the full MusicSearchResponse here
+                            // But we can try to find it in the current queue if available
+                        }
+                    }
                 }
                 
                 override fun onPlaybackStateChanged(playbackState: Int) {
@@ -134,6 +144,51 @@ class MusicActivity : AppCompatActivity() {
                 binding.globalMiniPlayer.musicMiniThumbnail.loadImage(song.thumbnailUrl)
             }
         }
+
+        viewModel.queueReady.observe(this) { resource ->
+            if (resource is Resource.Success) {
+                val (queue, index) = resource.value
+                startMusicQueueService(queue, index)
+            }
+        }
+
+        viewModel.streamUrl.observe(this) { resource ->
+            if (resource is Resource.Success) {
+                val (url, song) = resource.value
+                startMusicService(url, song)
+            }
+        }
+    }
+
+    private fun startMusicQueueService(queue: List<Pair<MusicSearchResponse, String>>, index: Int) {
+        val intent = Intent(this, MusicService::class.java).apply {
+            action = MusicService.ACTION_PLAY_QUEUE
+            val urls = queue.map { it.second }
+            val titles = queue.map { it.first.title }
+            val artists = queue.map { it.first.artist ?: "" }
+            val thumbnails = queue.map { it.first.thumbnailUrl ?: "" }
+            val videoIds = queue.map { it.first.videoId }
+            
+            putStringArrayListExtra(MusicService.EXTRA_URLS, ArrayList(urls))
+            putStringArrayListExtra(MusicService.EXTRA_TITLES, ArrayList(titles))
+            putStringArrayListExtra(MusicService.EXTRA_ARTISTS, ArrayList(artists))
+            putStringArrayListExtra(MusicService.EXTRA_THUMBNAILS, ArrayList(thumbnails))
+            putStringArrayListExtra(MusicService.EXTRA_VIDEO_IDS, ArrayList(videoIds))
+            putExtra(MusicService.EXTRA_START_INDEX, index)
+        }
+        ContextCompat.startForegroundService(this, intent)
+    }
+
+    private fun startMusicService(url: String, song: MusicSearchResponse) {
+        val intent = Intent(this, MusicService::class.java).apply {
+            action = MusicService.ACTION_PLAY
+            putExtra(MusicService.EXTRA_URL, url)
+            putExtra(MusicService.EXTRA_TITLE, song.title)
+            putExtra(MusicService.EXTRA_ARTIST, song.artist)
+            putExtra(MusicService.EXTRA_THUMBNAIL, song.thumbnailUrl)
+            putExtra(MusicService.EXTRA_VIDEO_ID, song.videoId)
+        }
+        ContextCompat.startForegroundService(this, intent)
     }
 
     override fun onDestroy() {

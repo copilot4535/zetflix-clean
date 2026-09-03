@@ -17,6 +17,9 @@ import com.maxrave.kotlinytmusicscraper.YouTube
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
 
+import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
+
+@androidx.media3.common.util.UnstableApi
 class MusicFragment : BaseFragment<FragmentMusicBinding>(
     BindingCreator.Inflate(FragmentMusicBinding::inflate)
 ) {
@@ -53,10 +56,12 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
     }
 
     private fun setupRecyclerView() {
-        musicAdapter = MusicSearchAdapter { index ->
+        musicAdapter = MusicSearchAdapter({ index ->
             val songs = musicAdapter.currentList
             viewModel.playQueue(songs, index)
-        }
+        }, { view, song ->
+            showSongMenu(view, song)
+        })
         binding?.musicRecyclerView?.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = musicAdapter
@@ -117,6 +122,42 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(
                 false
             }
         }
+    }
+
+    private fun showSongMenu(view: View, song: MusicSearchResponse) {
+        val isLiked = MusicPersistence.isSongLiked(song.videoId)
+        val isDownloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }
+        
+        val options = mutableListOf<Pair<Int, String>>()
+        options.add(0 to if (isLiked) "Remove from Liked" else "Like")
+        options.add(1 to if (isDownloaded) "Remove Download" else "Download")
+        options.add(2 to "Add to Playlist")
+
+        view.popupMenuNoIconsAndNoStringRes(options) {
+            when (itemId) {
+                0 -> viewModel.toggleLikeSong(song)
+                1 -> {
+                    if (isDownloaded) viewModel.removeDownload(song.videoId)
+                    else viewModel.downloadSong(song)
+                }
+                2 -> showAddToPlaylistDialog(song)
+            }
+        }
+    }
+
+    private fun showAddToPlaylistDialog(song: MusicSearchResponse) {
+        val playlists = MusicPersistence.getPlaylists()
+        if (playlists.isEmpty()) {
+            Toast.makeText(context, "No playlists created", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val names = playlists.map { it.name }.toTypedArray()
+        androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
+            .setTitle("Add to Playlist")
+            .setItems(names) { _, which ->
+                viewModel.addSongToPlaylist(names[which], song)
+            }
+            .show()
     }
 
     private fun observeViewModel() {

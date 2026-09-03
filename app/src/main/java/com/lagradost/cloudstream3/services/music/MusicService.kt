@@ -10,13 +10,16 @@ import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.lagradost.cloudstream3.DownloaderTestImpl
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
 import org.schabi.newpipe.extractor.NewPipe
 
+@UnstableApi
 class MusicService : MediaSessionService() {
     companion object {
         const val ACTION_PLAY = "com.lagradost.cloudstream3.services.music.ACTION_PLAY"
@@ -26,11 +29,13 @@ class MusicService : MediaSessionService() {
         const val EXTRA_TITLE = "EXTRA_TITLE"
         const val EXTRA_ARTIST = "EXTRA_ARTIST"
         const val EXTRA_THUMBNAIL = "EXTRA_THUMBNAIL"
+        const val EXTRA_VIDEO_ID = "EXTRA_VIDEO_ID"
 
         const val EXTRA_URLS = "EXTRA_URLS"
         const val EXTRA_TITLES = "EXTRA_TITLES"
         const val EXTRA_ARTISTS = "EXTRA_ARTISTS"
         const val EXTRA_THUMBNAILS = "EXTRA_THUMBNAILS"
+        const val EXTRA_VIDEO_IDS = "EXTRA_VIDEO_IDS"
         const val EXTRA_START_INDEX = "EXTRA_START_INDEX"
     }
 
@@ -39,7 +44,10 @@ class MusicService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        val exoPlayer = ExoPlayer.Builder(this).build()
+        val dataSourceFactory = MusicDownloadManager.getReadOnlyDataSourceFactory(this)
+        val exoPlayer = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .build()
         player = exoPlayer
         mediaSession = MediaSession.Builder(this, exoPlayer).build()
 
@@ -63,12 +71,13 @@ class MusicService : MediaSessionService() {
             val title = intent.getStringExtra(EXTRA_TITLE)
             val artist = intent.getStringExtra(EXTRA_ARTIST)
             val thumbnail = intent.getStringExtra(EXTRA_THUMBNAIL)
+            val videoId = intent.getStringExtra(EXTRA_VIDEO_ID)
 
             Log.d("MusicService", "Received ACTION_PLAY for: $title, URL: $url")
 
-            if (!url.isNullOrBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
+            if (!url.isNullOrBlank()) {
                 showNotification(title, artist)
-                play(url, title, artist, thumbnail)
+                play(url, title, artist, thumbnail, videoId)
             } else {
                 Log.e("MusicService", "Invalid or null URL received. Stopping service.")
                 stopForeground(true)
@@ -79,6 +88,7 @@ class MusicService : MediaSessionService() {
             val titles = intent.getStringArrayListExtra(EXTRA_TITLES)
             val artists = intent.getStringArrayListExtra(EXTRA_ARTISTS)
             val thumbnails = intent.getStringArrayListExtra(EXTRA_THUMBNAILS)
+            val videoIds = intent.getStringArrayListExtra(EXTRA_VIDEO_IDS)
             val startIndex = intent.getIntExtra(EXTRA_START_INDEX, 0)
 
             if (!urls.isNullOrEmpty()) {
@@ -88,6 +98,7 @@ class MusicService : MediaSessionService() {
                     val title = titles?.getOrNull(i)
                     val artist = artists?.getOrNull(i)
                     val thumbnail = thumbnails?.getOrNull(i)
+                    val videoId = videoIds?.getOrNull(i)
 
                     val metadata = MediaMetadata.Builder()
                         .setTitle(title)
@@ -97,6 +108,7 @@ class MusicService : MediaSessionService() {
 
                     mediaItems.add(
                         MediaItem.Builder()
+                            .setMediaId(videoId ?: url)
                             .setUri(url)
                             .setMediaMetadata(metadata)
                             .build()
@@ -137,7 +149,7 @@ class MusicService : MediaSessionService() {
         startForeground(1, notification)
     }
 
-    private fun play(url: String, title: String?, artist: String?, thumbnail: String?) {
+    private fun play(url: String, title: String?, artist: String?, thumbnail: String?, videoId: String? = null) {
         val metadata = MediaMetadata.Builder()
             .setTitle(title)
             .setArtist(artist)
@@ -145,6 +157,7 @@ class MusicService : MediaSessionService() {
             .build()
 
         val mediaItem = MediaItem.Builder()
+            .setMediaId(videoId ?: url)
             .setUri(url)
             .setMediaMetadata(metadata)
             .build()

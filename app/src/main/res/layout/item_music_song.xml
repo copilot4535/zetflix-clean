@@ -57,4 +57,13 @@
             tools:text="Artist Name" />
     </LinearLayout>
 
+    <ImageButton
+        android:id="@+id/music_song_menu"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_baseline_more_vert_24"
+        app:tint="@color/music_text_secondary"
+        android:contentDescription="Options" />
+
 </LinearLayout>

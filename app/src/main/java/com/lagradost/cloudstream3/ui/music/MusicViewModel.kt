@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.launchSafe
 import com.maxrave.kotlinytmusicscraper.YouTube
 import com.lagradost.cloudstream3.services.music.MusicService
+import androidx.media3.common.util.UnstableApi
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.stream.StreamInfo
@@ -58,6 +59,9 @@ class MusicViewModel : ViewModel() {
     private val _searchSuggestions = MutableLiveData<List<String>>()
     val searchSuggestions: LiveData<List<String>> = _searchSuggestions
 
+    private val _downloadedSongs = MutableLiveData<List<MusicSearchResponse>>()
+    val downloadedSongs: LiveData<List<MusicSearchResponse>> = _downloadedSongs
+
     private val _sleepTimerTimeLeft = MutableLiveData<Long?>()
     val sleepTimerTimeLeft: LiveData<Long?> = _sleepTimerTimeLeft
 
@@ -81,6 +85,30 @@ class MusicViewModel : ViewModel() {
         _likedSongs.postValue(MusicPersistence.getLikedSongs())
         _history.postValue(MusicPersistence.getHistory())
         _playlists.postValue(MusicPersistence.getPlaylists())
+        _downloadedSongs.postValue(MusicPersistence.getDownloadedSongs())
+    }
+
+    @androidx.media3.common.util.UnstableApi
+    fun downloadSong(song: MusicSearchResponse) {
+        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+            val url = extractStreamUrl(song.videoId)
+            if (url != null) {
+                com.lagradost.cloudstream3.CloudStreamApp.context?.let { ctx ->
+                    MusicDownloadRepository(ctx).downloadSong(song, url)
+                    _downloadedSongs.postValue(MusicPersistence.getDownloadedSongs())
+                }
+            } else {
+                // Post failure if needed
+            }
+        }
+    }
+
+    @androidx.media3.common.util.UnstableApi
+    fun removeDownload(videoId: String) {
+        com.lagradost.cloudstream3.CloudStreamApp.context?.let { ctx ->
+            MusicDownloadRepository(ctx).removeDownload(videoId)
+            _downloadedSongs.postValue(MusicPersistence.getDownloadedSongs())
+        }
     }
 
     fun toggleLikeSong(song: MusicSearchResponse) {
@@ -211,7 +239,17 @@ class MusicViewModel : ViewModel() {
         }
     }
 
+    @androidx.media3.common.util.UnstableApi
     private suspend fun extractStreamUrl(videoId: String): String? {
+        // 0. Check if already downloaded
+        com.lagradost.cloudstream3.CloudStreamApp.context?.let { ctx ->
+            val downloadManager = com.lagradost.cloudstream3.services.music.MusicDownloadManager.getDownloadManager(ctx)
+            val download = downloadManager.downloadIndex.getDownload(videoId)
+            if (download != null && download.state == androidx.media3.exoplayer.offline.Download.STATE_COMPLETED) {
+                return download.request.uri.toString()
+            }
+        }
+
         // 1. Try InnerTube
         try {
             val playerResult = YouTubeInstance.youtube.player(videoId, null, false).getOrNull()

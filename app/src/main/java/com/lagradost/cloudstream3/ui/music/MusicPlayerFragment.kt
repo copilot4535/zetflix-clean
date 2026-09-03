@@ -12,6 +12,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import androidx.media3.common.util.UnstableApi
 import androidx.palette.graphics.Palette
 import coil3.asDrawable
 import com.google.common.util.concurrent.ListenableFuture
@@ -28,6 +29,7 @@ import kotlin.math.abs
 import androidx.appcompat.app.AlertDialog
 import com.lagradost.cloudstream3.utils.UIHelper.popupMenuNoIconsAndNoStringRes
 
+@UnstableApi
 class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     BindingCreator.Inflate(FragmentMusicPlayerBinding::inflate)
 ) {
@@ -98,6 +100,16 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
             playerView.findViewById<View>(R.id.music_player_queue)?.setOnClickListener {
                 activity?.navigate(R.id.global_to_navigation_music_queue)
+            }
+
+            playerView.findViewById<View>(R.id.music_player_download)?.setOnClickListener {
+                viewModel.currentPlayingSong.value?.let { song ->
+                    if (MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }) {
+                        viewModel.removeDownload(song.videoId)
+                    } else {
+                        viewModel.downloadSong(song)
+                    }
+                }
             }
         }
     }
@@ -218,6 +230,14 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
     }
 
+    private fun updateDownloadIcon(downloaded: Boolean) {
+        val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_download)
+        button?.let {
+            it.setImageResource(if (downloaded) R.drawable.download_icon_done else R.drawable.netflix_download)
+            it.drawable?.setTint(if (downloaded) context?.getColor(R.color.zetflix_accent) ?: android.graphics.Color.RED else android.graphics.Color.WHITE)
+        }
+    }
+
     private fun shareCurrentSong() {
         val song = viewModel.currentPlayingSong.value ?: return
         val shareText = "Listening to ${song.title} by ${song.artist} on ZetFlix Music!\nhttps://www.youtube.com/watch?v=${song.videoId}"
@@ -247,12 +267,19 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                     })
                 }
                 updateLikeIcon(MusicPersistence.isSongLiked(song.videoId))
+                updateDownloadIcon(MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId })
             }
         }
 
         viewModel.likedSongs.observe(viewLifecycleOwner) { songs ->
             viewModel.currentPlayingSong.value?.let { song ->
                 updateLikeIcon(songs.any { it.videoId == song.videoId })
+            }
+        }
+
+        viewModel.downloadedSongs.observe(viewLifecycleOwner) { downloads ->
+            viewModel.currentPlayingSong.value?.let { song ->
+                updateDownloadIcon(downloads.any { it.videoId == song.videoId })
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.lagradost.cloudstream3.ui.music
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -8,8 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.lagradost.cloudstream3.databinding.ItemMusicSongBinding
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 
-class MusicSearchAdapter(private val onSongClick: (Int) -> Unit) :
-    ListAdapter<MusicSearchResponse, MusicSearchAdapter.MusicViewHolder>(MusicDiffCallback()) {
+class MusicSearchAdapter(
+    private val onSongClick: (Int) -> Unit,
+    private val onMenuClick: ((View, MusicSearchResponse) -> Unit)? = null
+) : ListAdapter<MusicSearchResponse, MusicSearchAdapter.MusicViewHolder>(MusicDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MusicViewHolder {
         val binding = ItemMusicSongBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -29,6 +32,9 @@ class MusicSearchAdapter(private val onSongClick: (Int) -> Unit) :
             binding.musicSongThumbnail.loadImage(song.thumbnailUrl)
             binding.root.setOnClickListener {
                 onSongClick(position)
+            }
+            binding.musicSongMenu.setOnClickListener {
+                onMenuClick?.invoke(it, song)
             }
         }
     }

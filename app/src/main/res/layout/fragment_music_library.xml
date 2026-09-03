@@ -72,6 +72,33 @@
                 android:visibility="gone"
                 tools:listitem="@layout/item_music_song" />
 
+            <!-- Downloads Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/metropolis_bold"
+                android:text="Downloads"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/library_downloads_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                tools:listitem="@layout/item_music_song" />
+
+            <TextView
+                android:id="@+id/library_downloads_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/metropolis_regular"
+                android:text="Your downloaded songs will appear here."
+                android:textColor="@color/music_text_secondary"
+                android:textSize="14sp" />
+
             <!-- Playlists Section -->
             <TextView
                 android:layout_width="wrap_content"
