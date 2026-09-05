@@ -31,9 +31,7 @@
         android:id="@+id/music_player_top_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="4dp"
         android:elevation="8dp"
-        android:translationZ="8dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
@@ -47,6 +45,20 @@
             app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/white"
             android:contentDescription="@string/go_back" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Now Playing"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.1"
+            android:fontFamily="@font/metropolis_bold"
+            app:layout_constraintBottom_toBottomOf="@id/music_player_back"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/music_player_back" />
 
         <ImageButton
             android:id="@+id/music_player_more"
@@ -72,26 +84,14 @@
             app:layout_constraintTop_toBottomOf="@id/music_player_more"
             android:layout_marginTop="4dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Now Playing"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            android:fontFamily="@font/metropolis_bold"
-            app:layout_constraintBottom_toBottomOf="@id/music_player_back"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/music_player_back" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/music_player_album_art_card"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="40dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="24dp"
         app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="24dp"
         app:cardElevation="16dp"
@@ -110,64 +110,105 @@
             tools:src="@drawable/default_cover" />
     </com.google.android.material.card.MaterialCardView>
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/music_player_metadata_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginTop="24dp"
-        android:elevation="4dp"
+        android:paddingHorizontal="32dp"
+        android:layout_marginTop="32dp"
         app:layout_constraintTop_toBottomOf="@id/music_player_album_art_card">
 
         <TextView
             android:id="@+id/music_player_title"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="32dp"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:fontFamily="@font/metropolis_bold"
-            android:gravity="center"
             android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
             android:singleLine="true"
+            app:layout_constraintEnd_toStartOf="@id/music_player_like"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="Song Title" />
 
         <TextView
             android:id="@+id/music_player_artist"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="32dp"
             android:layout_marginTop="4dp"
-            android:textColor="@color/music_text_secondary"
-            android:textSize="18sp"
+            android:textColor="#B3B3B3"
+            android:textSize="16sp"
             android:fontFamily="@font/metropolis_regular"
-            android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
             android:clickable="true"
             android:focusable="true"
             android:background="?attr/selectableItemBackground"
+            app:layout_constraintEnd_toStartOf="@id/music_player_like"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/music_player_title"
             tools:text="Artist Name" />
 
-        <TextView
-            android:id="@+id/music_player_album"
+        <!-- This is a stub, the actual Like button is in custom_music_controls,
+             but Spotify has it here. We will move the logic in the fragment. -->
+        <ImageButton
+            android:id="@+id/music_player_like"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_baseline_favorite_border_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white"
+            android:contentDescription="Like" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/music_player_lyrics_preview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="24dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="#26FFFFFF"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:layout_constraintTop_toBottomOf="@id/music_player_metadata_container"
+        tools:visibility="visible">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="32dp"
-            android:layout_marginTop="2dp"
-            android:textColor="@color/music_text_secondary"
-            android:textSize="14sp"
-            android:fontFamily="@font/metropolis_regular"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:visibility="gone"
-            tools:text="Album Name"
-            tools:visibility="visible" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LYRICS"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:fontFamily="@font/metropolis_bold"
+                android:letterSpacing="0.1" />
+
+            <TextView
+                android:id="@+id/music_player_lyrics_snippet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/metropolis_bold"
+                android:maxLines="2"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                tools:text="This is a snippet of the lyrics that will be displayed here..." />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/music_player_view"
@@ -179,5 +220,6 @@
         app:controller_layout_id="@layout/custom_music_controls"
         app:show_timeout="0"
         app:hide_on_touch="false" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

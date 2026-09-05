@@ -151,16 +151,9 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
         binding?.musicPlayerArtist?.setOnClickListener {
             viewModel.currentPlayingSong.value?.let { song ->
-                // Usually search results or current song might not have browseId directly, 
-                // but MusicArtistFragment expects artist_id.
-                // If videoId is used as fallback in TrackOptions, we can try something similar or just search.
-                // In CloudStream3 music, artist often doesn't have a direct ID in MusicSearchResponse.
-                // However, MusicArtistFragment uses artist_id.
-                // We'll pass the artist name as a search query if we can't find an ID, 
-                // or just navigate if we have something that looks like an ID.
                 val args = Bundle().apply {
                     putString("artist_name", song.artist)
-                    putString("artist_id", song.artist) // Fallback to name as ID if real ID is missing
+                    putString("artist_id", song.artist)
                 }
                 activity?.navigate(R.id.music_nav_artist, args)
             }
@@ -184,40 +177,20 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 }
             }
         }
+
+        binding?.musicPlayerLike?.setOnClickListener {
+            viewModel.currentPlayingSong.value?.let { song ->
+                viewModel.toggleLikeSong(song)
+            }
+        }
+
+        binding?.musicPlayerLyricsPreview?.setOnClickListener {
+            openLyricsPanel()
+        }
         
         binding?.musicPlayerView?.let { playerView ->
             playerView.findViewById<View>(R.id.music_player_lyrics)?.setOnClickListener {
-                val lyrics = viewModel.lyrics.value
-                val hasLyrics = when (lyrics) {
-                    is Resource.Success -> !lyrics.value.plainLyrics.isNullOrBlank() || !lyrics.value.syncedLyrics.isNullOrBlank()
-                    else -> false
-                }
-
-                if (hasLyrics) {
-                    val args = Bundle().apply {
-                        putInt(MusicCombinedBottomSheetFragment.ARG_INITIAL_TAB, MusicCombinedBottomSheetFragment.TAB_LYRICS)
-                    }
-                    activity?.navigate(R.id.navigation_music_combined_panel, args)
-                } else {
-                    Toast.makeText(context, "Lyrics not available for this song", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            playerView.findViewById<View>(R.id.music_player_like)?.setOnClickListener {
-                viewModel.currentPlayingSong.value?.let { song ->
-                    viewModel.toggleLikeSong(song)
-                }
-            }
-
-            playerView.findViewById<View>(R.id.music_player_share)?.setOnClickListener {
-                shareCurrentSong()
-            }
-
-            playerView.findViewById<View>(R.id.music_player_queue)?.setOnClickListener {
-                val args = Bundle().apply { 
-                    putInt(MusicCombinedBottomSheetFragment.ARG_INITIAL_TAB, MusicCombinedBottomSheetFragment.TAB_QUEUE) 
-                }
-                activity?.navigate(R.id.navigation_music_combined_panel, args)
+                openLyricsPanel()
             }
 
             playerView.findViewById<View>(R.id.music_player_download)?.setOnClickListener {
@@ -234,6 +207,30 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                     }
                 }
             }
+
+            playerView.findViewById<View>(R.id.music_player_queue)?.setOnClickListener {
+                val args = Bundle().apply { 
+                    putInt(MusicCombinedBottomSheetFragment.ARG_INITIAL_TAB, MusicCombinedBottomSheetFragment.TAB_QUEUE) 
+                }
+                activity?.navigate(R.id.navigation_music_combined_panel, args)
+            }
+        }
+    }
+
+    private fun openLyricsPanel() {
+        val lyrics = viewModel.lyrics.value
+        val hasLyrics = when (lyrics) {
+            is Resource.Success -> !lyrics.value.plainLyrics.isNullOrBlank() || !lyrics.value.syncedLyrics.isNullOrBlank()
+            else -> false
+        }
+
+        if (hasLyrics) {
+            val args = Bundle().apply {
+                putInt(MusicCombinedBottomSheetFragment.ARG_INITIAL_TAB, MusicCombinedBottomSheetFragment.TAB_LYRICS)
+            }
+            activity?.navigate(R.id.navigation_music_combined_panel, args)
+        } else {
+            Toast.makeText(context, "Lyrics not available for this song", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -348,7 +345,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_shuffle)
         button?.let {
             it.alpha = if (enabled) 1.0f else 0.6f
-            it.drawable?.setTint(if (enabled) context?.getColor(R.color.zetflix_accent) ?: Color.RED else Color.WHITE)
+            it.drawable?.setTint(if (enabled) context?.getColor(R.color.music_spotify_green) ?: Color.GREEN else Color.WHITE)
         }
     }
 
@@ -356,25 +353,22 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_repeat)
         button?.let {
             it.alpha = if (mode != Player.REPEAT_MODE_OFF) 1.0f else 0.6f
-            it.drawable?.setTint(if (mode != Player.REPEAT_MODE_OFF) context?.getColor(R.color.zetflix_accent) ?: android.graphics.Color.RED else android.graphics.Color.WHITE)
+            it.drawable?.setTint(if (mode != Player.REPEAT_MODE_OFF) context?.getColor(R.color.music_spotify_green) ?: Color.GREEN else Color.WHITE)
         }
     }
 
     private fun updateLikeIcon(liked: Boolean) {
-        val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_like)
-        button?.let {
+        binding?.musicPlayerLike?.let {
             it.setImageResource(if (liked) R.drawable.ic_baseline_favorite_24 else R.drawable.ic_baseline_favorite_border_24)
-            it.drawable?.setTint(if (liked) context?.getColor(R.color.zetflix_accent) ?: android.graphics.Color.RED else android.graphics.Color.WHITE)
+            it.drawable?.setTint(if (liked) context?.getColor(R.color.zetflix_accent) ?: Color.RED else Color.WHITE)
         }
     }
 
     private fun updateRateStatusIcons(status: RateStatus) {
-        val likeBtn = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_like)
-
         val accentColor = context?.getColor(R.color.zetflix_accent) ?: Color.RED
         val whiteColor = Color.WHITE
 
-        likeBtn?.let {
+        binding?.musicPlayerLike?.let {
             it.setImageResource(if (status == RateStatus.LIKE) R.drawable.ic_baseline_favorite_24 else R.drawable.ic_baseline_favorite_border_24)
             it.imageTintList = ColorStateList.valueOf(if (status == RateStatus.LIKE) accentColor else whiteColor)
         }
