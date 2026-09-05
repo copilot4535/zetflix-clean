@@ -133,6 +133,16 @@
         <item name="textColor">?attr/textColor</item>
     </style>
 
+    <style name="MusicFilterChip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/music_chip_background</item>
+        <item name="android:textColor">@color/music_chip_text</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="chipCornerRadius">20dp</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="android:fontFamily">@font/metropolis_medium</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
 
 
     <style name="DubButton" parent="@style/SearchBox">
@@ -837,5 +847,23 @@
         <item name="android:windowBackground">@color/music_background_black</item>
         <item name="colorSurface">@color/music_surface_dark</item>
         <item name="android:textColorSecondary">@color/music_text_secondary</item>
+    </style>
+    <style name="MusicTabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+        <item name="android:textSize">14sp</item>
+        <item name="fontFamily">@font/google_sans</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="MusicBottomSheetDialogTheme" parent="AppBottomSheetDialogTheme">
+        <item name="bottomSheetStyle">@style/MusicModalStyle</item>
+    </style>
+
+    <style name="MusicModalStyle" parent="AppModalStyle">
+        <item name="backgroundTint">@color/music_background_black</item>
+        <item name="android:background">@drawable/music_rounded_bottom_sheet</item>
+        <item name="behavior_peekHeight">512dp</item>
+        <item name="behavior_skipCollapsed">false</item>
     </style>
 </resources>

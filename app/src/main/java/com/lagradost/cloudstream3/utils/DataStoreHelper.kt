@@ -33,7 +33,7 @@ import com.lagradost.cloudstream3.ui.result.VideoWatchState
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
-import com.lagradost.cloudstream3.ui.home.BaseHomeViewModel
+import com.lagradost.cloudstream3.ui.movie.BaseHomeViewModel
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
 import com.lagradost.cloudstream3.utils.serializers.WriteOnlySerializer

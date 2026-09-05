@@ -233,15 +233,22 @@ android {
 }
 
 dependencies {
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.json)
+    testImplementation(libs.mockk)
+    testImplementation(libs.arch.core.testing)
     androidTestImplementation(libs.core)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.instancio.core)
     androidTestImplementation(libs.junit.ktx)
     androidTestImplementation(libs.kotlin.test)
+    androidTestImplementation(libs.mockk)
 
     // Android Core & Lifecycle
     implementation(libs.core.ktx)

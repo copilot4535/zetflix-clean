@@ -19,6 +19,10 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.ViewHolderState
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
+import com.lagradost.cloudstream3.ui.movie.BaseHomeFragment
+import com.lagradost.cloudstream3.ui.movie.BaseHomeViewModel
+import com.lagradost.cloudstream3.ui.movie.ParentItemAdapter
+import com.lagradost.cloudstream3.ui.movie.SearchClickCallback
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPressedCallback
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPressedCallback
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
@@ -48,7 +52,7 @@ class LiveStreamFragment : BaseHomeFragment<FragmentLivestreamBinding>(
 
     inner class LiveStreamParentAdapter(
         id: Int,
-        clickCallback: (com.lagradost.cloudstream3.ui.search.SearchClickCallback) -> Unit,
+        clickCallback: (SearchClickCallback) -> Unit,
         moreInfoClickCallback: (BaseHomeViewModel.ExpandableHomepageList) -> Unit,
         expandCallback: ((String) -> Unit)? = null,
     ) : ParentItemAdapter(id, clickCallback, moreInfoClickCallback, expandCallback) {

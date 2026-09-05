@@ -2,20 +2,38 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="1dp"
-    android:visibility="gone"
+    android:padding="8dp"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-        <ImageView
-            android:id="@+id/nav_header_notification"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            app:itemIconTint="@color/item_select_color"
-            android:focusable="true"
+    <ImageView
+        android:id="@+id/nav_rail_search"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginBottom="16dp"
+        android:padding="4dp"
+        android:src="@drawable/search_icon"
+        android:focusable="true"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/search"
+        app:tint="?attr/textColor" />
 
-            android:src="@drawable/notifications_icon_selector"
-            android:contentDescription="@string/account"
-            app:tint="@color/item_select_color" />
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/nav_rail_avatar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="2dp"
+        app:strokeColor="?attr/colorPrimary"
+        app:strokeWidth="1dp"
+        app:shapeAppearanceOverlay="@style/RoundedImageView"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_outline_account_circle_24"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/account" />
 
 </LinearLayout>

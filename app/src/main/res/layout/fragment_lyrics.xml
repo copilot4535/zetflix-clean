@@ -20,6 +20,7 @@
         android:orientation="vertical">
 
         <FrameLayout
+            android:id="@+id/lyrics_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp">
@@ -52,14 +53,13 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/lyrics_recycler"
+            <com.lagradost.cloudstream3.ui.music.SyncedLyricsView
+                android:id="@+id/lyrics_synced_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingVertical="100dp"
                 android:visibility="gone"
-                tools:listitem="@layout/item_lyrics_line"
                 tools:visibility="visible" />
 
             <ScrollView

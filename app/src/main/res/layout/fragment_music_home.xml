@@ -6,127 +6,78 @@
     android:layout_height="match_parent"
     android:background="@color/music_background_black">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/music_home_appbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        app:elevation="0dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            app:layout_scrollFlags="scroll|enterAlways">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/music"
-                android:textColor="@color/white"
-                android:textSize="28sp"
-                android:fontFamily="@font/metropolis_bold" />
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:scrollbars="none">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/music_home_genre_chips"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:singleLine="true">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_moods_and_genres"
-                        style="@style/ChipFilled"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Explore All"
-                        app:chipIcon="@drawable/ic_baseline_public_24"
-                        app:chipIconTint="@color/white" />
-
-                    <com.google.android.material.chip.Chip
-                        style="@style/ChipFilledSemiTransparent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Relax" />
-
-                    <com.google.android.material.chip.Chip
-                        style="@style/ChipFilledSemiTransparent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Energize" />
-
-                    <com.google.android.material.chip.Chip
-                        style="@style/ChipFilledSemiTransparent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Workout" />
-
-                    <com.google.android.material.chip.Chip
-                        style="@style/ChipFilledSemiTransparent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Focus" />
-
-                    <com.google.android.material.chip.Chip
-                        style="@style/ChipFilledSemiTransparent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Commute" />
-
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
-        </LinearLayout>
-    </com.google.android.material.appbar.AppBarLayout>
-
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/music_home_swipe_refresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_height="match_parent">
 
-        <androidx.core.widget.NestedScrollView
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <LinearLayout
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/music_home_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="84dp"
+                tools:listitem="@layout/item_music_home_section" />
+
+            <include
+                android:id="@+id/music_home_shimmer_view"
+                layout="@layout/loading_music_home"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:id="@+id/music_home_empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
                 android:orientation="vertical"
-                android:paddingBottom="80dp">
+                android:padding="32dp"
+                android:visibility="gone">
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/music_home_recycler"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
-                    tools:listitem="@layout/item_music_home_section" />
-
-                <include
-                    android:id="@+id/music_home_shimmer_view"
-                    layout="@layout/loading_music_home"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_baseline_hearing_24"
+                    app:tint="@color/zetflix_white_20"
+                    tools:ignore="ContentDescription" />
 
                 <TextView
-                    android:id="@+id/music_home_error_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="32dp"
-                    android:textColor="?attr/textColor"
-                    android:visibility="gone"
-                    tools:text="Error message"
-                    tools:visibility="visible" />
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/metropolis_bold"
+                    android:text="No music found"
+                    android:textColor="@color/white"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/metropolis_regular"
+                    android:gravity="center"
+                    android:text="Try checking your connection or repository settings."
+                    android:textColor="@color/music_text_secondary"
+                    android:textSize="14sp" />
             </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+
+            <TextView
+                android:id="@+id/music_home_error_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/metropolis_medium"
+                android:textColor="@color/zetflix_error"
+                android:visibility="gone"
+                tools:text="Failed to load music"
+                tools:visibility="visible" />
+        </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

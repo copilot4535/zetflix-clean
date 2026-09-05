@@ -8,10 +8,12 @@ import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
+import androidx.appcompat.content.res.AppCompatResources
 import coil3.EventListener
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.asImage
 import coil3.decode.BitmapFactoryDecoder
 import coil3.disk.DiskCache
 import coil3.dispose
@@ -28,6 +30,7 @@ import coil3.request.bitmapConfig
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import com.lagradost.cloudstream3.BuildConfig
+import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.USER_AGENT
 import com.lagradost.cloudstream3.network.buildDefaultClient
 import okio.Path.Companion.toOkioPath
@@ -105,6 +108,9 @@ object ImageLoader {
         }
         // headers can be overridden by extensions.
         this.load(imageData, SingletonImageLoader.get(context)) {
+            val placeholderImage = AppCompatResources.getDrawable(context, R.drawable.bg_music_placeholder)?.asImage()
+            placeholder(placeholderImage)
+            error(placeholderImage)
             this.httpHeaders(NetworkHeaders.Builder().also { headerBuilder ->
                 headerBuilder["User-Agent"] = USER_AGENT
                 headers?.forEach { (key, value) ->

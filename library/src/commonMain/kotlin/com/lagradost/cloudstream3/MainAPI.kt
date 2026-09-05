@@ -143,6 +143,17 @@ object APIHolder {
         initMap(forcedUpdate = true)
     }
 
+    /**
+     * Filters providers based on the given types.
+     */
+    fun getProvidersForType(types: List<TvType>): List<MainAPI> {
+        return apis.withLock {
+            apis.filter { api ->
+                api.supportedTypes.any { types.contains(it) }
+            }.toList()
+        }
+    }
+
     private fun initMap(forcedUpdate: Boolean = false) {
         apis.withLock {
             if ((apiMap == null) || forcedUpdate)

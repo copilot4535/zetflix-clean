@@ -23,7 +23,6 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
     BindingCreator.Inflate(FragmentLyricsBinding::inflate)
 ) {
     private val viewModel: MusicViewModel by activityViewModels()
-    private lateinit var lyricsAdapter: LyricsLineAdapter
     
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
@@ -41,18 +40,16 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
     override fun onViewReady(view: View, savedInstanceState: Bundle?) {
         super.onViewReady(view, savedInstanceState)
         
+        val isChild = arguments?.getBoolean(MusicCombinedBottomSheetFragment.ARG_IS_CHILD) ?: false
+        binding?.lyricsHeader?.isVisible = !isChild
+        binding?.lyricsBackgroundBlur?.isVisible = !isChild
+        
         setupUI()
         setupMediaController()
         observeViewModel()
     }
 
     private fun setupUI() {
-        lyricsAdapter = LyricsLineAdapter()
-        binding?.lyricsRecycler?.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = lyricsAdapter
-        }
-        
         binding?.lyricsClose?.setOnClickListener {
             activity?.onBackPressedDispatcher?.onBackPressed()
         }
@@ -83,12 +80,12 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
                     val data = resource.value
                     if (!data.syncedLyrics.isNullOrBlank()) {
                         val lines = LrcParser.parse(data.syncedLyrics)
-                        lyricsAdapter.submitList(lines)
-                        binding?.lyricsRecycler?.isVisible = true
+                        binding?.lyricsSyncedView?.setLyrics(lines)
+                        binding?.lyricsSyncedView?.isVisible = true
                         binding?.lyricsPlainScroll?.isVisible = false
                     } else if (!data.plainLyrics.isNullOrBlank()) {
                         binding?.lyricsPlainText?.text = data.plainLyrics
-                        binding?.lyricsRecycler?.isVisible = false
+                        binding?.lyricsSyncedView?.isVisible = false
                         binding?.lyricsPlainScroll?.isVisible = true
                     } else {
                         binding?.lyricsEmpty?.isVisible = true
@@ -103,15 +100,15 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
         val controller = mediaController ?: return
         if (!controller.isPlaying) return
         
-        val currentPos = controller.currentPosition
-        val lines = lyricsAdapter.currentList
-        if (lines.isEmpty()) return
-        
-        var index = lines.indexOfLast { it.timeMs <= currentPos }
-        if (index != lyricsAdapter.currentLineIndex) {
-            lyricsAdapter.currentLineIndex = index
+        binding?.lyricsSyncedView?.updateProgress(controller.currentPosition)
+    }
+
+    fun forceLyricsScroll() {
+        binding?.lyricsSyncedView?.let { syncedView ->
+            val adapter = syncedView.adapter as? LyricsLineAdapter
+            val index = adapter?.currentLineIndex ?: -1
             if (index != -1) {
-                binding?.lyricsRecycler?.smoothScrollToPosition(index)
+                syncedView.scrollToPositionCentered(index)
             }
         }
     }

@@ -15,52 +15,24 @@
         app:title="Queue"
         app:titleTextColor="@color/white" />
 
-    <androidx.core.widget.NestedScrollView
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:fontFamily="@font/metropolis_bold"
+        android:text="Up Next"
+        android:textColor="@color/white"
+        android:textSize="14sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/music_queue_recycler"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:fontFamily="@font/metropolis_bold"
-                android:text="Now Playing"
-                android:textColor="@color/zetflix_accent"
-                android:textSize="14sp" />
-
-            <include
-                android:id="@+id/music_queue_current_item"
-                layout="@layout/item_music_song"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="24dp"
-                android:fontFamily="@font/metropolis_bold"
-                android:text="Up Next"
-                android:textColor="@color/white"
-                android:textSize="14sp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/music_queue_recycler"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:nestedScrollingEnabled="false"
-                android:paddingBottom="100dp"
-                tools:listitem="@layout/item_music_song" />
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="100dp"
+        tools:listitem="@layout/item_music_song" />
 
 </LinearLayout>

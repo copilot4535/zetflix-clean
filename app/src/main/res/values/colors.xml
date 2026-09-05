@@ -18,9 +18,10 @@
 
     <!-- Music Module Spotify-style palette -->
     <color name="music_spotify_green">#1ED760</color>
-    <color name="music_background_black">#0b0b0f</color> <!-- ZetFlix matching -->
-    <color name="music_surface_dark">#1a1a24</color>    <!-- Elevated surfaces matching -->
-    <color name="music_text_secondary">#a0a0b0</color>   <!-- Matching zetflix_text_secondary -->
+    <color name="music_background_black">#000000</color> <!-- AMOLED black -->
+    <color name="music_surface_dark">#121212</color>    <!-- Surface matching -->
+    <color name="music_chip_button">#242424</color>
+    <color name="music_text_secondary">#888888</color>
     <color name="music_card_overlay">#40000000</color>
     <color name="music_accent_red">#e50914</color>
     <color name="music_scrim_gradient_start">#00000000</color>

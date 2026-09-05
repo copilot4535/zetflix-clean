@@ -60,56 +60,73 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
+        <ProgressBar
+            android:id="@+id/music_artist_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/music_artist_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"
+            android:fontFamily="@font/metropolis_medium"
+            android:text="No content found for this artist"
+            android:textColor="@color/music_text_secondary"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/music_artist_tracks_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/metropolis_bold"
+            android:text="Top Tracks"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/music_artist_top_tracks"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="12dp"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_music_song" />
+
+        <TextView
+            android:id="@+id/music_artist_albums_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/metropolis_bold"
+            android:text="Albums"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/music_artist_albums"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="100dp">
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_music_home_card" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="24dp"
-                android:fontFamily="@font/metropolis_bold"
-                android:text="Top Tracks"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/music_artist_top_tracks"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:nestedScrollingEnabled="false"
-                tools:listitem="@layout/item_music_song" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="32dp"
-                android:fontFamily="@font/metropolis_bold"
-                android:text="Albums"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/music_artist_albums"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:paddingHorizontal="14dp"
-                android:clipToPadding="false"
-                tools:listitem="@layout/item_music_home_card" />
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

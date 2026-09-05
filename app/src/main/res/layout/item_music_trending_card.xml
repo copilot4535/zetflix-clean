@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackground">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="0dp">
+
+        <ImageView
+            android:id="@+id/trending_thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/default_cover"
+            android:contentDescription="Song Artwork" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/trending_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/metropolis_bold"
+            android:maxLines="1"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            tools:text="Trending Song Title" />
+
+        <TextView
+            android:id="@+id/trending_artist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/metropolis_regular"
+            android:maxLines="1"
+            android:textColor="@color/music_text_secondary"
+            android:textSize="12sp"
+            tools:text="Artist Name" />
+    </LinearLayout>
+</LinearLayout>

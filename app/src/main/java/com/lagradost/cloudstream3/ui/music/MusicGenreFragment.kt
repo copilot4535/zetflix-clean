@@ -33,6 +33,9 @@ class MusicGenreFragment : BaseFragment<FragmentMusicGenreBinding>(
         val params = arguments?.getString("params")
         if (params == "moods_and_genres") {
             viewModel.loadMoodAndGenres()
+        } else if (params != null && params != "null") {
+            // Structured browse is preferred for See All
+            viewModel.loadBrowseSections(null, params)
         } else {
             // Use search to find curated playlists for this mood
             viewModel.search(title, com.maxrave.kotlinytmusicscraper.YouTube.SearchFilter.FILTER_FEATURED_PLAYLIST)
@@ -89,7 +92,20 @@ class MusicGenreFragment : BaseFragment<FragmentMusicGenreBinding>(
     private fun observeViewModel() {
         observe(viewModel.homeSections) { resource ->
             if (resource is Resource.Success) {
-                genreAdapter.submitList(resource.value)
+                val title = arguments?.getString("title") ?: "Moods & Genres"
+                val sections = resource.value
+                
+                if (title.contains("New", true) || title.contains("Release", true)) {
+                    // Flatten sections for New Releases to show a continuous list
+                    val allItems = sections.flatMap { it.items }.distinctBy { it.id }
+                    if (allItems.isNotEmpty()) {
+                        val flatSection = MusicHomeSection(title, allItems)
+                        genreAdapter.submitList(listOf(flatSection))
+                        return@observe
+                    }
+                }
+                
+                genreAdapter.submitList(sections)
             }
         }
 

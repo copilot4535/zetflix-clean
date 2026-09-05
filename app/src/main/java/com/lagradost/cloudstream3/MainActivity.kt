@@ -77,8 +77,8 @@ import com.lagradost.cloudstream3.ui.SyncWatchType
 import com.lagradost.cloudstream3.ui.WatchType
 import com.lagradost.cloudstream3.ui.result.ResultViewModel2
 import com.lagradost.cloudstream3.ui.result.SyncViewModel
-import com.lagradost.cloudstream3.ui.search.SearchFragment
-import com.lagradost.cloudstream3.ui.search.SearchResultBuilder
+import com.lagradost.cloudstream3.ui.movie.SearchFragment
+import com.lagradost.cloudstream3.ui.movie.SearchResultBuilder
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.SettingsFragment
 import com.google.android.material.navigationrail.NavigationRailView
@@ -134,7 +134,6 @@ import com.lagradost.cloudstream3.utils.txt
 import com.lagradost.safefile.SafeFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
@@ -144,6 +143,11 @@ import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.attachBackPres
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPressedCallback
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import kotlin.reflect.full.createInstance
+import coil3.imageLoader
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.lagradost.cloudstream3.workers.OatCleanupWorker
+import kotlin.math.absoluteValue
 
 class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCallback {
     companion object {
@@ -251,6 +255,23 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
     }
 
 
+    fun launchMusic() {
+        val intent = Intent(this, com.lagradost.cloudstream3.ui.music.MusicActivity::class.java)
+        startActivity(intent)
+        finishWithOptimization()
+    }
+
+    private fun finishWithOptimization() {
+        // 1. Clear Coil memory cache
+        this.imageLoader.memoryCache?.clear()
+        
+        // 2. Cancel active scraping coroutines
+        lastPopupJob?.cancel()
+
+        finish()
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
+
     var lastPopup: SearchResponse? = null
     var lastPopupJob: Job? = null
     fun loadPopup(result: SearchResponse, load: Boolean = true) {
@@ -326,7 +347,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             R.id.navigation_subtitles,
             R.id.navigation_chrome_subtitles,
             R.id.navigation_test_providers,
-            R.id.navigation_livestream,
         ).contains(destination.id)
 
         binding?.apply {
@@ -410,13 +430,34 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         }
     }
 
+    fun initCastLazily() {
+        if (mSessionManager != null) return
+        try {
+            if (isCastApiAvailable()) {
+                CastContext.getSharedInstance(this) { it.run() }
+                    .addOnSuccessListener { 
+                        mSessionManager = it.sessionManager
+                        mSessionManager?.addSessionManagerListener(mSessionManagerListener)
+                    }
+            }
+        } catch (t: Throwable) {
+            logError(t)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         setActivityInstance(this)
+
+        // Lazy init Cast only if we might need it
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+        val destId = navHostFragment?.navController?.currentDestination?.id
+        if (destId == R.id.navigation_player || destId == R.id.navigation_results_phone) {
+            initCastLazily()
+        }
+
         try {
-            if (isCastApiAvailable()) {
-                mSessionManager?.addSessionManagerListener(mSessionManagerListener)
-            }
+            mSessionManager?.addSessionManagerListener(mSessionManagerListener)
         } catch (e: Exception) {
             logError(e)
         }
@@ -528,6 +569,17 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 R.id.navigation_home -> {
                     binding?.root?.findViewById<RecyclerView>(R.id.home_master_recycler)
                         ?.smoothScrollToTop()
+                }
+
+                R.id.navigation_search -> {
+                    for (recyclerId in arrayOf(
+                        R.id.search_master_recycler,
+                        R.id.search_autofit_results,
+                        R.id.search_history_recycler
+                    )) {
+                        binding?.root?.findViewById<RecyclerView>(recyclerId)
+                            ?.smoothScrollToTop()
+                    }
                 }
 
                 R.id.navigation_downloads -> {
@@ -670,6 +722,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         setNavigationBarColorCompat(R.attr.primaryGrayBackground)
         updateLocale()
         super.onCreate(savedInstanceState)
+        
         try {
             if (isCastApiAvailable()) {
                 CastContext.getSharedInstance(this) { it.run() }
@@ -692,10 +745,10 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 safe {
                     backup(this@MainActivity)
                 }
-                safe {
-                    // Recompile oat on new version
-                    PluginManager.deleteAllOatFiles(this@MainActivity)
-                }
+                
+                // Offload heavy OAT cleanup to WorkManager
+                val oatCleanupRequest = OneTimeWorkRequestBuilder<OatCleanupWorker>().build()
+                WorkManager.getInstance(this@MainActivity).enqueue(oatCleanupRequest)
             }
         }
 
@@ -748,17 +801,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             }
         }
 
-        // Consolidate non-critical IO tasks into a single deferred job
-        ioSafe {
-            SafeFile.check(this@MainActivity)
-            try {
-                loadCache()
-                File(filesDir, "exoplayer").deleteRecursively() // old cache
-                deleteFileOnExit(File(cacheDir, "exoplayer"))   // current cache
-            } catch (e: Exception) {
-                logError(e)
-            }
-        }
+        ioSafe { SafeFile.check(this@MainActivity) }
 
         if (PluginManager.checkSafeModeFile()) {
             safe {
@@ -766,62 +809,46 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             }
         } else if (lastError == null) {
             ioSafe {
-                // Start initializing built-in providers and home plugin concurrently
-                val builtInJob = launch {
-                    Log.i("SportsIPTV", "Adding IPTV-Org Sports provider")
-                    allProviders.add(com.lagradost.cloudstream3.providers.SportsIPTVProvider())
-                    allProviders.add(com.lagradost.cloudstream3.providers.FredTVProvider())
-                    initAll()
+                DataStoreHelper.currentHomePage?.let { homeApi ->
+                    mainPluginsLoadedEvent.invoke(loadSinglePlugin(this@MainActivity, homeApi))
+                } ?: run {
+                    mainPluginsLoadedEvent.invoke(false)
                 }
 
-                var homeSuccess = false
-                val homeJob = launch {
-                    DataStoreHelper.currentHomePage?.let { homeApi ->
-                        homeSuccess = loadSinglePlugin(this@MainActivity, homeApi)
+                ioSafe {
+                    if (settingsManager.getBoolean(
+                            getString(R.string.auto_update_plugins_key),
+                            true
+                        )
+                    ) {
+                        PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(
+                            this@MainActivity
+                        )
+                    } else {
+                        ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(this@MainActivity)
+                    }
+
+                    //Automatically download not existing plugins, using mode specified.
+                    val autoDownloadPlugin = AutoDownloadMode.getEnum(
+                        settingsManager.getInt(
+                            getString(R.string.auto_download_plugins_key),
+                            2
+                        )
+                    ) ?: AutoDownloadMode.Disable
+                    if (autoDownloadPlugin != AutoDownloadMode.Disable) {
+                        PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_downloadNotExistingPluginsAndLoad(
+                            this@MainActivity,
+                            autoDownloadPlugin
+                        )
                     }
                 }
 
-                // Wait for built-ins and home to be ready
-                builtInJob.join()
-                homeJob.join()
-
-                // Update apis after loading initial providers to ensure they are available for HomeFragment
-                allProviders.withLock {
-                    apis = allProviders.distinctBy { it.lang + it.name + it.mainUrl + it::class.qualifiedName }
-                    APIHolder.apiMap = null
-                }
-                mainPluginsLoadedEvent.invoke(homeSuccess)
-
-                if (settingsManager.getBoolean(
-                        getString(R.string.auto_update_plugins_key),
-                        true
-                    )
-                ) {
-                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(
-                        this@MainActivity
-                    )
-                } else {
-                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(this@MainActivity)
-                }
-
-                //Automatically download not existing plugins, using mode specified.
-                val autoDownloadPlugin = AutoDownloadMode.getEnum(
-                    settingsManager.getInt(
-                        getString(R.string.auto_download_plugins_key),
-                        2
-                    )
-                ) ?: AutoDownloadMode.Disable
-                if (autoDownloadPlugin != AutoDownloadMode.Disable) {
-                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_downloadNotExistingPluginsAndLoad(
+                ioSafe {
+                    PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllLocalPlugins(
                         this@MainActivity,
-                        autoDownloadPlugin
+                        false
                     )
                 }
-
-                PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllLocalPlugins(
-                    this@MainActivity,
-                    false
-                )
             }
         } else {
             val builder: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -1039,6 +1066,11 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         SearchResultBuilder.updateCache(this)
 
+        ioSafe {
+            initAll()
+            apis = allProviders.distinctBy { it }
+        }
+
         setUpBackup()
 
         CommonActivity.init(this)
@@ -1071,12 +1103,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     navController
                 )
             }
-            setOnItemReselectedListener { item ->
-                onNavDestinationSelected(
-                    item,
-                    navController
-                )
-            }
+
         }
 
         binding?.navRailView?.apply {
@@ -1092,18 +1119,23 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     navController
                 )
             }
-            setOnItemReselectedListener { item ->
-                onNavDestinationSelected(
-                    item,
-                    navController
-                )
-            }
         }
 
         val rail = binding?.navRailView
         if (rail != null) {
             binding?.navRailView?.labelVisibilityMode =
                 NavigationRailView.LABEL_VISIBILITY_UNLABELED
+            
+            binding?.navRailView?.getHeaderView()?.apply {
+                findViewById<View>(R.id.nav_rail_search)?.setOnClickListener {
+                    navController.navigate(R.id.navigation_search)
+                }
+                findViewById<View>(R.id.nav_rail_avatar)?.setOnClickListener {
+                    navController.navigate(R.id.navigation_account)
+                }
+            }
+            loadRailAvatar()
+            reloadAccountEvent += { loadRailAvatar() }
         }
 
         for (view in listOf(binding?.navView, binding?.navRailView)) {
@@ -1113,6 +1145,19 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 return@setOnLongClickListener recycler != null
             }
 
+
+            view?.findViewById<View?>(R.id.navigation_search)?.setOnLongClickListener {
+                for (recyclerId in arrayOf(
+                    R.id.search_master_recycler,
+                    R.id.search_autofit_results,
+                    R.id.search_history_recycler
+                )) {
+                    val recycler = binding?.root?.findViewById<RecyclerView?>(recyclerId)
+                        ?: return@setOnLongClickListener false
+                    recycler.smoothScrollToPosition(0)
+                }
+                return@setOnLongClickListener true
+            }
 
             view?.findViewById<View?>(R.id.navigation_downloads)?.setOnLongClickListener {
                 val recycler: RecyclerView? = binding?.root?.findViewById(R.id.download_list)
@@ -1148,7 +1193,22 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         ioSafe {
             runAutoUpdate()
-            APIRepository.dubStatusActive = getApiDubstatusSettings()
+        }
+
+        APIRepository.dubStatusActive = getApiDubstatusSettings()
+
+        ioSafe {
+            try {
+                loadCache()
+                File(filesDir, "exoplayer").deleteRecursively() // old cache
+                deleteFileOnExit(File(cacheDir, "exoplayer"))   // current cache
+            } catch (e: Exception) {
+                logError(e)
+            }
+        }
+        println("Loaded everything")
+
+        ioSafe {
             migrateResumeWatching()
         }
 
@@ -1201,6 +1261,43 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             ).text.trim() == "ok"
         } catch (t: Throwable) {
             false
+        }
+    }
+
+    private fun loadRailAvatar() {
+        val binding = binding ?: return
+        val context = this
+        val header = binding.navRailView.getHeaderView() ?: return
+        val avatarView = header.findViewById<com.google.android.material.imageview.ShapeableImageView>(R.id.nav_rail_avatar) ?: return
+
+        ioSafe {
+            try {
+                val email = com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs.getStoredEmail(context) ?: ""
+                val userId = if (email.isNotEmpty()) email.substringBefore("@") else ""
+                val account = DataStoreHelper.getCurrentAccount() ?: DataStoreHelper.getDefaultAccount(context)
+
+                main {
+                    if (account.customImage != null) {
+                        avatarView.loadImage(account.image)
+                        avatarView.background = null
+                    } else {
+                        val backgrounds = listOf(
+                            R.drawable.profile_bg_blue,
+                            R.drawable.profile_bg_dark_blue,
+                            R.drawable.profile_bg_orange,
+                            R.drawable.profile_bg_pink,
+                            R.drawable.profile_bg_purple,
+                            R.drawable.profile_bg_red,
+                            R.drawable.profile_bg_teal
+                        )
+                        val bgIndex = if (userId.isNotEmpty()) userId.hashCode().absoluteValue % backgrounds.size else 0
+                        avatarView.setBackgroundResource(backgrounds[bgIndex])
+                        avatarView.setImageResource(R.drawable.ic_outline_account_circle_24)
+                    }
+                }
+            } catch (e: Exception) {
+                logError(e)
+            }
         }
     }
 }

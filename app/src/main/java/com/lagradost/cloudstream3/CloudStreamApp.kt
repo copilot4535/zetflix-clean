@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Build
+import android.os.Looper
+import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import coil3.ImageLoader
@@ -16,6 +18,7 @@ import com.lagradost.cloudstream3.BuildConfig
 import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.mvvm.safeAsync
 import com.lagradost.cloudstream3.plugins.PluginManager
+import com.lagradost.cloudstream3.network.initClient
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.openBrowser
@@ -37,14 +40,15 @@ import java.io.PrintStream
 import java.lang.ref.WeakReference
 import java.util.Locale
 import kotlin.concurrent.thread
-import kotlin.system.exitProcess
 
 class ExceptionHandler(
     val errorFile: File,
-    val onError: (() -> Unit),
+    private val defaultHandler: Thread.UncaughtExceptionHandler?,
 ) : Thread.UncaughtExceptionHandler {
 
     override fun uncaughtException(thread: Thread, error: Throwable) {
+        Log.e("ZetFlixCrash", "Uncaught exception on thread ${thread.name}", error)
+
         try {
             val threadId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
                 thread.threadId()
@@ -60,11 +64,11 @@ class ExceptionHandler(
             }
         } catch (_: FileNotFoundException) {
         }
-        try {
-            onError()
-        } catch (_: Exception) {
+
+        // Only let the system handle it (standard crash UI) if it's the main thread
+        if (Looper.getMainLooper().thread == thread) {
+            defaultHandler?.uncaughtException(thread, error)
         }
-        exitProcess(1)
     }
 }
 
@@ -73,15 +77,17 @@ class CloudStreamApp : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
 
-        ExceptionHandler(filesDir.resolve("last_error")) {
-            val intent = context!!.packageManager.getLaunchIntentForPackage(context!!.packageName)
-            startActivity(Intent.makeRestartActivityTask(intent!!.component))
-        }.also {
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        ExceptionHandler(filesDir.resolve("last_error"), defaultHandler).also {
             exceptionHandler = it
             Thread.setDefaultUncaughtExceptionHandler(it)
         }
 
         AppDebug.isDebug = BuildConfig.DEBUG
+
+        app.initClient(this, ignoreSSL = false)
+        @OptIn(UnsafeSSL::class)
+        insecureApp.initClient(this, ignoreSSL = true)
     }
 
     override fun attachBaseContext(base: Context?) {

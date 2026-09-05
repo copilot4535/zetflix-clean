@@ -68,8 +68,8 @@ import com.lagradost.cloudstream3.ui.quicksearch.QuickSearchFragment
 import com.lagradost.cloudstream3.ui.result.ResultFragment.bindLogo
 import com.lagradost.cloudstream3.ui.result.ResultFragment.getStoredData
 import com.lagradost.cloudstream3.ui.result.ResultFragment.updateUIEvent
-import com.lagradost.cloudstream3.ui.search.SearchAdapter
-import com.lagradost.cloudstream3.ui.search.SearchHelper
+import com.lagradost.cloudstream3.ui.movie.SearchAdapter
+import com.lagradost.cloudstream3.ui.movie.SearchHelper
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
 import com.lagradost.cloudstream3.ui.settings.pickDownloadPath
 import com.lagradost.cloudstream3.ui.settings.utils.getChooseFolderLauncher

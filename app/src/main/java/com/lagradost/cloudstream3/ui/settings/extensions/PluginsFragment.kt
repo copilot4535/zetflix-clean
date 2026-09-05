@@ -12,7 +12,7 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.databinding.FragmentPluginsBinding
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.BaseFragment
-import com.lagradost.cloudstream3.ui.home.HomeFragment.Companion.bindChips
+import com.lagradost.cloudstream3.ui.movie.HomeFragment.Companion.bindChips
 import com.lagradost.cloudstream3.ui.result.FOCUS_SELF
 import com.lagradost.cloudstream3.ui.result.setLinearListLayout
 import com.lagradost.cloudstream3.ui.setRecycledViewPool

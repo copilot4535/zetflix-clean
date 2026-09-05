@@ -47,8 +47,8 @@ class LyricsLineAdapter : ListAdapter<LrcLine, LyricsLineAdapter.LyricsLineViewH
         }
     }
 
-    class LyricsLineDiffCallback : DiffUtil.ItemCallback<LrcLine>() {
-        override fun areItemsTheSame(oldItem: LrcLine, newItem: LrcLine): Boolean = oldItem.timeMs == newItem.timeMs
-        override fun areContentsTheSame(oldItem: LrcLine, newItem: LrcLine): Boolean = oldItem == newItem
+    class LyricsLineDiffCallback : DiffUtil.ItemCallback<LyricLine>() {
+        override fun areItemsTheSame(oldItem: LyricLine, newItem: LyricLine): Boolean = oldItem.timestampMs == newItem.timestampMs
+        override fun areContentsTheSame(oldItem: LyricLine, newItem: LyricLine): Boolean = oldItem == newItem
     }
 }

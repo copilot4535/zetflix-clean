@@ -2,6 +2,7 @@ package com.lagradost.cloudstream3.ui.music
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.lagradost.cloudstream3.R
@@ -45,7 +46,7 @@ class MusicArtistFragment : BaseFragment<FragmentMusicArtistBinding>(
                 MusicItemType.SONG -> {
                     val songItems = section.items.filter { it.type == MusicItemType.SONG }
                     val songs = songItems.map {
-                        MusicSearchResponse(it.title, it.subtitle, it.id, it.thumbnailUrl)
+                        MusicSearchResponse(it.title, it.subtitle, it.id, it.thumbnailUrl, it.params)
                     }
                     val songIndex = songItems.indexOf(item).coerceAtLeast(0)
                     viewModel.playQueue(songs, songIndex)
@@ -61,6 +62,7 @@ class MusicArtistFragment : BaseFragment<FragmentMusicArtistBinding>(
                     val args = Bundle().apply {
                         putString("playlist_id", item.id)
                         putString("playlist_name", item.title)
+                        putString("params", item.params)
                     }
                     activity?.navigate(R.id.music_nav_detail, args)
                 }
@@ -72,6 +74,17 @@ class MusicArtistFragment : BaseFragment<FragmentMusicArtistBinding>(
                     activity?.navigate(R.id.music_nav_artist, args)
                 }
             }
+        }, { section ->
+            val params = section.params
+            if (params != null) {
+                val args = Bundle().apply {
+                    putString("title", section.title)
+                    putString("params", params)
+                }
+                activity?.navigate(R.id.music_nav_genre, args)
+            }
+        }, { videoId, params ->
+            viewModel.prefetchUrl(videoId, params)
         })
         
         binding?.musicArtistTopTracks?.apply {
@@ -82,13 +95,25 @@ class MusicArtistFragment : BaseFragment<FragmentMusicArtistBinding>(
 
     private fun observeViewModel() {
         observe(viewModel.homeSections) { resource ->
+            binding?.musicArtistLoading?.isVisible = resource is Resource.Loading
+            
             if (resource is Resource.Success) {
-                sectionAdapter.submitList(resource.value)
-                val firstSection = resource.value.firstOrNull()
+                val sections = resource.value
+                binding?.musicArtistEmpty?.isVisible = sections.isEmpty()
+                binding?.musicArtistTracksHeader?.isVisible = sections.isNotEmpty()
+                binding?.musicArtistAlbumsHeader?.isVisible = sections.size > 1
+                
+                sectionAdapter.submitList(sections)
+                
+                val firstSection = sections.firstOrNull()
                 binding?.musicArtistName?.text = arguments?.getString("artist_name") ?: firstSection?.title
+                
                 // Find an item with a thumbnail to use as header image
-                val thumb = resource.value.flatMap { it.items }.firstOrNull { it.thumbnailUrl != null }?.thumbnailUrl
+                val thumb = sections.flatMap { it.items }.firstOrNull { !it.thumbnailUrl.isNullOrBlank() }?.thumbnailUrl
                 binding?.musicArtistHeaderImage?.loadImage(thumb)
+            } else if (resource is Resource.Failure) {
+                binding?.musicArtistEmpty?.isVisible = true
+                binding?.musicArtistEmpty?.text = resource.errorString
             }
         }
     }

@@ -169,6 +169,114 @@
                     android:textSize="13sp" />
             </LinearLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/zetflix_white_20"
+                android:layout_marginVertical="8dp" />
+
+            <TextView
+                style="@style/TextAppearance.ZetFlix.H3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Audio &amp; Equalizer"
+                android:textColor="@color/zetflix_accent"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/music_setting_equalizer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Equalizer"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/metropolis_medium" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Launch system audio effects"
+                    android:textColor="@color/music_text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/zetflix_white_20"
+                android:layout_marginVertical="8dp" />
+
+            <TextView
+                style="@style/TextAppearance.ZetFlix.H3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Backup &amp; Restore"
+                android:textColor="@color/zetflix_accent"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/music_setting_export"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Export Data"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/metropolis_medium" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Backup library, history and settings to JSON"
+                    android:textColor="@color/music_text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/music_setting_import"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Import Data"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/metropolis_medium" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Restore from a previously exported JSON file"
+                    android:textColor="@color/music_text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

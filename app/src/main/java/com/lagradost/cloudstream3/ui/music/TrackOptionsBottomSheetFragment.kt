@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
@@ -19,6 +20,7 @@ import com.lagradost.cloudstream3.databinding.BottomSheetTrackOptionsBinding
 import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 
@@ -60,12 +62,12 @@ class TrackOptionsBottomSheetFragment : BottomSheetDialogFragment() {
         binding.trackThumbnail.loadImage(track.thumbnailUrl)
 
         binding.optionPlayNext.setOnClickListener {
-            addToQueue(index = mediaController?.nextMediaItemIndex ?: 0)
+            viewModel.playNext(track)
             dismiss()
         }
 
         binding.optionAddQueue.setOnClickListener {
-            addToQueue(index = mediaController?.mediaItemCount ?: 0)
+            viewModel.addToQueue(track)
             dismiss()
         }
 
@@ -99,32 +101,24 @@ class TrackOptionsBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun showAddToPlaylistDialog() {
-        val playlists = MusicPersistence.getPlaylists()
-        if (playlists.isEmpty()) {
-            android.widget.Toast.makeText(context, "No playlists created", android.widget.Toast.LENGTH_SHORT).show()
-            return
-        }
-        val names = playlists.map { it.name }.toTypedArray()
-        androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
-            .setTitle("Add to Playlist")
-            .setItems(names) { _, which ->
-                viewModel.addSongToPlaylist(names[which], track)
-                dismiss()
+        viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val playlists = MusicPersistence.getPlaylists()
+            
+            viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                if (playlists.isEmpty()) {
+                    android.widget.Toast.makeText(context, "No playlists created", android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    val names = playlists.map { it.name }.toTypedArray()
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
+                        .setTitle("Add to Playlist")
+                        .setItems(names) { _, which ->
+                            viewModel.addSongToPlaylist(names[which], track)
+                            dismiss()
+                        }
+                        .show()
+                }
             }
-            .show()
-    }
-
-    private fun addToQueue(index: Int) {
-        // This is a bit complex because we need the stream URL
-        // In a real app, the service would handle extraction when needed
-        // For now, let's just use what we have in ViewModel if possible
-        // But ViewModel only has playQueue which replaces it.
-        
-        // Let's assume for now we can't easily add to queue without modifying ViewModel
-        // or having a more robust MusicService API.
-        // I will try to use the MediaController if I can get the URL.
-        // Actually, the user said "Connect actions to existing MusicViewModel and MusicDownloadManager methods."
-        // If they don't exist, I might have to skip or implement a simplified version.
+        }
     }
 
     private fun shareTrack() {

@@ -813,4 +813,24 @@
     <string name="logout_confirmation_title">Confirm Logout</string>
     <string name="logout_confirmation_message">Are you sure you want to log out? Bookmarks and downloads will be preserved.</string>
     <string name="logout_button">Logout</string>
+
+    <!-- Music Module Phase 3 -->
+    <string name="music_song_credits">Song Credits</string>
+    <string name="music_technical_specs">Technical Specs</string>
+    <string name="music_songwriters">Songwriters</string>
+    <string name="music_producers">Producers</string>
+    <string name="music_record_label">Record Label</string>
+    <string name="music_import_playlist">Import Playlist</string>
+    <string name="music_import_playlist_hint">Paste a YouTube or YouTube Music playlist URL to import it to your library.</string>
+    <string name="music_playlist_url">Playlist URL</string>
+    <string name="music_import">Import</string>
+    <string name="music_importing">Importing…</string>
+    <string name="music_now_playing_queue">Now Playing Queue</string>
+    <string name="music_top_charts">Top Charts</string>
+    <string name="music_charts_global">Global</string>
+    <string name="music_charts_trending">Trending</string>
+    <string name="music_charts_new_hits">New Hits</string>
+    <string name="music_failed_to_load_charts">Failed to load charts</string>
+    <string name="music_start_radio">Start Radio</string>
+    <string name="music_show_credits">Show Credits</string>
 </resources>

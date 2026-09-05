@@ -1,0 +1,16 @@
+- [x] Task 1: Robust Repository Parsing
+    - [x] Create `parseBrowseResponse` helper in `MusicRepository.kt`
+    - [x] Implement `getBrowseSections` in `MusicRepository.kt`
+    - [x] Improve `getArtistDetails` parsing
+    - [x] Add fallback to `getAlbumSongs` and `getPlaylistSongs`
+- [x] Task 2: ID Mapping & Click Flow
+    - [x] Update `MusicHomeFragment.kt` click logic and logging
+    - [x] Add `loadBrowseSections` to `MusicViewModel.kt`
+- [x] Task 3: UI Feedback (Empty States)
+    - [x] Update `fragment_music_artist.xml` with ProgressBar and Empty State
+    - [x] Update `fragment_music_detail.xml` with ProgressBar and Empty State
+    - [x] Update `MusicArtistFragment.kt` to toggle visibility
+    - [x] Update `MusicDetailFragment.kt` to toggle visibility
+- [x] Task 4: Verification
+    - [x] Run build `./gradlew :app:assembleDebug`
+    - [x] Verify detail pages (Artist, Album, Playlist, Moods) show content

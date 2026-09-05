@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="140dp"
+    android:layout_height="140dp"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <View
+        android:id="@+id/genre_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/zetflix_accent" />
+
+    <TextView
+        android:id="@+id/genre_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:fontFamily="@font/metropolis_bold"
+        android:gravity="center"
+        android:padding="12dp"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        tools:text="Rock" />
+
+</com.google.android.material.card.MaterialCardView>

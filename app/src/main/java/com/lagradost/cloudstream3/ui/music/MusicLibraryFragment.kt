@@ -4,9 +4,17 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.ImageButton
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentMusicLibraryBinding
+import com.lagradost.cloudstream3.databinding.ItemMusicLibraryHeaderBinding
 import com.lagradost.cloudstream3.mvvm.observe
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
@@ -22,6 +30,13 @@ class MusicLibraryFragment : BaseFragment<FragmentMusicLibraryBinding>(
     private lateinit var historyAdapter: MusicSearchAdapter
     private lateinit var downloadsAdapter: MusicSearchAdapter
     private lateinit var playlistsAdapter: MusicPlaylistAdapter
+    
+    private lateinit var likedHeader: HeaderAdapter
+    private lateinit var downloadsHeader: HeaderAdapter
+    private lateinit var playlistsHeader: HeaderAdapter
+    private lateinit var historyHeader: HeaderAdapter
+
+    private lateinit var mainAdapter: ConcatAdapter
 
     override fun fixLayout(view: View) {
         // Implement fixLayout if needed
@@ -42,9 +57,19 @@ class MusicLibraryFragment : BaseFragment<FragmentMusicLibraryBinding>(
         }, { _, song ->
             showSongMenu(song)
         })
-        binding?.libraryLikedSongsRecycler?.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = likedSongsAdapter
+
+        downloadsAdapter = MusicSearchAdapter({ index ->
+            viewModel.playQueue(downloadsAdapter.currentList, index)
+        }, { _, song ->
+            showSongMenu(song)
+        })
+
+        playlistsAdapter = MusicPlaylistAdapter { playlist ->
+            val args = Bundle().apply {
+                putString("playlist_name", playlist.name)
+                putString("playlist_id", "local_${playlist.name}") 
+            }
+            activity?.navigate(R.id.music_nav_detail, args)
         }
 
         historyAdapter = MusicSearchAdapter({ index ->
@@ -52,50 +77,85 @@ class MusicLibraryFragment : BaseFragment<FragmentMusicLibraryBinding>(
         }, { _, song ->
             showSongMenu(song)
         })
-        binding?.libraryHistoryRecycler?.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = historyAdapter
-        }
 
-        downloadsAdapter = MusicSearchAdapter({ index ->
-            viewModel.playQueue(downloadsAdapter.currentList, index)
-        }, { _, song ->
-            showSongMenu(song)
+        likedHeader = HeaderAdapter("Liked Songs", R.drawable.ic_baseline_favorite_24, onClick = {
+            // Toggle logic could be implemented by removing likedSongsAdapter from mainAdapter
         })
-        binding?.libraryDownloadsRecycler?.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = downloadsAdapter
-        }
 
-        playlistsAdapter = MusicPlaylistAdapter { playlist ->
-            val args = Bundle().apply {
-                putString("playlist_name", playlist.name)
-                // In local persistence we don't have a playlist ID, but we can pass name
-                putString("playlist_id", "local_${playlist.name}") 
-            }
-            activity?.navigate(R.id.music_nav_detail, args)
-        }
-        binding?.libraryPlaylistsRecycler?.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = playlistsAdapter
-        }
-
-        binding?.libraryLikedSongsHeader?.setOnClickListener {
-            val isVisible = binding?.libraryLikedSongsRecycler?.visibility == View.VISIBLE
-            binding?.libraryLikedSongsRecycler?.visibility = if (isVisible) View.GONE else View.VISIBLE
-        }
-
-        binding?.libraryDownloadsHeader?.setOnClickListener {
+        downloadsHeader = HeaderAdapter("Downloads", R.drawable.netflix_download, onClick = {
             activity?.navigate(R.id.music_nav_downloads)
-        }
+        })
 
-        binding?.libraryCreatePlaylist?.setOnClickListener {
-            showCreatePlaylistDialog()
+        playlistsHeader = HeaderAdapter("Playlists", null,
+            action1 = R.drawable.ic_baseline_add_24 to { showCreatePlaylistDialog() },
+            action2 = R.drawable.baseline_save_as_24 to { activity?.navigate(R.id.navigation_import_playlist) }
+        )
+
+        historyHeader = HeaderAdapter("Recently Played", null,
+            action1 = R.drawable.ic_baseline_arrow_forward_24 to { activity?.navigate(R.id.navigation_music_history) }
+        )
+
+        mainAdapter = ConcatAdapter(
+            likedHeader, likedSongsAdapter,
+            downloadsHeader, downloadsAdapter,
+            playlistsHeader, playlistsAdapter,
+            historyHeader, historyAdapter
+        )
+
+        binding?.libraryMainRecycler?.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = mainAdapter
         }
 
         binding?.librarySettings?.setOnClickListener {
             activity?.navigate(R.id.music_nav_settings)
         }
+    }
+
+    class HeaderAdapter(
+        private val title: String,
+        private val iconRes: Int?,
+        private val action1: Pair<Int, () -> Unit>? = null,
+        private val action2: Pair<Int, () -> Unit>? = null,
+        private val onClick: (() -> Unit)? = null
+    ) : RecyclerView.Adapter<HeaderAdapter.ViewHolder>() {
+
+        class ViewHolder(val binding: ItemMusicLibraryHeaderBinding) : RecyclerView.ViewHolder(binding.root)
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val binding = ItemMusicLibraryHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            return ViewHolder(binding)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.binding.libraryHeaderTitle.text = title
+            if (iconRes != null) {
+                holder.binding.libraryHeaderIcon.setImageResource(iconRes)
+                holder.binding.libraryHeaderIconCard.visibility = View.VISIBLE
+            } else {
+                holder.binding.libraryHeaderIconCard.visibility = View.GONE
+            }
+
+            holder.binding.root.setOnClickListener { onClick?.invoke() }
+
+            if (action1 != null) {
+                holder.binding.libraryHeaderAction1.setImageResource(action1.first)
+                holder.binding.libraryHeaderAction1.visibility = View.VISIBLE
+                holder.binding.libraryHeaderAction1.setOnClickListener { action1.second() }
+            } else {
+                holder.binding.libraryHeaderAction1.visibility = View.GONE
+            }
+
+            if (action2 != null) {
+                holder.binding.libraryHeaderAction2.setImageResource(action2.first)
+                holder.binding.libraryHeaderAction2.visibility = View.VISIBLE
+                holder.binding.libraryHeaderAction2.setOnClickListener { action2.second() }
+            } else {
+                holder.binding.libraryHeaderAction2.visibility = View.GONE
+            }
+        }
+
+        override fun getItemCount(): Int = 1
     }
 
     private fun showSongMenu(song: MusicSearchResponse) {
@@ -140,25 +200,18 @@ class MusicLibraryFragment : BaseFragment<FragmentMusicLibraryBinding>(
     private fun observeViewModel() {
         viewModel.likedSongs.observe(viewLifecycleOwner) { songs ->
             likedSongsAdapter.submitList(songs)
-            // Header is always visible, but we could update song count
         }
 
         viewModel.history.observe(viewLifecycleOwner) { history ->
             historyAdapter.submitList(history)
-            binding?.libraryHistoryEmpty?.visibility = if (history.isEmpty()) View.VISIBLE else View.GONE
-            binding?.libraryHistoryRecycler?.visibility = if (history.isEmpty()) View.GONE else View.VISIBLE
         }
 
         viewModel.downloadedSongs.observe(viewLifecycleOwner) { downloads ->
             downloadsAdapter.submitList(downloads)
-            binding?.libraryDownloadsEmpty?.visibility = if (downloads.isEmpty()) View.VISIBLE else View.GONE
-            binding?.libraryDownloadsRecycler?.visibility = if (downloads.isEmpty()) View.GONE else View.VISIBLE
         }
 
         viewModel.playlists.observe(viewLifecycleOwner) { playlists ->
             playlistsAdapter.submitList(playlists)
-            binding?.libraryPlaylistsEmpty?.visibility = if (playlists.isEmpty()) View.VISIBLE else View.GONE
-            binding?.libraryPlaylistsRecycler?.visibility = if (playlists.isEmpty()) View.GONE else View.VISIBLE
         }
     }
 }

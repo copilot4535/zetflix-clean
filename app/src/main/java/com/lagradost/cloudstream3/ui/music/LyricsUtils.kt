@@ -15,15 +15,18 @@ data class LyricsResponse(
     val syncedLyrics: String? = null
 )
 
-data class LrcLine(
-    val timeMs: Long,
+@Serializable
+data class LyricLine(
+    val timestampMs: Long,
     val text: String
 )
+
+typealias LrcLine = LyricLine
 
 object LrcParser {
     private val lrcRegex = Regex("\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})](.*)")
 
-    fun parse(lrc: String?): List<LrcLine> {
+    fun parse(lrc: String?): List<LyricLine> {
         if (lrc.isNullOrBlank()) return emptyList()
         
         return lrc.lines().mapNotNull { line ->
@@ -33,7 +36,7 @@ object LrcParser {
                 val timeMs = mm.toLong() * 60 * 1000 + 
                              ss.toLong() * 1000 + 
                              ms.padEnd(3, '0').take(3).toLong()
-                LrcLine(timeMs, text.trim())
+                LyricLine(timeMs, text.trim())
             } else null
         }
     }

@@ -119,6 +119,20 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".ui.music.MusicWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.lagradost.cloudstream3.music.ACTION_PLAY_PAUSE" />
+                <action android:name="com.lagradost.cloudstream3.music.ACTION_NEXT" />
+                <action android:name="com.lagradost.cloudstream3.music.ACTION_PREV" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/music_widget_info" />
+        </receiver>
+
         <service
             android:name=".services.VideoDownloadService"
             android:enabled="true"
@@ -143,7 +157,7 @@
         </service>
 
         <service
-            android:name=".services.music.MusicDownloadService"
+            android:name=".services.music.ZetFlixDownloadService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync">

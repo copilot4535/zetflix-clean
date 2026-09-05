@@ -14,6 +14,8 @@ import com.lagradost.cloudstream3.amap
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.mvvm.launchSafe
 import com.lagradost.cloudstream3.ui.APIRepository
+import com.lagradost.cloudstream3.ui.movie.BaseHomeViewModel
+import com.lagradost.cloudstream3.ui.movie.BaseHomeViewModel.ExpandableHomepageList
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterHomePageListByFilmQuality
 import com.lagradost.cloudstream3.utils.AppContextUtils.filterProviderByPreferredMedia
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe

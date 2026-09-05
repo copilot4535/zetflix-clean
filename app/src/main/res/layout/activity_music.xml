@@ -1,36 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/music_background_black">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/nav_host_fragment"
-        android:name="androidx.navigation.fragment.NavHostFragment"
+    <!-- Main Content Layout -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/music_content_layout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/music_navigation"
-        app:layout_constraintBottom_toTopOf="@+id/global_mini_player"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:visibility="gone"
+        tools:alpha="1"
+        tools:visibility="visible">
 
-    <include
-        layout="@layout/view_music_mini_player"
-        android:id="@+id/global_mini_player"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/music_bottom_nav" />
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/nav_host_fragment"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:defaultNavHost="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:navGraph="@navigation/music_navigation" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/music_bottom_nav"
+        <include
+            layout="@layout/view_music_mini_player"
+            android:id="@+id/global_mini_player"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintBottom_toTopOf="@+id/music_bottom_nav_container" />
+
+        <FrameLayout
+            android:id="@+id/music_bottom_nav_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginBottom="8dp"
+            android:elevation="20dp"
+            android:translationZ="20dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <com.google.android.material.bottomnavigation.BottomNavigationView
+                android:id="@+id/music_bottom_nav"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:background="@drawable/bg_music_floating_nav"
+                app:elevation="20dp"
+                app:itemIconSize="26dp"
+                app:itemIconTint="@color/music_bottom_nav_icon_color"
+                app:itemTextColor="@color/music_bottom_nav_icon_color"
+                app:labelVisibilityMode="labeled"
+                app:itemActiveIndicatorStyle="@null"
+                app:itemRippleColor="#33FFFFFF"
+                app:menu="@menu/music_bottom_nav_menu" />
+        </FrameLayout>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btn_return_to_movies"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:src="@drawable/ic_baseline_ondemand_video_24"
+            app:backgroundTint="@color/zetflix_accent"
+            app:tint="@color/white"
+            app:layout_constraintBottom_toTopOf="@+id/global_mini_player"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:contentDescription="Return to Movies" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Preloader Overlay -->
+    <LinearLayout
+        android:id="@+id/music_preloader_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/music_surface_dark"
-        app:itemIconTint="@color/white"
-        app:itemTextColor="@color/white"
-        app:labelVisibilityMode="labeled"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:menu="@menu/music_bottom_nav_menu" />
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="@color/music_background_black">
+
+        <ImageView
+            android:id="@+id/preloader_logo"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_zetflix_logo_text"
+            app:tint="@color/zetflix_accent" />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:indeterminate="true"
+            app:indicatorColor="@color/zetflix_accent"
+            app:trackColor="@color/zetflix_white_20" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

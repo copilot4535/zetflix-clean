@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#000000">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/music_home_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:contentInsetStart="0dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="16dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_zetflix_home_logo"
+                    android:contentDescription="ZetFlix Logo" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="@font/metropolis_bold"
+                    android:text="Music"
+                    android:textColor="@color/white"
+                    android:textSize="20sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/music_home_search"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/search_icon"
+                    app:tint="@color/white"
+                    tools:ignore="ContentDescription" />
+
+                <ImageButton
+                    android:id="@+id/music_home_history"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_baseline_replay_24"
+                    app:tint="@color/white"
+                    android:contentDescription="History" />
+
+                <ImageButton
+                    android:id="@+id/music_home_settings"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_outline_settings_24"
+                    app:tint="@color/white"
+                    tools:ignore="ContentDescription" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/music_home_profile"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="12dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/zetflix_white_20"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_outline_account_circle_24"
+                        app:tint="@color/white"
+                        android:contentDescription="Profile Icon" />
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+        </RelativeLayout>
+    </androidx.appcompat.widget.Toolbar>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingBottom="8dp">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/music_home_chip_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            app:singleLine="true"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_overview"
+                style="@style/MusicFilterChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Overview"
+                android:checked="true" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_charts"
+                style="@style/MusicFilterChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Charts" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_artists"
+                style="@style/MusicFilterChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Top Artists" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_podcasts"
+                style="@style/MusicFilterChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Podcasts" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_moods"
+                style="@style/MusicFilterChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Moods &amp; Genres" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_trending"
+                style="@style/MusicFilterChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trending" />
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+</LinearLayout>

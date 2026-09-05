@@ -35,6 +35,7 @@ class MusicDetailFragment : BaseFragment<FragmentMusicDetailBinding>(
 
         val albumId = arguments?.getString("album_id")
         val playlistId = arguments?.getString("playlist_id")
+        val params = arguments?.getString("params")
 
         if (playlistId?.startsWith("local_") == true) {
             val playlistName = playlistId.removePrefix("local_")
@@ -44,6 +45,8 @@ class MusicDetailFragment : BaseFragment<FragmentMusicDetailBinding>(
                 binding?.musicDetailSubtitle?.text = "${it.songs.size} songs"
                 binding?.musicDetailHeaderImage?.loadImage(it.songs.firstOrNull()?.thumbnailUrl)
             }
+        } else if (params != null && params != "null") {
+            viewModel.loadBrowseResult(params)
         } else if (albumId != null && albumId != "null") {
             viewModel.loadAlbumSongs(albumId)
             binding?.musicDetailTitle?.text = arguments?.getString("album_name")
@@ -63,6 +66,8 @@ class MusicDetailFragment : BaseFragment<FragmentMusicDetailBinding>(
             viewModel.playQueue(songs, index)
         }, { _, song ->
             showSongMenu(song)
+        }, { videoId, params ->
+            viewModel.prefetchUrl(videoId, params)
         })
         binding?.musicDetailRecycler?.apply {
             layoutManager = LinearLayoutManager(context)
@@ -91,16 +96,29 @@ class MusicDetailFragment : BaseFragment<FragmentMusicDetailBinding>(
 
     private fun observeViewModel() {
         observe(viewModel.searchResult) { resource ->
-            // In a real premium app, we would have a separate detail resource with header info
-            // For now, we'll extract header info from the first item if available
+            binding?.musicDetailLoading?.isVisible = resource is Resource.Loading
+            
             if (resource is Resource.Success) {
-                musicAdapter.submitList(resource.value)
-                val firstSong = resource.value.firstOrNull()
+                val songs = resource.value
+                binding?.musicDetailEmpty?.isVisible = songs.isEmpty()
+                binding?.musicDetailRecycler?.isVisible = songs.isNotEmpty()
+                binding?.musicDetailControls?.isVisible = songs.isNotEmpty()
+                
+                musicAdapter.submitList(songs)
+                
+                val firstSong = songs.firstOrNull()
                 if (firstSong != null) {
                     binding?.musicDetailHeaderImage?.loadImage(firstSong.thumbnailUrl)
-                    binding?.musicDetailTitle?.text = arguments?.getString("album_name") ?: firstSong.title
+                    binding?.musicDetailTitle?.text = arguments?.getString("album_name") 
+                                                      ?: arguments?.getString("playlist_name")
+                                                      ?: firstSong.title
                     binding?.musicDetailSubtitle?.text = firstSong.artist
                 }
+            } else if (resource is Resource.Failure) {
+                binding?.musicDetailEmpty?.isVisible = true
+                binding?.musicDetailEmpty?.text = resource.errorString
+                binding?.musicDetailRecycler?.isVisible = false
+                binding?.musicDetailControls?.isVisible = false
             }
         }
     }

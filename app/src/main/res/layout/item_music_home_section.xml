@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -10,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="bottom"
+        android:gravity="center_vertical"
         android:paddingHorizontal="20dp">
 
         <TextView
@@ -18,34 +19,31 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/white"
-            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
             android:fontFamily="@font/metropolis_bold"
-            android:letterSpacing="-0.02"
+            android:letterSpacing="-0.01"
             tools:text="Quick Picks" />
 
-        <TextView
+        <ImageButton
             android:id="@+id/section_see_all"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="More"
-            android:textColor="@color/music_text_secondary"
-            android:textSize="13sp"
-            android:fontFamily="@font/metropolis_bold"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="4dp"
-            android:background="@drawable/rounded_outline"
-            android:layout_marginBottom="2dp" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_baseline_arrow_forward_24"
+            app:tint="@color/white"
+            android:contentDescription="See all"
+            android:padding="8dp" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/section_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:clipToPadding="false"
         android:orientation="horizontal"
-        android:paddingHorizontal="14dp"
+        android:paddingHorizontal="12dp"
         tools:listitem="@layout/item_music_home_card" />
 
 </LinearLayout>

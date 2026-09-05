@@ -78,57 +78,73 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+        <ProgressBar
+            android:id="@+id/music_detail_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/music_detail_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"
+            android:fontFamily="@font/metropolis_medium"
+            android:text="No songs found in this collection"
+            android:textColor="@color/music_text_secondary"
+            android:visibility="gone" />
+
         <LinearLayout
+            android:id="@+id/music_detail_controls"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="100dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="16dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/music_detail_play_btn"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="24dp"
-                android:paddingVertical="16dp">
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Play"
+                app:icon="@drawable/ic_baseline_play_arrow_24"
+                app:cornerRadius="24dp"
+                android:backgroundTint="@color/zetflix_accent" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/music_detail_play_btn"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    android:text="Play"
-                    app:icon="@drawable/ic_baseline_play_arrow_24"
-                    app:cornerRadius="24dp"
-                    android:backgroundTint="@color/zetflix_accent" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/music_detail_shuffle_btn"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="Shuffle"
-                    app:icon="@drawable/baseline_sync_24"
-                    app:cornerRadius="24dp"
-                    android:textColor="@color/white"
-                    app:strokeColor="@color/zetflix_border" />
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/music_detail_recycler"
-                android:layout_width="match_parent"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/music_detail_shuffle_btn"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                tools:listitem="@layout/item_music_song" />
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Shuffle"
+                app:icon="@drawable/baseline_sync_24"
+                app:cornerRadius="24dp"
+                android:textColor="@color/white"
+                app:strokeColor="@color/zetflix_border" />
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/music_detail_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingBottom="84dp"
+            tools:listitem="@layout/item_music_song" />
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

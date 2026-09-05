@@ -17,7 +17,7 @@ class MusicDownloadService : DownloadService(
     0
 ) {
     override fun getDownloadManager(): DownloadManager {
-        return MusicDownloadManager.getDownloadManager(this)
+        return MusicDownloadManager.getDownloadManager(this)!!
     }
 
     override fun getScheduler(): Scheduler? {

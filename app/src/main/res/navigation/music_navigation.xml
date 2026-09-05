@@ -45,6 +45,11 @@
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="params"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
     </fragment>
 
     <!-- Artist Profile -->
@@ -119,7 +124,52 @@
         android:name="com.lagradost.cloudstream3.ui.music.SleepTimerBottomSheetFragment"
         android:label="Sleep Timer" />
 
+    <dialog
+        android:id="@+id/navigation_song_credits"
+        android:name="com.lagradost.cloudstream3.ui.music.SongCreditsBottomSheet"
+        android:label="Song Credits" />
+
+    <dialog
+        android:id="@+id/navigation_queue_sheet"
+        android:name="com.lagradost.cloudstream3.ui.music.QueueBottomSheet"
+        android:label="Queue" />
+
+    <dialog
+        android:id="@+id/navigation_import_playlist"
+        android:name="com.lagradost.cloudstream3.ui.music.ImportPlaylistDialogFragment"
+        android:label="Import Playlist" />
+
+    <dialog
+        android:id="@+id/navigation_music_combined_panel"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicCombinedBottomSheetFragment"
+        android:label="Lyrics and Queue">
+        <argument
+            android:name="initial_tab"
+            android:defaultValue="0"
+            app:argType="integer" />
+    </dialog>
+
+    <fragment
+        android:id="@+id/navigation_music_charts"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicChartsFragment"
+        android:label="Charts"
+        tools:layout="@layout/fragment_music_charts" />
+
+    <fragment
+        android:id="@+id/navigation_music_history"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicHistoryFragment"
+        android:label="Recently Played"
+        tools:layout="@layout/fragment_music_history" />
+
     <!-- Global actions for easy access from any fragment in the music graph -->
+    <action
+        android:id="@+id/global_to_navigation_music_history"
+        app:destination="@id/navigation_music_history"
+        app:enterAnim="@anim/enter_anim"
+        app:exitAnim="@anim/exit_anim"
+        app:popEnterAnim="@anim/enter_anim"
+        app:popExitAnim="@anim/exit_anim" />
+
     <action
         android:id="@+id/global_to_navigation_music_player"
         app:destination="@id/navigation_music_player"

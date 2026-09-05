@@ -11,7 +11,8 @@ import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 
 class MusicSearchAdapter(
     private val onSongClick: (Int) -> Unit,
-    private val onMenuClick: ((View, MusicSearchResponse) -> Unit)? = null
+    private val onMenuClick: ((View, MusicSearchResponse) -> Unit)? = null,
+    private val onPrefetch: (String, String?) -> Unit = { _, _ -> }
 ) : ListAdapter<MusicSearchResponse, MusicSearchAdapter.MusicViewHolder>(MusicDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MusicViewHolder {
@@ -20,7 +21,9 @@ class MusicSearchAdapter(
     }
 
     override fun onBindViewHolder(holder: MusicViewHolder, position: Int) {
-        holder.bind(getItem(position), position)
+        val song = getItem(position)
+        onPrefetch(song.videoId, song.params)
+        holder.bind(song, position)
     }
 
     inner class MusicViewHolder(private val binding: ItemMusicSongBinding) :

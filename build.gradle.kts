@@ -7,4 +7,6 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.firebase.testlab) apply false
 }

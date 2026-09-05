@@ -1,6 +1,7 @@
 package com.lagradost.cloudstream3.ui.music
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -27,48 +28,26 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
         super.onViewReady(view, savedInstanceState)
         
         setupRecyclerView()
-        setupGenreChips()
         observeViewModel()
         
         if (viewModel.homeSections.value !is Resource.Success) {
             viewModel.loadHomeSections()
         }
-    }
-
-    private fun setupGenreChips() {
-        binding?.musicHomeGenreChips?.setOnCheckedStateChangeListener { group, checkedIds ->
-            val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
-            val args = Bundle()
-            if (checkedId == R.id.chip_moods_and_genres) {
-                args.putString("title", "Moods & Genres")
-                args.putString("params", "moods_and_genres")
-            } else {
-                val chip = group.findViewById<com.google.android.material.chip.Chip>(checkedId)
-                val title = chip.text.toString()
-                args.putString("title", title)
-                args.putString("params", "genre_$title")
-            }
-            activity?.navigate(R.id.music_nav_genre, args)
-            // Uncheck so it can be clicked again
-            group.clearCheck()
+        
+        binding?.musicHomeSwipeRefresh?.setOnRefreshListener {
+            viewModel.loadHomeSections()
+            binding?.musicHomeSwipeRefresh?.isRefreshing = false
         }
     }
 
     private fun setupRecyclerView() {
         homeAdapter = MusicHomeAdapter({ section, index ->
             val item = section.items[index]
-            android.util.Log.d("MusicHome", "Clicked item: ${item.title}, type: ${item.type}, id: ${item.id}")
             when (item.type) {
                 MusicItemType.SONG -> {
-                    // Filter section items to only include songs for the queue
                     val songItems = section.items.filter { it.type == MusicItemType.SONG }
                     val songs = songItems.map {
-                        MusicSearchResponse(
-                            title = it.title,
-                            artist = it.subtitle,
-                            videoId = it.id,
-                            thumbnailUrl = it.thumbnailUrl
-                        )
+                        MusicSearchResponse(it.title, it.subtitle, it.id, it.thumbnailUrl, it.params)
                     }
                     val songIndex = songItems.indexOf(item).coerceAtLeast(0)
                     viewModel.playQueue(songs, songIndex)
@@ -84,6 +63,7 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                     val args = Bundle().apply {
                         putString("playlist_id", item.id)
                         putString("playlist_name", item.title)
+                        putString("params", item.params)
                     }
                     activity?.navigate(R.id.music_nav_detail, args)
                 }
@@ -96,10 +76,32 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                 }
             }
         }, { section ->
-            val args = Bundle().apply {
-                putString("title", section.title)
+            val params = section.params
+            if (params != null) {
+                val args = Bundle().apply {
+                    putString("title", section.title)
+                    putString("params", params)
+                }
+                activity?.navigate(R.id.music_nav_genre, args)
             }
-            activity?.navigate(R.id.music_nav_genre, args)
+        }, { videoId, params ->
+            viewModel.prefetchUrl(videoId, params)
+        }, { viewId ->
+            when (viewId) {
+                R.id.music_home_search -> activity?.navigate(R.id.music_nav_search)
+                R.id.music_home_history -> activity?.navigate(R.id.navigation_music_history)
+                R.id.music_home_settings -> activity?.navigate(R.id.music_nav_settings)
+                R.id.music_home_profile -> { /* Profile */ }
+            }
+        }, { checkedId ->
+            when (checkedId) {
+                R.id.chip_overview -> scrollToSection(null)
+                R.id.chip_charts -> scrollToSection("Charts")
+                R.id.chip_artists -> scrollToSection("Top Artists")
+                R.id.chip_podcasts -> scrollToSection("Podcasts")
+                R.id.chip_moods -> scrollToSection("Moods & Genres")
+                R.id.chip_trending -> scrollToSection("Trending")
+            }
         })
         binding?.musicHomeRecycler?.apply {
             layoutManager = LinearLayoutManager(context)
@@ -107,15 +109,34 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
         }
     }
 
+    private fun scrollToSection(title: String?) {
+        val recycler = binding?.musicHomeRecycler ?: return
+        if (title == null) {
+            recycler.smoothScrollToPosition(0)
+            return
+        }
+
+        val sections = homeAdapter.currentList
+        val index = sections.indexOfFirst { it.title.contains(title, true) }
+        if (index != -1) {
+            val scroller = object : androidx.recyclerview.widget.LinearSmoothScroller(context) {
+                override fun getVerticalSnapPreference(): Int = SNAP_TO_START
+            }
+            scroller.targetPosition = index
+            recycler.layoutManager?.startSmoothScroll(scroller)
+        }
+    }
+
 
 
     private fun observeViewModel() {
-        observe(viewModel.queueReady) { resource ->
-            when (resource) {
-                is Resource.Failure -> {
+        viewModel.queueReady.observe(viewLifecycleOwner) { event ->
+            val content = event.peekContent()
+            val (resource, requestId) = content
+            if (requestId == viewModel.currentQueueRequestId) {
+                if (resource is Resource.Failure) {
                     Toast.makeText(context, "Queue Error: ${resource.errorString}", Toast.LENGTH_LONG).show()
                 }
-                else -> {}
             }
         }
 
@@ -124,20 +145,36 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
                 if (resource is Resource.Loading) {
                     binding?.musicHomeShimmerView?.root?.isVisible = true
                     shimmer.startShimmer()
+                    binding?.musicHomeRecycler?.isVisible = false
+                    binding?.musicHomeEmptyState?.isVisible = false
                 } else {
                     shimmer.stopShimmer()
                     binding?.musicHomeShimmerView?.root?.isVisible = false
+                    binding?.musicHomeRecycler?.isVisible = resource is Resource.Success
                 }
             }
             binding?.musicHomeErrorText?.isVisible = resource is Resource.Failure
             
             when (resource) {
                 is Resource.Success -> {
-                    homeAdapter.submitList(resource.value)
+                    val sections = resource.value
+                    if (sections.isEmpty()) {
+                        binding?.musicHomeEmptyState?.isVisible = true
+                        binding?.musicHomeRecycler?.isVisible = false
+                    } else {
+                        binding?.musicHomeEmptyState?.isVisible = false
+                        binding?.musicHomeRecycler?.isVisible = true
+                        
+                        val listWithHeader = mutableListOf<MusicHomeSection>()
+                        listWithHeader.add(MusicHomeSection(MusicHomeAdapter.HEADER_ID, emptyList()))
+                        listWithHeader.addAll(sections)
+                        homeAdapter.submitList(listWithHeader)
+                    }
                 }
                 is Resource.Failure -> {
                     binding?.musicHomeErrorText?.isVisible = true
                     binding?.musicHomeErrorText?.text = resource.errorString
+                    binding?.musicHomeEmptyState?.isVisible = false
                     android.util.Log.e("MusicHome", "Failed to load sections: ${resource.errorString}")
                 }
                 else -> {}

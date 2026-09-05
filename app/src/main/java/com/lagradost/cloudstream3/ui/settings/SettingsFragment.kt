@@ -28,11 +28,11 @@ import com.lagradost.cloudstream3.ui.APIRepository
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.ui.auth.ZetFlixAuthPrefs
 import com.lagradost.cloudstream3.ui.clear
-import com.lagradost.cloudstream3.ui.home.HomeChildItemAdapter
-import com.lagradost.cloudstream3.ui.home.ParentItemAdapter
+import com.lagradost.cloudstream3.ui.movie.HomeChildItemAdapter
+import com.lagradost.cloudstream3.ui.movie.ParentItemAdapter
 import com.lagradost.cloudstream3.ui.player.source_priority.QualityProfileDialog
-import com.lagradost.cloudstream3.ui.search.SearchAdapter
-import com.lagradost.cloudstream3.ui.search.SearchResultBuilder
+import com.lagradost.cloudstream3.ui.movie.SearchAdapter
+import com.lagradost.cloudstream3.ui.movie.SearchResultBuilder
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLandscape
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
