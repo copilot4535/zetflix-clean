@@ -1,0 +1,6 @@
+- [x] Create default background drawable
+- [ ] Fix `PlayerView` transparency in `fragment_music_player.xml`
+- [ ] Fix animation cancellation in `MusicColorHelper.kt`
+- [ ] Implement redundant call guard in `MusicPlayerFragment.kt`
+- [ ] Improve fallback color logic in `MusicPlayerFragment.kt`
+- [ ] Verify build and behavior

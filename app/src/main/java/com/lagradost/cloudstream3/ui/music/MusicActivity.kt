@@ -58,6 +58,7 @@ class MusicActivity : AppCompatActivity() {
     private lateinit var viewModel: MusicViewModel
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
+    private var miniPlayerAnimator: android.animation.ValueAnimator? = null
 
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private val progressRunnable = object : Runnable {

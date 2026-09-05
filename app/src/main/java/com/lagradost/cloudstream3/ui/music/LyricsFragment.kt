@@ -29,6 +29,7 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
     
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
+    private var lyricsBackgroundAnimator: android.animation.ValueAnimator? = null
     
     private val handler = Handler(Looper.getMainLooper())
     private val updateRunnable = object : Runnable {
@@ -135,7 +136,8 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
         val color2 = MusicColorHelper.darkenColor(palette.vibrantColor, 0.4f)
         val targetColors = intArrayOf(color1, color2, 0xFF000000.toInt())
 
-        MusicColorHelper.animateGradientChange(
+        lyricsBackgroundAnimator?.cancel()
+        lyricsBackgroundAnimator = MusicColorHelper.animateGradientChange(
             binding?.lyricsBackgroundGradient,
             currentGradientColors,
             targetColors

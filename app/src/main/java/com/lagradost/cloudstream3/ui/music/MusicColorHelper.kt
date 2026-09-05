@@ -3,6 +3,8 @@ package com.lagradost.cloudstream3.ui.music
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.graphics.Bitmap
+import android.graphics.drawable.GradientDrawable
+import android.view.View
 import androidx.annotation.ColorInt
 import androidx.palette.graphics.Palette
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +20,7 @@ data class MusicPalette(
 object MusicColorHelper {
     private val paletteCache = mutableMapOf<String, MusicPalette>()
 
-    private const val DEFAULT_SURFACE = 0xFF1A1A1A.toInt()
+    private const val DEFAULT_SURFACE = 0xFF121212.toInt()
     private const val DEFAULT_ACCENT = 0xFFE50914.toInt()
 
     suspend fun getPalette(mediaId: String?, bitmap: Bitmap): MusicPalette = withContext(Dispatchers.Default) {
@@ -65,17 +67,19 @@ object MusicColorHelper {
         return android.graphics.Color.argb(a, r, g, b)
     }
 
-    fun animateColorChange(@ColorInt fromColor: Int, @ColorInt toColor: Int, duration: Long = 500L, onUpdate: (Int) -> Unit) {
+    fun animateColorChange(@ColorInt fromColor: Int, @ColorInt toColor: Int, duration: Long = 500L, onUpdate: (Int) -> Unit): ValueAnimator {
         val animator = ValueAnimator.ofObject(ArgbEvaluator(), fromColor, toColor)
         animator.duration = duration
         animator.addUpdateListener {
             onUpdate(it.animatedValue as Int)
         }
         animator.start()
+        return animator
     }
 
-    fun animateGradientChange(view: android.view.View?, fromColors: IntArray, toColors: IntArray, duration: Long = 500L) {
-        if (view == null) return
+    fun animateGradientChange(view: View?, fromColors: IntArray, toColors: IntArray, duration: Long = 500L): ValueAnimator? {
+        if (view == null) return null
+        
         val animator = ValueAnimator.ofFloat(0f, 1f)
         animator.duration = duration
         val evaluator = ArgbEvaluator()
@@ -86,12 +90,14 @@ object MusicColorHelper {
                 val from = if (i < fromColors.size) fromColors[i] else fromColors.last()
                 colors[i] = evaluator.evaluate(fraction, from, toColors[i]) as Int
             }
-            val gradient = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+            val gradient = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
                 colors
             )
             view.background = gradient
+            view.invalidate()
         }
         animator.start()
+        return animator
     }
 }

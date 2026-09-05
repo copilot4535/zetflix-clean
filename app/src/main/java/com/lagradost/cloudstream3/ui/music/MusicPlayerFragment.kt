@@ -60,6 +60,9 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
     private var isLiked = false
+    private var lastThemedMediaId: String? = null
+    private var currentGradientColors = intArrayOf(Color.BLACK, Color.BLACK, Color.BLACK)
+    private var backgroundAnimator: android.animation.ValueAnimator? = null
 
     private val swipeGestureDetector by lazy {
         GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
@@ -316,6 +319,9 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     }
 
     private fun loadArtworkAndTheme(url: String?, videoId: String?) {
+        if (videoId != null && videoId == lastThemedMediaId) return
+        lastThemedMediaId = videoId
+
         if (url.isNullOrBlank()) {
             startPostponedEnterTransition()
             return
@@ -524,15 +530,19 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
     }
 
-    private var currentGradientColors = intArrayOf(Color.BLACK, Color.BLACK, Color.BLACK)
-
     private fun applyDynamicTheming(palette: MusicPalette) {
-        val targetColors = intArrayOf(palette.vibrantColor, palette.dominantColor, palette.darkMutedColor)
+        val defaultSurface = 0xFF121212.toInt()
+        val defaultAccent = context?.getColor(R.color.zetflix_accent) ?: Color.RED
+
+        val dominant = if (palette.dominantColor != Color.BLACK && palette.dominantColor != 0xFF1A1A1A.toInt()) palette.dominantColor else defaultSurface
+        val vibrant = if (palette.vibrantColor != Color.BLACK && palette.vibrantColor != 0xFFE50914.toInt()) palette.vibrantColor else defaultAccent
+        val darkMuted = if (palette.darkMutedColor != Color.BLACK) palette.darkMutedColor else Color.BLACK
+
+        val targetColors = intArrayOf(vibrant, dominant, darkMuted)
         MusicColorHelper.animateGradientChange(binding?.musicPlayerBackgroundGradient, currentGradientColors, targetColors)
         currentGradientColors = targetColors
 
-        val accentColor = if (palette.vibrantColor != Color.BLACK) palette.vibrantColor else context?.getColor(R.color.zetflix_accent) ?: Color.RED
-        val buttonTint = ColorStateList.valueOf(accentColor)
+        val buttonTint = ColorStateList.valueOf(vibrant)
 
         binding?.let { b ->
             b.musicPlayerView.findViewById<ImageButton>(R.id.music_player_shuffle)?.imageTintList = buttonTint
