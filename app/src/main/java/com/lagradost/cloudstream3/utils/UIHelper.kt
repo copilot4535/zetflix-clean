@@ -82,6 +82,12 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.disableBackPressedCallback
 import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.enableBackPressedCallback
+import androidx.transition.ChangeBounds
+import androidx.transition.ChangeClipBounds
+import androidx.transition.ChangeImageTransform
+import androidx.transition.ChangeTransform
+import androidx.transition.TransitionSet
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 
 /**
  * Smoothly scrolls to the top of the RecyclerView with a custom speed.
@@ -710,6 +716,17 @@ object UIHelper {
 
         popup.show()
         return popup
+    }
+
+    fun getSharedElementTransition(duration: Long = 400L): TransitionSet {
+        return TransitionSet().apply {
+            addTransition(ChangeBounds())
+            addTransition(ChangeTransform())
+            addTransition(ChangeImageTransform())
+            addTransition(ChangeClipBounds())
+            this.duration = duration
+            interpolator = FastOutSlowInInterpolator()
+        }
     }
 }
 

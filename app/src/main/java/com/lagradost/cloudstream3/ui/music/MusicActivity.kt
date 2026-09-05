@@ -297,7 +297,7 @@ class MusicActivity : AppCompatActivity() {
     private fun setupGlobalMiniPlayer() {
         binding.globalMiniPlayer.musicMiniPlayer.setOnClickListener {
             val extras = FragmentNavigatorExtras(
-                binding.globalMiniPlayer.musicMiniThumbnail to "album_art"
+                binding.globalMiniPlayer.musicMiniThumbnailCard to "album_art"
             )
             this.navigate(R.id.global_to_navigation_music_player, extras = extras)
         }
@@ -311,7 +311,7 @@ class MusicActivity : AppCompatActivity() {
         // Ensure thumbnail card also triggers navigation
         binding.globalMiniPlayer.musicMiniThumbnailCard.setOnClickListener {
             val extras = FragmentNavigatorExtras(
-                binding.globalMiniPlayer.musicMiniThumbnail to "album_art"
+                binding.globalMiniPlayer.musicMiniThumbnailCard to "album_art"
             )
             this.navigate(R.id.global_to_navigation_music_player, extras = extras)
         }
@@ -368,23 +368,32 @@ class MusicActivity : AppCompatActivity() {
         val shouldShow = !isFullScreen && hasMedia && !isIdle
         
         if (shouldShow) {
-            binding.globalMiniPlayer.musicMiniPlayer.isVisible = true
-            binding.globalMiniPlayer.musicMiniPlayer.alpha = 1f
+            if (!binding.globalMiniPlayer.musicMiniPlayer.isVisible || binding.globalMiniPlayer.musicMiniPlayer.alpha < 1f) {
+                binding.globalMiniPlayer.musicMiniPlayer.isVisible = true
+                binding.globalMiniPlayer.musicMiniPlayer.animate()
+                    .alpha(1f)
+                    .setDuration(400)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator())
+                    .start()
+            }
         } else if (isFullScreen) {
-            // Delay hiding if entering player to allow shared element transition
+            // Smoothly hide mini player if entering full player
             if (isPlayer && binding.globalMiniPlayer.musicMiniPlayer.isVisible) {
                 binding.globalMiniPlayer.musicMiniPlayer.animate()
                     .alpha(0f)
-                    .setDuration(300)
+                    .setDuration(400)
+                    .setInterpolator(android.view.animation.AccelerateInterpolator())
                     .withEndAction {
                         binding.globalMiniPlayer.musicMiniPlayer.isVisible = false
                     }
                     .start()
             } else {
                 binding.globalMiniPlayer.musicMiniPlayer.isVisible = false
+                binding.globalMiniPlayer.musicMiniPlayer.alpha = 0f
             }
         } else {
             binding.globalMiniPlayer.musicMiniPlayer.isVisible = false
+            binding.globalMiniPlayer.musicMiniPlayer.alpha = 0f
         }
     }
 

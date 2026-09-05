@@ -45,7 +45,8 @@ import com.lagradost.cloudstream3.ui.music.RateStatus
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import androidx.appcompat.app.AlertDialog
-import androidx.transition.TransitionInflater
+import androidx.transition.Fade
+import com.lagradost.cloudstream3.utils.UIHelper.getSharedElementTransition
 
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -103,10 +104,15 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = TransitionInflater.from(requireContext())
-            .inflateTransition(android.R.transition.move)
-        sharedElementReturnTransition = TransitionInflater.from(requireContext())
-            .inflateTransition(android.R.transition.move)
+        sharedElementEnterTransition = getSharedElementTransition()
+        sharedElementReturnTransition = getSharedElementTransition()
+        
+        enterTransition = Fade().apply {
+            duration = 300
+        }
+        returnTransition = Fade().apply {
+            duration = 300
+        }
     }
 
     override fun fixLayout(view: View) {}
@@ -314,6 +320,16 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             startPostponedEnterTransition()
             return
         }
+        
+        // Use a flag to avoid multiple calls to startPostponedEnterTransition
+        var transitionStarted = false
+        fun safeStartTransition() {
+            if (!transitionStarted) {
+                transitionStarted = true
+                startPostponedEnterTransition()
+            }
+        }
+
         binding?.musicPlayerAlbumArt?.loadImage(url) {
             listener(
                 onSuccess = { _, result ->
@@ -326,13 +342,18 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                             }
                         }
                     }
-                    startPostponedEnterTransition()
+                    safeStartTransition()
                 },
                 onError = { _, _ ->
-                    startPostponedEnterTransition()
+                    safeStartTransition()
                 }
             )
         }
+        
+        // Safety timeout for transition postponement
+        view?.postDelayed({
+            safeStartTransition()
+        }, 1000)
     }
 
     private fun updateShuffleIcon(enabled: Boolean) {

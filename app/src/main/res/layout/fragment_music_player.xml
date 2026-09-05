@@ -85,6 +85,7 @@
         app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="24dp"
         app:cardElevation="16dp"
+        android:transitionName="album_art"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -95,7 +96,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:transitionName="album_art"
             android:contentDescription="Album Art"
             tools:src="@drawable/default_cover" />
     </com.google.android.material.card.MaterialCardView>
