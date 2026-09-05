@@ -118,7 +118,10 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
         // Handle insets for the player
         ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val insetTypes = WindowInsetsCompat.Type.systemBars() or 
+                            WindowInsetsCompat.Type.displayCutout()
+            val bars = insets.getInsets(insetTypes)
+            
             binding?.musicPlayerTopBar?.updatePadding(top = bars.top)
             binding?.musicPlayerView?.updatePadding(bottom = bars.bottom)
             insets

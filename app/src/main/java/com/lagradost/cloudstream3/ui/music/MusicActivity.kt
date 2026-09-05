@@ -85,23 +85,6 @@ class MusicActivity : AppCompatActivity() {
             returnToMain()
         }
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.musicContentLayout) { view, insets ->
-            val insetTypes = WindowInsetsCompat.Type.systemBars() or 
-                            WindowInsetsCompat.Type.displayCutout()
-            val bars = insets.getInsets(insetTypes)
-            
-            // Reduce excessive padding: top by 4dp, bottom by 8dp where possible
-            val density = resources.displayMetrics.density
-            val reducedTop = maxOf(0, bars.top - (4 * density).toInt())
-            val reducedBottom = maxOf(0, bars.bottom - (4 * density).toInt())
-            
-            view.updatePadding(
-                top = reducedTop,
-                bottom = reducedBottom
-            )
-            insets
-        }
-
         // Trigger background initialization
         viewModel.initMusic()
     }
@@ -210,14 +193,6 @@ class MusicActivity : AppCompatActivity() {
             // Use the color selector created in res/color/music_bottom_nav_icon_color.xml
             itemIconTintList = ContextCompat.getColorStateList(context, R.color.music_bottom_nav_icon_color)
             itemTextColor = ContextCompat.getColorStateList(context, R.color.music_bottom_nav_icon_color)
-            
-            // Properly handle M3 indicator by making it transparent
-            try {
-                itemActiveIndicatorColor = android.content.res.ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
-            } catch (e: Exception) {
-                // Fallback for older library versions if any
-            }
-            itemRippleColor = android.content.res.ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
         }
 
         navController.addOnDestinationChangedListener { _, destination, _ ->

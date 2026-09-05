@@ -5,7 +5,7 @@
     android:id="@+id/music_player_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/music_background_black">
+    android:background="@android:color/transparent">
 
     <View
         android:id="@+id/music_player_background_gradient"
