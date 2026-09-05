@@ -254,6 +254,10 @@ class MusicViewModel : ViewModel() {
                     _searchResult.postValue(Resource.Failure(false, "No results found"))
                 } else {
                     _searchResult.postValue(Resource.Success(results))
+                    // Prefetch top 3 results for instant playback
+                    results.take(3).forEach { song ->
+                        prefetchUrl(song.videoId, song.params)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MusicSearch", "Search failed for query: $query", e)
@@ -360,6 +364,15 @@ class MusicViewModel : ViewModel() {
                     }
 
                     _homeSections.postValue(Resource.Success(finalSections))
+                    
+                    // Prefetch items from priority sections
+                    finalSections.take(2).forEach { section ->
+                        section.items.take(3).forEach { item ->
+                            if (item.type == MusicItemType.SONG) {
+                                prefetchUrl(item.id, item.params)
+                            }
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MusicViewModel", "Failed to load merged home sections", e)
@@ -375,6 +388,7 @@ class MusicViewModel : ViewModel() {
                 // Fetch curated trending songs (fallback to popular search)
                 val songs = repository.searchSongs("trending music")
                 _searchResult.postValue(Resource.Success(songs))
+                songs.take(5).forEach { prefetchUrl(it.videoId, it.params) }
             } catch (e: Exception) {
                 Log.e("MusicViewModel", "Failed to load trending songs", e)
                 _searchResult.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
@@ -388,6 +402,7 @@ class MusicViewModel : ViewModel() {
             try {
                 val songs = repository.getAlbumSongs(albumId)
                 _searchResult.postValue(Resource.Success(songs))
+                songs.take(5).forEach { prefetchUrl(it.videoId, it.params) }
             } catch (e: Exception) {
                 Log.e("MusicViewModel", "Failed to load album songs", e)
                 _searchResult.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
@@ -401,6 +416,7 @@ class MusicViewModel : ViewModel() {
             try {
                 val songs = repository.getPlaylistSongs(playlistId)
                 _searchResult.postValue(Resource.Success(songs))
+                songs.take(5).forEach { prefetchUrl(it.videoId, it.params) }
             } catch (e: Exception) {
                 Log.e("MusicViewModel", "Failed to load playlist songs", e)
                 _searchResult.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
@@ -537,6 +553,7 @@ class MusicViewModel : ViewModel() {
     private suspend fun extractAndCache(videoId: String, params: String? = null): String? {
         val url = extractStreamUrl(videoId, params)
         if (url != null) {
+            Log.d("MusicViewModel", "Prefetch success for $videoId: $url")
             StreamUrlCache.put(videoId, url)
         }
         return url

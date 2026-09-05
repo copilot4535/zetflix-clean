@@ -22,7 +22,13 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.core.view.updateLayoutParams
+import com.lagradost.cloudstream3.CommonActivity
+import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.insecureApp
+import com.lagradost.cloudstream3.UnsafeSSL
+import com.lagradost.cloudstream3.network.initClient
 import com.lagradost.cloudstream3.databinding.ActivityMusicBinding
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.services.music.MusicService
@@ -67,6 +73,11 @@ class MusicActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        app.initClient(this, ignoreSSL = false)
+        @OptIn(UnsafeSSL::class)
+        insecureApp.initClient(this, ignoreSSL = true)
+        CommonActivity.init(this)
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdgeCompat()
         binding = ActivityMusicBinding.inflate(layoutInflater)
@@ -82,6 +93,7 @@ class MusicActivity : AppCompatActivity() {
         handler.post(progressRunnable)
         
         setupBackHandler()
+        setupInsets()
 
         binding.btnReturnToMovies.setOnClickListener {
             returnToMain()
@@ -156,7 +168,8 @@ class MusicActivity : AppCompatActivity() {
 
     private fun setupInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.musicContentLayout) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val displayCutout = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
             
             val navHostFragment = supportFragmentManager
                 .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
@@ -166,12 +179,15 @@ class MusicActivity : AppCompatActivity() {
             val isImmersive = destinationId == R.id.navigation_music_player || 
                              destinationId == R.id.navigation_lyrics
             
-            // For standard screens, pad the top to stay below status bar
-            // For immersive screens, allow content to draw behind status bar (fragments handle their own insets)
+            val topInset = maxOf(systemBars.top, displayCutout.top)
+            val bottomInset = systemBars.bottom
+            
+            // For standard screens, pad the top and bottom to respect system bars
             v.updatePadding(
-                top = if (isImmersive) 0 else insets.top,
-                bottom = insets.bottom
+                top = if (isImmersive) 0 else topInset,
+                bottom = if (isImmersive) 0 else bottomInset
             )
+            
             windowInsets
         }
     }

@@ -11,8 +11,19 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:alpha="0.3"
+        android:alpha="0.15"
         tools:src="@drawable/default_cover" />
+
+    <View
+        android:id="@+id/lyrics_background_gradient"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <View
+        android:id="@+id/lyrics_background_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000" />
 
     <LinearLayout
         android:layout_width="match_parent"

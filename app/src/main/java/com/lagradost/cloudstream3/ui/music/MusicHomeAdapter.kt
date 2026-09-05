@@ -198,8 +198,13 @@ class MusicHomeItemAdapter(
     inner class PodcastVerticalViewHolder(private val binding: ItemMusicPodcastCardVerticalBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: MusicHomeItem, position: Int) {
             binding.podcastTitle.text = item.title
-            binding.podcastSubtitle.text = item.subtitle
-            binding.podcastAuthor.text = item.subtitle?.split("•")?.firstOrNull()?.trim() ?: "ZetFlix Podcast"
+            
+            val subtitleParts = item.subtitle?.split("•", limit = 2)
+            val showName = subtitleParts?.getOrNull(0)?.trim()
+            val description = subtitleParts?.getOrNull(1)?.trim() ?: item.subtitle
+            
+            binding.podcastShowName.text = showName ?: "ZetFlix Podcast"
+            binding.podcastDescription.text = description
             
             binding.podcastThumbnail.loadImage(item.thumbnailUrl) {
                 listener(onSuccess = { _, result ->
@@ -207,10 +212,19 @@ class MusicHomeItemAdapter(
                     if (bitmap != null) {
                         androidx.palette.graphics.Palette.from(bitmap).generate { palette ->
                             val color = palette?.getDarkMutedColor(Color.parseColor("#121212")) ?: Color.parseColor("#121212")
-                            binding.root.setCardBackgroundColor(color)
+                            val darkenedColor = MusicColorHelper.darkenColor(color, 0.4f)
+                            binding.podcastCardRoot.setCardBackgroundColor(darkenedColor)
                         }
                     }
                 })
+            }
+
+            binding.btnPlay.setOnClickListener { onItemClick(position) }
+            binding.btnAdd.setOnClickListener { 
+                // Add to library / playlist
+            }
+            binding.btnMore.setOnClickListener {
+                // Show more options
             }
             binding.root.setOnClickListener { onItemClick(position) }
         }

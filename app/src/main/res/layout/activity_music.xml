@@ -51,16 +51,17 @@
 
             <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/music_bottom_nav"
-                android:layout_width="280dp"
+                android:layout_width="260dp"
                 android:layout_height="64dp"
                 android:background="@drawable/bg_music_floating_nav"
                 app:elevation="20dp"
-                app:itemIconSize="24dp"
+                app:itemIconSize="22dp"
                 app:itemIconTint="@color/music_bottom_nav_icon_color"
                 app:itemTextColor="@color/music_bottom_nav_icon_color"
                 app:labelVisibilityMode="labeled"
-                app:itemActiveIndicatorStyle="@null"
+                app:itemHorizontalTranslationEnabled="false"
                 app:itemRippleColor="#33FFFFFF"
+                app:itemActiveIndicatorStyle="@null"
                 app:menu="@menu/music_bottom_nav_menu" />
         </FrameLayout>
 

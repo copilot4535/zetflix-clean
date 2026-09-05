@@ -3,8 +3,11 @@
     android:id="@+id/lyrics_line_text"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="12dp"
-    android:textSize="18sp"
-    android:fontFamily="@font/metropolis_medium"
-    android:textColor="@color/music_text_secondary"
-    android:gravity="center" />
+    android:paddingHorizontal="24dp"
+    android:paddingVertical="12dp"
+    android:textSize="20sp"
+    android:fontFamily="sans-serif-medium"
+    android:textColor="#B3B3B3"
+    android:lineSpacingExtra="6dp"
+    android:gravity="start|center_vertical"
+    android:textAlignment="viewStart" />

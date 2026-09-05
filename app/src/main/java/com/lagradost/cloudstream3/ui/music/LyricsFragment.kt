@@ -18,6 +18,9 @@ import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import com.lagradost.cloudstream3.utils.UIHelper.dismissSafe
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import coil3.asDrawable
 
 class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
     BindingCreator.Inflate(FragmentLyricsBinding::inflate)
@@ -42,7 +45,11 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
         
         val isChild = arguments?.getBoolean(MusicCombinedBottomSheetFragment.ARG_IS_CHILD) ?: false
         binding?.lyricsHeader?.isVisible = !isChild
-        binding?.lyricsBackgroundBlur?.isVisible = !isChild
+        
+        if (isChild) {
+            binding?.lyricsBackgroundBlur?.isVisible = false
+            binding?.lyricsBackgroundOverlay?.setBackgroundColor(0xCC000000.toInt()) // More opaque in sheet
+        }
         
         setupUI()
         setupMediaController()
@@ -52,6 +59,12 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
     private fun setupUI() {
         binding?.lyricsClose?.setOnClickListener {
             activity?.onBackPressedDispatcher?.onBackPressed()
+        }
+
+        binding?.let { b ->
+            com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding(b.lyricsHeader, padBottom = false)
+            com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding(b.lyricsSyncedView, padTop = false)
+            com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding(b.lyricsPlainScroll, padTop = false)
         }
     }
 
@@ -68,7 +81,18 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
     private fun observeViewModel() {
         observe(viewModel.currentPlayingSong) { song ->
             binding?.lyricsTitle?.text = song?.title
-            binding?.lyricsBackgroundBlur?.loadImage(song?.thumbnailUrl)
+            binding?.lyricsBackgroundBlur?.loadImage(song?.thumbnailUrl) {
+                listener(onSuccess = { _, result ->
+                    val drawable = result.image.asDrawable(resources)
+                    val bitmap = com.lagradost.cloudstream3.utils.drawableToBitmap(drawable)
+                    if (bitmap != null) {
+                        lifecycleScope.launch {
+                            val palette = MusicColorHelper.getPalette(song?.videoId, bitmap)
+                            applyDynamicBackground(palette)
+                        }
+                    }
+                })
+            }
         }
 
         observe(viewModel.lyrics) { resource ->
@@ -94,6 +118,29 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
                 else -> {}
             }
         }
+    }
+
+    private var currentGradientColors = intArrayOf(0xFF000000.toInt(), 0xFF000000.toInt())
+
+    private fun applyDynamicBackground(palette: MusicPalette) {
+        val baseColor = if (palette.darkMutedColor != 0xFF1A1A1A.toInt()) {
+            palette.darkMutedColor
+        } else if (palette.darkVibrantColor != 0xFF1A1A1A.toInt()) {
+            palette.darkVibrantColor
+        } else {
+            palette.dominantColor
+        }
+
+        val color1 = MusicColorHelper.darkenColor(baseColor, 0.8f)
+        val color2 = MusicColorHelper.darkenColor(palette.vibrantColor, 0.4f)
+        val targetColors = intArrayOf(color1, color2, 0xFF000000.toInt())
+
+        MusicColorHelper.animateGradientChange(
+            binding?.lyricsBackgroundGradient,
+            currentGradientColors,
+            targetColors
+        )
+        currentGradientColors = targetColors
     }
 
     private fun updateLyricsHighlight() {

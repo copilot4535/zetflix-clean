@@ -38,11 +38,11 @@ class LyricsLineAdapter : ListAdapter<LrcLine, LyricsLineAdapter.LyricsLineViewH
             if (isHighlighted) {
                 textView.setTextColor(Color.WHITE)
                 textView.setTypeface(null, Typeface.BOLD)
-                textView.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start()
+                textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 32f)
             } else {
-                textView.setTextColor(itemView.context.getColor(R.color.music_text_secondary))
+                textView.setTextColor(Color.parseColor("#B3B3B3"))
                 textView.setTypeface(null, Typeface.NORMAL)
-                textView.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()
+                textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 20f)
             }
         }
     }
