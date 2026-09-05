@@ -17,16 +17,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <View
-        android:id="@+id/music_player_scrim"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/bg_player_metadata_scrim_netflix"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/music_player_top_bar"
         android:layout_width="match_parent"
@@ -127,7 +117,7 @@
             android:fontFamily="@font/metropolis_bold"
             android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
-            android:singleLine="true"
+            android:maxLines="2"
             app:layout_constraintEnd_toStartOf="@id/music_player_like"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"

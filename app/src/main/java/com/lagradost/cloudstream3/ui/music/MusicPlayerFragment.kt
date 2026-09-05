@@ -297,7 +297,6 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val song = viewModel.currentPlayingSong.value
         val title = if (!metadata.title.isNullOrBlank()) metadata.title else song?.title
         val artist = if (!metadata.artist.isNullOrBlank()) metadata.artist else song?.artist
-        val album = if (!metadata.albumTitle.isNullOrBlank()) metadata.albumTitle else null
 
         binding?.musicPlayerTitle?.apply {
             text = title ?: "Unknown Title"
@@ -305,11 +304,6 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
         binding?.musicPlayerArtist?.text = artist ?: "Unknown Artist"
         
-        binding?.musicPlayerAlbum?.let {
-            it.text = album
-            it.isVisible = !album.isNullOrBlank() && album != title && album != artist
-        }
-
         val artworkUri = metadata.artworkUri?.toString()
         val url = if (!artworkUri.isNullOrBlank()) artworkUri else song?.thumbnailUrl
         loadArtworkAndTheme(url, song?.videoId)
@@ -468,6 +462,31 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                             }
                         }
                     }
+                }
+            }
+        }
+
+        viewModel.lyrics.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    val plain = resource.value.plainLyrics
+                    val synced = resource.value.syncedLyrics
+                    val hasLyrics = !plain.isNullOrBlank() || !synced.isNullOrBlank()
+                    
+                    binding?.musicPlayerLyricsPreview?.isVisible = hasLyrics
+                    if (hasLyrics) {
+                        val snippet = if (!plain.isNullOrBlank()) {
+                            plain.lines().filter { it.isNotBlank() }.take(2).joinToString("\n")
+                        } else {
+                            // Extract snippet from synced lyrics if plain is not available
+                            synced?.lines()?.filter { it.contains("]") }?.take(2)
+                                ?.joinToString("\n") { it.substringAfter("]").trim() }
+                        }
+                        binding?.musicPlayerLyricsSnippet?.text = snippet
+                    }
+                }
+                else -> {
+                    binding?.musicPlayerLyricsPreview?.isVisible = false
                 }
             }
         }

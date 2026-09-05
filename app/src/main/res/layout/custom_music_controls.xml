@@ -58,21 +58,9 @@
         android:layout_marginTop="16dp">
 
         <ImageButton
-            android:id="@+id/music_player_shuffle"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/baseline_sync_24"
-            app:tint="@color/white"
-            android:alpha="0.6"
-            android:contentDescription="Shuffle" />
-
-        <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
-
-        <ImageButton
             android:id="@id/exo_prev"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/baseline_skip_previous_24"
             app:tint="@color/white"
@@ -81,20 +69,20 @@
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="24dp">
+            android:layout_marginHorizontal="32dp">
 
             <View
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:background="@drawable/bg_circle_white" />
 
             <ImageButton
                 android:id="@id/exo_play_pause"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_baseline_play_arrow_24"
-                android:padding="16dp"
+                android:padding="20dp"
                 android:scaleType="fitCenter"
                 app:tint="@color/black"
                 android:contentDescription="Play or Pause" />
@@ -102,24 +90,12 @@
 
         <ImageButton
             android:id="@id/exo_next"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_baseline_skip_next_24"
             app:tint="@color/white"
             android:contentDescription="@string/next" />
-
-        <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
-
-        <ImageButton
-            android:id="@+id/music_player_repeat"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_refresh"
-            app:tint="@color/white"
-            android:alpha="0.6"
-            android:contentDescription="Repeat" />
 
     </LinearLayout>
 
@@ -132,6 +108,21 @@
         android:orientation="horizontal">
 
         <ImageButton
+            android:id="@+id/music_player_shuffle"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/baseline_sync_24"
+            app:tint="@color/white"
+            android:alpha="0.6"
+            android:contentDescription="Shuffle" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
             android:id="@+id/music_player_lyrics"
             android:layout_width="44dp"
             android:layout_height="44dp"
@@ -140,6 +131,21 @@
             app:tint="@color/white"
             android:alpha="0.8"
             android:contentDescription="Lyrics" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/music_player_share"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_outline_share_24"
+            app:tint="@color/white"
+            android:alpha="0.8"
+            android:contentDescription="@string/result_share" />
 
         <View
             android:layout_width="0dp"
@@ -170,6 +176,21 @@
             app:tint="@color/white"
             android:alpha="0.8"
             android:contentDescription="@string/music_now_playing_queue" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/music_player_repeat"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_refresh"
+            app:tint="@color/white"
+            android:alpha="0.6"
+            android:contentDescription="Repeat" />
 
     </LinearLayout>
 </LinearLayout>
