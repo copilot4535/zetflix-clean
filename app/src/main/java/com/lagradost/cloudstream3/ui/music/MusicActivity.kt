@@ -14,12 +14,14 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.ui.setupWithNavController
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.core.view.updateLayoutParams
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.ActivityMusicBinding
 import com.lagradost.cloudstream3.mvvm.Resource
@@ -152,6 +154,28 @@ class MusicActivity : AppCompatActivity() {
         })
     }
 
+    private fun setupInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.musicContentLayout) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            
+            val navHostFragment = supportFragmentManager
+                .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+            val destinationId = navHostFragment?.navController?.currentDestination?.id
+            
+            // Check if we are in an immersive screen (like the player)
+            val isImmersive = destinationId == R.id.navigation_music_player || 
+                             destinationId == R.id.navigation_lyrics
+            
+            // For standard screens, pad the top to stay below status bar
+            // For immersive screens, allow content to draw behind status bar (fragments handle their own insets)
+            v.updatePadding(
+                top = if (isImmersive) 0 else insets.top,
+                bottom = insets.bottom
+            )
+            windowInsets
+        }
+    }
+
     private fun returnToMain() {
         // 1. Resource Teardown
         try {
@@ -205,6 +229,9 @@ class MusicActivity : AppCompatActivity() {
             
             toggleBottomNav(showNav)
             updateMiniPlayerVisibility()
+            
+            // Re-apply insets when destination changes to handle immersive/non-immersive transitions
+            ViewCompat.requestApplyInsets(binding.musicContentLayout)
         }
 
         val openTab = intent.getStringExtra(EXTRA_OPEN_TAB)
@@ -253,7 +280,10 @@ class MusicActivity : AppCompatActivity() {
 
     private fun setupGlobalMiniPlayer() {
         binding.globalMiniPlayer.musicMiniPlayer.setOnClickListener {
-            this.navigate(R.id.global_to_navigation_music_player)
+            val extras = FragmentNavigatorExtras(
+                binding.globalMiniPlayer.musicMiniThumbnail to "album_art"
+            )
+            this.navigate(R.id.global_to_navigation_music_player, extras = extras)
         }
 
         binding.globalMiniPlayer.musicMiniPlayPause.setOnClickListener {
@@ -264,7 +294,10 @@ class MusicActivity : AppCompatActivity() {
         
         // Ensure thumbnail card also triggers navigation
         binding.globalMiniPlayer.musicMiniThumbnailCard.setOnClickListener {
-            this.navigate(R.id.global_to_navigation_music_player)
+            val extras = FragmentNavigatorExtras(
+                binding.globalMiniPlayer.musicMiniThumbnail to "album_art"
+            )
+            this.navigate(R.id.global_to_navigation_music_player, extras = extras)
         }
     }
 
@@ -309,13 +342,34 @@ class MusicActivity : AppCompatActivity() {
     private fun updateMiniPlayerVisibility() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
         val destinationId = navHostFragment?.navController?.currentDestination?.id
-        val isFullScreen = destinationId == R.id.navigation_music_player || 
-                           destinationId == R.id.navigation_lyrics
+        val isPlayer = destinationId == R.id.navigation_music_player
+        val isLyrics = destinationId == R.id.navigation_lyrics
+        val isFullScreen = isPlayer || isLyrics
         
         val hasMedia = mediaController?.currentMediaItem != null
         val isIdle = mediaController?.playbackState == Player.STATE_IDLE
         
-        binding.globalMiniPlayer.musicMiniPlayer.isVisible = !isFullScreen && hasMedia && !isIdle
+        val shouldShow = !isFullScreen && hasMedia && !isIdle
+        
+        if (shouldShow) {
+            binding.globalMiniPlayer.musicMiniPlayer.isVisible = true
+            binding.globalMiniPlayer.musicMiniPlayer.alpha = 1f
+        } else if (isFullScreen) {
+            // Delay hiding if entering player to allow shared element transition
+            if (isPlayer && binding.globalMiniPlayer.musicMiniPlayer.isVisible) {
+                binding.globalMiniPlayer.musicMiniPlayer.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction {
+                        binding.globalMiniPlayer.musicMiniPlayer.isVisible = false
+                    }
+                    .start()
+            } else {
+                binding.globalMiniPlayer.musicMiniPlayer.isVisible = false
+            }
+        } else {
+            binding.globalMiniPlayer.musicMiniPlayer.isVisible = false
+        }
     }
 
     private fun updatePlayPauseIcon(isPlaying: Boolean) {

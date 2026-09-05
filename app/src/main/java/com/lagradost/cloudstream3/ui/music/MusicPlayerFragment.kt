@@ -45,6 +45,7 @@ import com.lagradost.cloudstream3.ui.music.RateStatus
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import androidx.appcompat.app.AlertDialog
+import androidx.transition.TransitionInflater
 
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -100,10 +101,19 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         })
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        sharedElementEnterTransition = TransitionInflater.from(requireContext())
+            .inflateTransition(android.R.transition.move)
+        sharedElementReturnTransition = TransitionInflater.from(requireContext())
+            .inflateTransition(android.R.transition.move)
+    }
+
     override fun fixLayout(view: View) {}
 
     override fun onViewReady(view: View, savedInstanceState: Bundle?) {
         super.onViewReady(view, savedInstanceState)
+        postponeEnterTransition()
         
         setupUI()
         setupController()
@@ -309,19 +319,28 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     }
 
     private fun loadArtworkAndTheme(url: String?, videoId: String?) {
-        if (url.isNullOrBlank()) return
+        if (url.isNullOrBlank()) {
+            startPostponedEnterTransition()
+            return
+        }
         binding?.musicPlayerAlbumArt?.loadImage(url) {
-            listener(onSuccess = { _, result ->
-                val bitmap = drawableToBitmap(result.image.asDrawable(resources))
-                if (bitmap != null) {
-                    viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Default) {
-                        val palette = MusicColorHelper.getPalette(videoId ?: "", bitmap)
-                        viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
-                            applyDynamicTheming(palette)
+            listener(
+                onSuccess = { _, result ->
+                    val bitmap = drawableToBitmap(result.image.asDrawable(resources))
+                    if (bitmap != null) {
+                        viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+                            val palette = MusicColorHelper.getPalette(videoId ?: "", bitmap)
+                            viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                                applyDynamicTheming(palette)
+                            }
                         }
                     }
+                    startPostponedEnterTransition()
+                },
+                onError = { _, _ ->
+                    startPostponedEnterTransition()
                 }
-            })
+            )
         }
     }
 

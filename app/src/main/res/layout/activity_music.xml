@@ -38,21 +38,24 @@
 
         <FrameLayout
             android:id="@+id/music_bottom_nav_container"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
             android:elevation="20dp"
             android:translationZ="20dp"
             android:clipChildren="false"
             android:clipToPadding="false"
-            app:layout_constraintBottom_toBottomOf="parent">
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
 
             <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/music_bottom_nav"
-                android:layout_width="match_parent"
-                android:layout_height="80dp"
+                android:layout_width="280dp"
+                android:layout_height="64dp"
                 android:background="@drawable/bg_music_floating_nav"
                 app:elevation="20dp"
-                app:itemIconSize="26dp"
+                app:itemIconSize="24dp"
                 app:itemIconTint="@color/music_bottom_nav_icon_color"
                 app:itemTextColor="@color/music_bottom_nav_icon_color"
                 app:labelVisibilityMode="labeled"

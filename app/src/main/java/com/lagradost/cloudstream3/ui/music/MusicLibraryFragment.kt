@@ -3,6 +3,9 @@ package com.lagradost.cloudstream3.ui.music
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -49,6 +52,14 @@ class MusicLibraryFragment : BaseFragment<FragmentMusicLibraryBinding>(
         observeViewModel()
         
         viewModel.loadPersistenceData()
+    }
+
+    private fun setupInsets(view: View) {
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding?.root?.updatePadding(top = insets.top)
+            windowInsets
+        }
     }
 
     private fun setupRecyclerViews() {

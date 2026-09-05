@@ -251,7 +251,8 @@ object UIHelper {
     fun Activity?.navigate(
         navigationId: Int,
         args: Bundle? = null,
-        navOptions: NavOptions? = null // To control nav graph & manage back stack
+        navOptions: NavOptions? = null, // To control nav graph & manage back stack
+        extras: androidx.navigation.Navigator.Extras? = null
     ) {
         val tag = "NavComponent"
         if (this is FragmentActivity) {
@@ -261,7 +262,7 @@ object UIHelper {
                     val navHostFragment =
                         supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
                     Log.i(tag, "Navigating to fragment: $navigationId")
-                    navHostFragment?.navController?.navigate(navigationId, args, navOptions)
+                    navHostFragment?.navController?.navigate(navigationId, args, navOptions, extras)
                 }
             } catch (t: Throwable) {
                 logError(t)
