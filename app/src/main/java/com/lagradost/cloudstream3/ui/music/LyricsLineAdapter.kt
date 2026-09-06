@@ -20,10 +20,11 @@ class LyricsLineAdapter : ListAdapter<LyricLine, LyricsLineAdapter.LyricsLineVie
             field = value
             
             // Notify affected range to update hierarchy and animations
+            // Use payload to prevent "tmp detached" crashes by forcing in-place updates
             val start = (minOf(previousIndex, value) - 5).coerceAtLeast(0)
             val end = (maxOf(previousIndex, value) + 5).coerceAtMost(itemCount - 1)
             if (start <= end) {
-                notifyItemRangeChanged(start, end - start + 1)
+                notifyItemRangeChanged(start, end - start + 1, "HIGHLIGHT_UPDATE")
             }
         }
 
@@ -43,8 +44,30 @@ class LyricsLineAdapter : ListAdapter<LyricLine, LyricsLineAdapter.LyricsLineVie
         holder.bind(getItem(position), position)
     }
 
+    override fun onBindViewHolder(
+        holder: LyricsLineViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+        } else {
+            // Partial update: just re-bind to update highlight state
+            holder.bind(getItem(position), position)
+        }
+    }
+
+    override fun onViewRecycled(holder: LyricsLineViewHolder) {
+        holder.cancelAnimations()
+        super.onViewRecycled(holder)
+    }
+
     inner class LyricsLineViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val textView: TextView = itemView.findViewById(R.id.lyrics_line_text)
+
+        fun cancelAnimations() {
+            textView.animate().cancel()
+        }
 
         fun bind(line: LyricLine, position: Int) {
             textView.text = line.text

@@ -18,6 +18,7 @@ class SyncedLyricsView @JvmOverloads constructor(
     init {
         layoutManager = LinearLayoutManager(context)
         adapter = lyricsAdapter
+        itemAnimator = null // Disable default animations to prevent conflicts with custom animations and avoid "tmp detached" crashes
         
         addOnScrollListener(object : OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -62,6 +63,7 @@ class SyncedLyricsView @JvmOverloads constructor(
         val layoutManager = layoutManager as? LinearLayoutManager ?: return
         
         post {
+            if (!isAttachedToWindow) return@post
             if (index < 0 || index >= lyricsAdapter.itemCount) return@post
             
             val smoothScroller = object : androidx.recyclerview.widget.LinearSmoothScroller(context) {
