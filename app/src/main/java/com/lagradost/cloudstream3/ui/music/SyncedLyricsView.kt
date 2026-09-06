@@ -49,12 +49,56 @@ class SyncedLyricsView @JvmOverloads constructor(
         val lines = lyricsAdapter.currentList
         if (lines.isEmpty()) return
 
-        val index = lines.indexOfLast { it.timestampMs <= currentMs }
-        if (index != -1 && index != lyricsAdapter.currentLineIndex) {
-            lyricsAdapter.currentLineIndex = index
-            if (autoScrollEnabled) {
-                scrollToPositionCentered(index)
+        val currentIndex = lyricsAdapter.currentLineIndex
+        
+        // 1. Check if we are still on the same line (most common case)
+        if (currentIndex != -1 && currentIndex < lines.size) {
+            val currentLine = lines[currentIndex]
+            val nextLine = if (currentIndex + 1 < lines.size) lines[currentIndex + 1] else null
+            
+            if (currentMs >= currentLine.timestampMs && (nextLine == null || currentMs < nextLine.timestampMs)) {
+                // We are still on the same line, no update needed
+                return
             }
+            
+            // 2. Check if we just moved to the next line (second most common case)
+            if (nextLine != null && currentMs >= nextLine.timestampMs) {
+                val nextNextLine = if (currentIndex + 2 < lines.size) lines[currentIndex + 2] else null
+                if (nextNextLine == null || currentMs < nextNextLine.timestampMs) {
+                    updateLineIndex(currentIndex + 1)
+                    return
+                }
+            }
+        }
+
+        // 3. Fallback to binary search for seeking or significant jumps
+        val index = findLineIndexAt(currentMs, lines)
+        if (index != -1 && index != currentIndex) {
+            updateLineIndex(index)
+        }
+    }
+
+    private fun findLineIndexAt(currentMs: Long, lines: List<LyricLine>): Int {
+        var low = 0
+        var high = lines.size - 1
+        var result = -1
+
+        while (low <= high) {
+            val mid = (low + high) / 2
+            if (lines[mid].timestampMs <= currentMs) {
+                result = mid
+                low = mid + 1
+            } else {
+                high = mid - 1
+            }
+        }
+        return result
+    }
+
+    private fun updateLineIndex(index: Int) {
+        lyricsAdapter.currentLineIndex = index
+        if (autoScrollEnabled) {
+            scrollToPositionCentered(index)
         }
     }
 

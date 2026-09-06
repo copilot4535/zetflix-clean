@@ -56,7 +56,7 @@ class TrackOptionsBottomSheetFragment : BottomSheetDialogFragment() {
                         if (bitmap != null) {
                             lifecycleScope.launch {
                                 val palette = MusicColorHelper.getPalette(song.videoId, bitmap)
-                                applyDynamicTheming(palette)
+                                applyDynamicTheming(song.videoId, palette)
                             }
                         }
                     })
@@ -87,8 +87,8 @@ class TrackOptionsBottomSheetFragment : BottomSheetDialogFragment() {
         )
     }
 
-    private fun applyDynamicTheming(palette: MusicPalette) {
-        val lyricsPalette = MusicColorHelper.generateLyricsPalette(palette)
+    private fun applyDynamicTheming(mediaId: String?, palette: MusicPalette) {
+        val lyricsPalette = MusicColorHelper.generateLyricsPalette(mediaId, palette)
         val bg = lyricsPalette.background
         binding.root.backgroundTintList = ColorStateList.valueOf(bg)
         

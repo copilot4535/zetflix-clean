@@ -710,7 +710,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val vibrant = if (palette.vibrantColor != Color.BLACK && palette.vibrantColor != 0xFFE50914.toInt()) palette.vibrantColor else defaultAccent
 
         // Content cards background
-        val lyricsPalette = MusicColorHelper.generateLyricsPalette(palette)
+        val videoId = viewModel.currentPlayingSong.value?.videoId
+        val lyricsPalette = MusicColorHelper.generateLyricsPalette(videoId, palette)
         currentLyricsPalette = lyricsPalette
         val cardBg = lyricsPalette.background
         

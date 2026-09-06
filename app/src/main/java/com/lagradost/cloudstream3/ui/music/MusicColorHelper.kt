@@ -40,6 +40,7 @@ data class LyricsPalette(
 
 object MusicColorHelper {
     private val paletteCache = mutableMapOf<String, MusicPalette>()
+    private val lyricsPaletteCache = mutableMapOf<String, LyricsPalette>()
 
     private const val DEFAULT_SURFACE = 0xFF121212.toInt()
     private const val DEFAULT_ACCENT = 0xFFE50914.toInt()
@@ -51,9 +52,17 @@ object MusicColorHelper {
 
         if (bitmap.isRecycled) return@withContext MusicPalette(DEFAULT_SURFACE, DEFAULT_ACCENT, DEFAULT_SURFACE, DEFAULT_SURFACE, false)
 
-        val safeBitmap = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && bitmap.config == Bitmap.Config.HARDWARE) {
-            bitmap.copy(Bitmap.Config.ARGB_8888, false)
-        } else bitmap
+        // Phase 17: Optimization - use a small bitmap for analysis
+        val analysisSize = 64
+        val analysisBitmap = try {
+            Bitmap.createScaledBitmap(bitmap, analysisSize, analysisSize, true)
+        } catch (e: Exception) {
+            bitmap
+        }
+
+        val safeBitmap = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && analysisBitmap.config == Bitmap.Config.HARDWARE) {
+            analysisBitmap.copy(Bitmap.Config.ARGB_8888, false)
+        } else analysisBitmap
 
         val musicPalette = try {
             val palette = Palette.from(safeBitmap).generate()
@@ -75,6 +84,13 @@ object MusicColorHelper {
         } catch (e: Exception) {
             android.util.Log.e("MusicColorHelper", "Palette generation failed", e)
             MusicPalette(DEFAULT_SURFACE, DEFAULT_ACCENT, DEFAULT_SURFACE, DEFAULT_SURFACE, false)
+        } finally {
+            if (analysisBitmap != bitmap) {
+                analysisBitmap.recycle()
+            }
+            if (safeBitmap != analysisBitmap && safeBitmap != bitmap) {
+                safeBitmap.recycle()
+            }
         }
         
         if (mediaId != null) {
@@ -120,8 +136,12 @@ object MusicColorHelper {
     /**
      * Generates a Spotify-style lyrics palette based on artwork colors.
      */
-    fun generateLyricsPalette(palette: MusicPalette): LyricsPalette {
-        // 1. Blend Dominant and Dark Muted colors (60-75%)
+    fun generateLyricsPalette(mediaId: String?, palette: MusicPalette): LyricsPalette {
+        if (mediaId != null) {
+            lyricsPaletteCache[mediaId]?.let { return it }
+        }
+
+        // 1. Blend Dominant and Dark Muted colors (70%)
         var lyricsBg = blendColors(palette.dominantColor, palette.darkMutedColor, 0.7f)
 
         // 2. Tone-map for readability
@@ -168,7 +188,7 @@ object MusicColorHelper {
         }
         accent = Color.HSVToColor(accentHsv)
 
-        return LyricsPalette(
+        val lyricsPalette = LyricsPalette(
             background = lyricsBg,
             foregroundPrimary = primary,
             foregroundSecondary = secondary,
@@ -176,6 +196,12 @@ object MusicColorHelper {
             accent = accent,
             isLight = isLight
         )
+        
+        if (mediaId != null) {
+            lyricsPaletteCache[mediaId] = lyricsPalette
+        }
+        
+        return lyricsPalette
     }
 
     /**

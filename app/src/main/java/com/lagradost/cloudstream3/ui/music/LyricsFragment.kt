@@ -213,7 +213,7 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
                             if (bitmap != null) {
                                 lifecycleScope.launch {
                                     val palette = MusicColorHelper.getPalette(song.videoId, bitmap)
-                                    applyDynamicTheming(palette)
+                                    applyDynamicTheming(song.videoId, palette)
                                 }
                             }
                         }
@@ -263,8 +263,8 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
 
     private var currentGradientColors = intArrayOf(0xFF000000.toInt(), 0xFF000000.toInt())
 
-    private fun applyDynamicTheming(musicPalette: MusicPalette) {
-        val palette = MusicColorHelper.generateLyricsPalette(musicPalette)
+    private fun applyDynamicTheming(mediaId: String?, musicPalette: MusicPalette) {
+        val palette = MusicColorHelper.generateLyricsPalette(mediaId, musicPalette)
         val lyricsBg = palette.background
         
         // Spotify-style: uniform dark field derived from artwork

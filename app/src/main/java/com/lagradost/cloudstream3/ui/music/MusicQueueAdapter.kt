@@ -1,0 +1,64 @@
+package com.lagradost.cloudstream3.ui.music
+
+import android.annotation.SuppressLint
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.lagradost.cloudstream3.databinding.ItemMusicSongBinding
+import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
+import java.util.Collections
+
+class MusicQueueAdapter(
+    private val onSongClick: (Int) -> Unit,
+    private val onMenuClick: ((View, MusicSearchResponse) -> Unit)? = null,
+    private val onItemMoved: (Int, Int) -> Unit,
+    private val onItemRemoved: (Int) -> Unit
+) : ListAdapter<MusicSearchResponse, MusicQueueAdapter.QueueViewHolder>(MusicDiffCallback()) {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QueueViewHolder {
+        val binding = ItemMusicSongBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return QueueViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: QueueViewHolder, position: Int) {
+        holder.bind(getItem(position), position)
+    }
+
+    fun onItemMove(fromPosition: Int, toIndex: Int): Boolean {
+        onItemMoved(fromPosition, toIndex)
+        return true
+    }
+
+    fun onItemDismiss(position: Int) {
+        onItemRemoved(position)
+    }
+
+    inner class QueueViewHolder(private val binding: ItemMusicSongBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(song: MusicSearchResponse, position: Int) {
+            binding.musicSongTitle.text = song.title
+            binding.musicSongArtist.text = song.artist ?: "Unknown Artist"
+            binding.musicSongThumbnail.loadImage(song.thumbnailUrl)
+            binding.root.setOnClickListener {
+                onSongClick(bindingAdapterPosition)
+            }
+            binding.musicSongMenu.setOnClickListener {
+                onMenuClick?.invoke(it, song)
+            }
+        }
+    }
+
+    class MusicDiffCallback : DiffUtil.ItemCallback<MusicSearchResponse>() {
+        override fun areItemsTheSame(oldItem: MusicSearchResponse, newItem: MusicSearchResponse): Boolean {
+            return oldItem.videoId == newItem.videoId
+        }
+
+        override fun areContentsTheSame(oldItem: MusicSearchResponse, newItem: MusicSearchResponse): Boolean {
+            return oldItem == newItem
+        }
+    }
+}

@@ -98,6 +98,7 @@ class MusicViewModel : ViewModel() {
 
     private var sleepTimerJob: kotlinx.coroutines.Job? = null
     private var queueJob: Job? = null
+    private var searchJob: Job? = null
     var currentQueueRequestId = 0
         private set
     
@@ -107,22 +108,9 @@ class MusicViewModel : ViewModel() {
     private val prefetchScope = CoroutineScope(Dispatchers.IO + prefetchJob)
     private val prefetchSemaphore = kotlinx.coroutines.sync.Semaphore(5)
 
-    private fun initNewPipe() {
-        try {
-            NewPipe.getDownloader()
-        } catch (e: Exception) {
-            DownloaderTestImpl.getInstance()?.let {
-                NewPipe.init(it)
-            }
-        }
-    }
-
     private val activeDownloadRequests = mutableMapOf<String, MusicSearchResponse>()
 
     init {
-        // We now call loadPersistenceData via initMusic for better control
-        // loadPersistenceData()
-        
         viewModelScope.launchSafe {
             downloadStates.collect { states ->
                 states.values.forEach { state ->
@@ -146,15 +134,8 @@ class MusicViewModel : ViewModel() {
             val startTime = System.currentTimeMillis()
 
             try {
-                // 1. Reload YTM session cookies / account data
-                // Assuming accountRepository is already initialized
-                // We could explicitly refresh if needed
-                
-                // 2. Warm up Persistence
+                // 1. Warm up Persistence
                 loadPersistenceData()
-
-                // 3. Pre-initialize dependencies (NewPipe, etc.)
-                initNewPipe()
                 
                 // Ensure minimum dwell time of 400ms
                 val elapsed = System.currentTimeMillis() - startTime
@@ -165,7 +146,6 @@ class MusicViewModel : ViewModel() {
                 _isInitialized.postValue(true)
             } catch (e: Exception) {
                 Log.e("MusicViewModel", "Initialization failed", e)
-                // Fallback to initialized even on error to not block UI forever
                 _isInitialized.postValue(true)
             }
         }
@@ -185,7 +165,7 @@ class MusicViewModel : ViewModel() {
     fun downloadSong(song: MusicSearchResponse) {
         activeDownloadRequests[song.videoId] = song
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
-            val url = extractStreamUrl(song.videoId, song.params)
+            val url = StreamResolver.resolveStreamUrl(song.videoId, song.params)
             if (url != null) {
                 com.lagradost.cloudstream3.CloudStreamApp.context?.let { ctx ->
                     val downloadRequest = androidx.media3.exoplayer.offline.DownloadRequest.Builder(song.videoId, android.net.Uri.parse(url))
@@ -250,8 +230,13 @@ class MusicViewModel : ViewModel() {
         }
         _searchResult.postValue(Resource.Loading())
         _searchSuggestions.postValue(emptyList())
-        viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
+        
+        searchJob?.cancel()
+        searchJob = viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
+                // Debounce to avoid flooding on rapid typing
+                delay(300)
+                
                 val results = repository.searchSongs(query, filter)
                 if (results.isEmpty()) {
                     _searchResult.postValue(Resource.Failure(false, "No results found"))
@@ -263,6 +248,7 @@ class MusicViewModel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e("MusicSearch", "Search failed for query: $query", e)
                 _searchResult.postValue(Resource.Failure(false, "Search failed: ${e.message ?: e.javaClass.simpleName}"))
             }
@@ -284,54 +270,55 @@ class MusicViewModel : ViewModel() {
         _homeSections.postValue(Resource.Loading())
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                // 1. Load Critical Content first (Main Home + Moods)
+                val homeDeferred = async { repository.getHomeSections() }
+                val moodDeferred = async { repository.getMoodAndGenres() }
+                
+                val rawHomeSections = homeDeferred.await()
+                val moodSections = moodDeferred.await()
+                
+                val initialSections = mutableListOf<MusicHomeSection>()
+                
+                val quickPicks = rawHomeSections.find { it.title.contains("Quick", true) || it.title.contains("Recent", true) }
+                val madeForYou = rawHomeSections.find { it.title.contains("Made For", true) || it.title.contains("Mix", true) }
+                val newReleases = rawHomeSections.find { it.title.contains("New", true) || it.title.contains("Release", true) }
+                
+                quickPicks?.let { initialSections.add(it) }
+                madeForYou?.let { initialSections.add(it) }
+                newReleases?.let { initialSections.add(it) }
+                
+                if (moodSections.isNotEmpty()) {
+                    val items = moodSections.flatMap { it.items }.shuffled().take(12)
+                    initialSections.add(MusicHomeSection("Moods & Genres", items))
+                }
+
+                // Post initial results immediately for faster perceived loading
+                if (initialSections.isNotEmpty()) {
+                    _homeSections.postValue(Resource.Success(initialSections.toList()))
+                }
+
+                // 2. Load Secondary Content in parallel
                 coroutineScope {
-                    val homeDeferred = async { repository.getHomeSections() }
-                    val moodDeferred = async { repository.getMoodAndGenres() }
                     val trendingDeferred = async { repository.searchSongs("trending music") }
-                    val podcastDeferred = async { repository.searchSongs("podcast episodes") }
                     val topArtistsDeferred = async { repository.searchSongs("top artists", YouTube.SearchFilter.FILTER_ARTIST) }
+                    val podcastDeferred = async { repository.searchSongs("podcast episodes") }
                     
-                    val curatedCategories = listOf("Chill Hits", "Workout Energy", "Romantic Hits", "Top 50 Global")
+                    val curatedCategories = listOf("Chill Hits", "Workout Energy", "Top 50 Global")
                     val curatedDeferred = curatedCategories.map { category ->
-                        async {
-                            category to repository.searchSongs(category).take(15)
-                        }
+                        async { category to repository.searchSongs(category).take(15) }
                     }
 
-                    val rawHomeSections = homeDeferred.await()
-                    val moodSections = moodDeferred.await()
                     val trendingSongs = trendingDeferred.await()
-                    val podcastSongs = podcastDeferred.await()
                     val topArtists = topArtistsDeferred.await()
+                    val podcastSongs = podcastDeferred.await()
                     val curatedResults = curatedDeferred.awaitAll()
 
-                    val finalSections = mutableListOf<MusicHomeSection>()
-
-                    // Sections in order: Quick Picks, Made For You, New Releases, Trending Artists, Top Artists, Charts, Moods & Genres, Trending, Curated, Podcasts (at bottom)
-                    val quickPicks = rawHomeSections.find { it.title.contains("Quick", true) || it.title.contains("Recent", true) }
-                    val madeForYou = rawHomeSections.find { it.title.contains("Made For", true) || it.title.contains("Mix", true) }
-                    val newReleases = rawHomeSections.find { it.title.contains("New", true) || it.title.contains("Release", true) }
-                    val trendingArtists = rawHomeSections.find { it.title.contains("Artist", true) }
-                    val charts = rawHomeSections.find { it.title.contains("Chart", true) }
-                    val popularPlaylists = rawHomeSections.find { it.title.contains("Popular", true) || it.title.contains("Playlist", true) }
-
-                    quickPicks?.let { finalSections.add(it) }
-                    madeForYou?.let { finalSections.add(it) }
-                    newReleases?.let { finalSections.add(it) }
-                    trendingArtists?.let { finalSections.add(it) }
+                    val finalSections = initialSections.toMutableList()
 
                     if (topArtists.isNotEmpty()) {
                         finalSections.add(MusicHomeSection("Top Artists", topArtists.map { 
                             MusicHomeItem(it.title, it.artist, it.videoId, it.thumbnailUrl, MusicItemType.ARTIST)
                         }))
-                    }
-
-                    charts?.let { finalSections.add(it) }
-
-                    // Moods & Genres
-                    if (moodSections.isNotEmpty()) {
-                        val items = moodSections.flatMap { it.items }.shuffled().take(12)
-                        finalSections.add(MusicHomeSection("Moods & Genres", items))
                     }
 
                     // Trending
@@ -340,8 +327,6 @@ class MusicViewModel : ViewModel() {
                             MusicHomeItem(it.title, it.artist, it.videoId, it.thumbnailUrl, MusicItemType.SONG)
                         }))
                     }
-
-                    popularPlaylists?.let { finalSections.add(it) }
 
                     // Curated Shelves
                     curatedResults.forEach { (title, songs) ->
@@ -352,14 +337,13 @@ class MusicViewModel : ViewModel() {
                         }
                     }
 
-                    // Add any remaining raw home sections that weren't categorized (except Podcasts)
+                    // Add remaining raw sections
                     rawHomeSections.forEach { section ->
                         if (finalSections.none { it.title == section.title } && !section.title.contains("Podcast", true)) {
                             finalSections.add(section)
                         }
                     }
 
-                    // Podcasts ALWAYS at the bottom as a rich vertical list
                     if (podcastSongs.isNotEmpty()) {
                         finalSections.add(MusicHomeSection("Podcasts", podcastSongs.map { 
                             MusicHomeItem(it.title, it.artist, it.videoId, it.thumbnailUrl, MusicItemType.SONG)
@@ -368,9 +352,9 @@ class MusicViewModel : ViewModel() {
 
                     _homeSections.postValue(Resource.Success(finalSections))
                     
-                    // Prefetch items from priority sections
+                    // Prefetch top items
                     finalSections.take(2).forEach { section ->
-                        section.items.take(3).forEach { item ->
+                        section.items.take(2).forEach { item ->
                             if (item.type == MusicItemType.SONG) {
                                 prefetchUrl(item.id, item.params)
                             }
@@ -378,7 +362,8 @@ class MusicViewModel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("MusicViewModel", "Failed to load merged home sections", e)
+                if (e is CancellationException) throw e
+                Log.e("MusicViewModel", "Failed to load home sections", e)
                 _homeSections.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
             }
         }
@@ -513,55 +498,15 @@ class MusicViewModel : ViewModel() {
 
     @androidx.media3.common.util.UnstableApi
     private suspend fun extractStreamUrl(videoId: String, params: String? = null): String? {
-        // 0. Check cache
-        StreamUrlCache.get(videoId)?.let { return it }
-
-        // 0.1 Check if already downloaded
-        com.lagradost.cloudstream3.CloudStreamApp.context?.let { ctx ->
-            val downloadManager = com.lagradost.cloudstream3.services.music.MusicDownloadManager.getDownloadManager(ctx)
-            val download = downloadManager?.downloadIndex?.getDownload(videoId)
-            if (download != null && download.state == androidx.media3.exoplayer.offline.Download.STATE_COMPLETED) {
-                return download.request.uri.toString()
-            }
-        }
-
-        // 1. Try InnerTube
-        try {
-            val playerResult = YouTubeInstance.youtube.player(videoId, params, false).getOrNull()
-            val formats = playerResult?.second?.streamingData?.adaptiveFormats
-            val url = formats?.filter { it.isAudio }?.maxByOrNull { it.bitrate }?.url
-            if (!url.isNullOrBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
-                return url
-            }
-        } catch (e: Exception) {
-            Log.e("MusicViewModel", "InnerTube extraction failed for $videoId", e)
-        }
-
-        // 2. Fallback to NewPipe
-        try {
-            initNewPipe()
-            val service = ServiceList.YouTube
-            val info = StreamInfo.getInfo(service, videoId)
-            val url = info.audioStreams.firstOrNull()?.content
-            if (!url.isNullOrBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
-                return url
-            }
-        } catch (e: Exception) {
-            Log.e("MusicViewModel", "NewPipe fallback failed for $videoId", e)
-        }
-
-        return null
+        return StreamResolver.resolveStreamUrl(videoId, params)
     }
 
+    @androidx.media3.common.util.UnstableApi
     private suspend fun extractAndCache(videoId: String, params: String? = null): String? {
-        val url = extractStreamUrl(videoId, params)
-        if (url != null) {
-            Log.d("MusicViewModel", "Prefetch success for $videoId: $url")
-            StreamUrlCache.put(videoId, url)
-        }
-        return url
+        return extractStreamUrl(videoId, params)
     }
 
+    @androidx.media3.common.util.UnstableApi
     fun prefetchUrl(videoId: String, params: String? = null) {
         if (StreamUrlCache.get(videoId) != null) return
         prefetchScope.launch {
@@ -571,15 +516,34 @@ class MusicViewModel : ViewModel() {
         }
     }
 
+    @androidx.media3.common.util.UnstableApi
+    private fun prefetchNextSongs(currentIndex: Int) {
+        // Phase 10: Smart prefetch - only next 2 songs to save bandwidth/resources
+        val nextSongs = currentQueueList.drop(currentIndex + 1).take(2)
+        nextSongs.forEach { song ->
+            prefetchUrl(song.videoId, song.params)
+        }
+    }
+
+    private fun cancelObsoletePrefetch() {
+        prefetchJob.cancelChildren()
+    }
+
     fun updateCurrentSong(mediaId: String?) {
         if (mediaId == null) return
-        val song = currentQueueList.find { it.videoId == mediaId }
-        if (song != null && _currentPlayingSong.value?.videoId != song.videoId) {
-            _currentPlayingSong.postValue(song)
-            // Reset lyrics state immediately on track change to avoid showing stale lyrics
-            _lyricsUiState.postValue(LyricsUiState(status = LyricsStatus.LOADING, trackId = song.videoId))
-            fetchLyrics(song)
-            addToHistory(song)
+        val index = currentQueueList.indexOfFirst { it.videoId == mediaId }
+        if (index != -1) {
+            val song = currentQueueList[index]
+            if (_currentPlayingSong.value?.videoId != song.videoId) {
+                _currentPlayingSong.postValue(song)
+                // Reset lyrics state immediately on track change to avoid showing stale lyrics
+                _lyricsUiState.postValue(LyricsUiState(status = LyricsStatus.LOADING, trackId = song.videoId))
+                fetchLyrics(song)
+                addToHistory(song)
+                
+                // Prefetch next songs when track changes
+                prefetchNextSongs(index)
+            }
         }
     }
 
@@ -592,6 +556,7 @@ class MusicViewModel : ViewModel() {
     fun playQueue(songs: List<MusicSearchResponse>, startIndex: Int) {
         val requestId = ++currentQueueRequestId
         queueJob?.cancel()
+        cancelObsoletePrefetch()
         
         currentQueueList.clear()
         currentQueueList.addAll(songs)
@@ -678,11 +643,47 @@ class MusicViewModel : ViewModel() {
         }
         _currentQueue.postValue(currentQueueList.toList())
         viewModelScope.launch(Dispatchers.IO) {
-            val url = extractStreamUrl(song.videoId, song.params)
+            val url = StreamResolver.resolveStreamUrl(song.videoId, song.params)
             if (url != null) {
                 sendQueueIntent(MusicService.ACTION_PLAY_NEXT, song, url)
             }
         }
+    }
+
+    fun removeFromQueue(index: Int) {
+        if (index in currentQueueList.indices) {
+            currentQueueList.removeAt(index)
+            _currentQueue.postValue(currentQueueList.toList())
+            sendQueueIndexIntent(MusicService.ACTION_REMOVE_FROM_QUEUE, index)
+        }
+    }
+
+    fun moveQueueItem(from: Int, to: Int) {
+        if (from in currentQueueList.indices && to in currentQueueList.indices) {
+            val item = currentQueueList.removeAt(from)
+            currentQueueList.add(to, item)
+            _currentQueue.postValue(currentQueueList.toList())
+            sendQueueMoveIntent(MusicService.ACTION_MOVE_QUEUE_ITEM, from, to)
+        }
+    }
+
+    private fun sendQueueIndexIntent(action: String, index: Int) {
+        val context = com.lagradost.cloudstream3.CloudStreamApp.context ?: return
+        val intent = Intent(context, MusicService::class.java).apply {
+            this.action = action
+            putExtra(MusicService.EXTRA_INDEX, index)
+        }
+        context.startService(intent)
+    }
+
+    private fun sendQueueMoveIntent(action: String, from: Int, to: Int) {
+        val context = com.lagradost.cloudstream3.CloudStreamApp.context ?: return
+        val intent = Intent(context, MusicService::class.java).apply {
+            this.action = action
+            putExtra(MusicService.EXTRA_FROM_INDEX, from)
+            putExtra(MusicService.EXTRA_TO_INDEX, to)
+        }
+        context.startService(intent)
     }
 
     private fun sendQueueIntent(action: String, song: MusicSearchResponse, url: String) {

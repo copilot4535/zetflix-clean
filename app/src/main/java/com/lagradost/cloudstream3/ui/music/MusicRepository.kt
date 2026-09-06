@@ -36,10 +36,21 @@ object YouTubeInstance {
 class MusicRepository {
     private val youtube = YouTubeInstance.youtube
     private var cachedHomeSections: List<MusicHomeSection>? = null
+    private var cachedMoodAndGenres: List<MusicHomeSection>? = null
+    private val cachedSongs = mutableMapOf<String, List<MusicSearchResponse>>()
+    private var lastHomeFetchTime = 0L
+    private val CACHE_EXPIRATION = 5 * 60 * 1000L // 5 minutes
+
+    private fun isCacheValid(fetchTime: Long) = System.currentTimeMillis() - fetchTime < CACHE_EXPIRATION
 
     suspend fun searchSongs(query: String, filter: YouTube.SearchFilter = YouTube.SearchFilter.FILTER_SONG): List<MusicSearchResponse> = withContext(Dispatchers.IO) {
+        val cacheKey = "$query-$filter"
+        if (isCacheValid(lastHomeFetchTime)) {
+            cachedSongs[cacheKey]?.let { return@withContext it }
+        }
+        
         val result = youtube.search(query, filter)
-        result.getOrNull()?.items?.mapNotNull { item ->
+        val songs = result.getOrNull()?.items?.mapNotNull { item ->
             val title = item.title
             val id = item.id
             val thumb = item.thumbnail
@@ -56,10 +67,15 @@ class MusicRepository {
                 MusicSearchResponse(title, artist, id, thumb, params)
             } else null
         } ?: emptyList()
+        
+        cachedSongs[cacheKey] = songs
+        songs
     }
 
     suspend fun getHomeSections(): List<MusicHomeSection> = withContext(Dispatchers.IO) {
-        cachedHomeSections?.let { return@withContext it }
+        if (isCacheValid(lastHomeFetchTime)) {
+            cachedHomeSections?.let { return@withContext it }
+        }
         try {
             val response = youtube.customQuery("FEmusic_home").getOrNull()
             if (response == null) {
@@ -68,7 +84,9 @@ class MusicRepository {
             }
 
             val sections = parseBrowseResponse(response)
-            sections.also { cachedHomeSections = it }
+            cachedHomeSections = sections
+            lastHomeFetchTime = System.currentTimeMillis()
+            sections
         } catch (e: Exception) {
             Log.e("MusicHome", "Error loading home sections", e)
             emptyList()
@@ -285,9 +303,12 @@ class MusicRepository {
     }
 
     suspend fun getMoodAndGenres(): List<MusicHomeSection> = withContext(Dispatchers.IO) {
+        if (isCacheValid(lastHomeFetchTime)) {
+            cachedMoodAndGenres?.let { return@withContext it }
+        }
         try {
             val moods = youtube.moodAndGenres().getOrNull()
-            moods?.map { mood ->
+            val sections = moods?.map { mood ->
                 MusicHomeSection(
                     title = mood.title,
                     items = mood.items.map { item ->
@@ -302,6 +323,8 @@ class MusicRepository {
                     }
                 )
             } ?: emptyList()
+            cachedMoodAndGenres = sections
+            sections
         } catch (e: Exception) {
             emptyList()
         }

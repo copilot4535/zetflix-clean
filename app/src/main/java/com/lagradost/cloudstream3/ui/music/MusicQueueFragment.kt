@@ -27,7 +27,7 @@ class MusicQueueFragment : BaseFragment<FragmentMusicQueueBinding>(
     BindingCreator.Inflate(FragmentMusicQueueBinding::inflate)
 ) {
     private val viewModel: MusicViewModel by activityViewModels()
-    private lateinit var queueAdapter: MusicSearchAdapter
+    private lateinit var queueAdapter: MusicQueueAdapter
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var mediaController: MediaController? = null
 
@@ -84,28 +84,55 @@ class MusicQueueFragment : BaseFragment<FragmentMusicQueueBinding>(
         } else {
             songs
         }
-        queueAdapter.submitList(upNext)
+        queueAdapter.submitList(upNext.toList())
     }
 
     private fun setupRecyclerView() {
-        queueAdapter = MusicSearchAdapter({ index ->
-            // In queue view, we might want to jump to this song
-            // For now, let's just use playQueue with the same list
+        queueAdapter = MusicQueueAdapter({ index ->
             viewModel.currentQueueLiveData.value?.let { songs ->
-                // The index in upNext corresponds to (original index - currentIndex - 1)
-                // But simplified for now: just map the song to its index in currentQueue
-                val selectedSong = queueAdapter.currentList[index]
-                val originalIndex = songs.indexOf(selectedSong)
-                if (originalIndex != -1) {
-                    viewModel.playQueue(songs, originalIndex)
+                val controller = mediaController ?: return@let
+                val currentIndex = controller.currentMediaItemIndex
+                val targetIndex = currentIndex + 1 + index
+                if (targetIndex in songs.indices) {
+                    controller.seekToDefaultPosition(targetIndex)
                 }
             }
         }, { _, song ->
             showSongMenu(song)
+        }, { from, to ->
+            val controller = mediaController ?: return@MusicQueueAdapter
+            val currentIndex = controller.currentMediaItemIndex
+            viewModel.moveQueueItem(currentIndex + 1 + from, currentIndex + 1 + to)
+        }, { position ->
+            val controller = mediaController ?: return@MusicQueueAdapter
+            val currentIndex = controller.currentMediaItemIndex
+            viewModel.removeFromQueue(currentIndex + 1 + position)
         })
+
         binding?.musicQueueRecycler?.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = queueAdapter
+            
+            val callback = object : androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(
+                androidx.recyclerview.widget.ItemTouchHelper.UP or androidx.recyclerview.widget.ItemTouchHelper.DOWN,
+                androidx.recyclerview.widget.ItemTouchHelper.LEFT or androidx.recyclerview.widget.ItemTouchHelper.RIGHT
+            ) {
+                override fun onMove(
+                    recyclerView: androidx.recyclerview.widget.RecyclerView,
+                    viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
+                    target: androidx.recyclerview.widget.RecyclerView.ViewHolder
+                ): Boolean {
+                    val from = viewHolder.bindingAdapterPosition
+                    val to = target.bindingAdapterPosition
+                    return queueAdapter.onItemMove(from, to)
+                }
+
+                override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
+                    val position = viewHolder.bindingAdapterPosition
+                    queueAdapter.onItemDismiss(position)
+                }
+            }
+            androidx.recyclerview.widget.ItemTouchHelper(callback).attachToRecyclerView(this)
         }
     }
 

@@ -18,7 +18,9 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.lagradost.cloudstream3.DownloaderTestImpl
+import com.lagradost.cloudstream3.ui.music.StreamResolver
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
+import com.lagradost.cloudstream3.utils.Coroutines.main
 import org.schabi.newpipe.extractor.NewPipe
 
 @UnstableApi
@@ -29,12 +31,17 @@ class MusicService : MediaSessionService() {
         const val ACTION_UPDATE_QUEUE = "com.lagradost.cloudstream3.services.music.ACTION_UPDATE_QUEUE"
         const val ACTION_ADD_TO_QUEUE = "com.lagradost.cloudstream3.services.music.ACTION_ADD_TO_QUEUE"
         const val ACTION_PLAY_NEXT = "com.lagradost.cloudstream3.services.music.ACTION_PLAY_NEXT"
+        const val ACTION_REMOVE_FROM_QUEUE = "com.lagradost.cloudstream3.services.music.ACTION_REMOVE_FROM_QUEUE"
+        const val ACTION_MOVE_QUEUE_ITEM = "com.lagradost.cloudstream3.services.music.ACTION_MOVE_QUEUE_ITEM"
         const val ACTION_STOP = "com.lagradost.cloudstream3.services.music.ACTION_STOP"
         const val EXTRA_URL = "EXTRA_URL"
         const val EXTRA_TITLE = "EXTRA_TITLE"
         const val EXTRA_ARTIST = "EXTRA_ARTIST"
         const val EXTRA_THUMBNAIL = "EXTRA_THUMBNAIL"
         const val EXTRA_VIDEO_ID = "EXTRA_VIDEO_ID"
+        const val EXTRA_INDEX = "EXTRA_INDEX"
+        const val EXTRA_FROM_INDEX = "EXTRA_FROM_INDEX"
+        const val EXTRA_TO_INDEX = "EXTRA_TO_INDEX"
 
         const val EXTRA_URLS = "EXTRA_URLS"
         const val EXTRA_TITLES = "EXTRA_TITLES"
@@ -46,6 +53,8 @@ class MusicService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
     private var player: ExoPlayer? = null
+    private var retryCount = 0
+    private val MAX_RETRY = 2
 
     override fun onCreate() {
         super.onCreate()
@@ -63,7 +72,14 @@ class MusicService : MediaSessionService() {
         player = exoPlayer
         exoPlayer.addListener(object : androidx.media3.common.Player.Listener {
             override fun onEvents(player: androidx.media3.common.Player, events: androidx.media3.common.Player.Events) {
+                if (events.contains(androidx.media3.common.Player.EVENT_MEDIA_ITEM_TRANSITION)) {
+                    retryCount = 0
+                }
                 updateWidget()
+            }
+
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                handlePlaybackError(error)
             }
         })
         mediaSession = MediaSession.Builder(this, exoPlayer)
@@ -236,8 +252,52 @@ class MusicService : MediaSessionService() {
                     }
                 }
             }
+        } else if (intent?.action == ACTION_REMOVE_FROM_QUEUE) {
+            val index = intent.getIntExtra(EXTRA_INDEX, -1)
+            if (index != -1) {
+                player?.removeMediaItem(index)
+            }
+        } else if (intent?.action == ACTION_MOVE_QUEUE_ITEM) {
+            val from = intent.getIntExtra(EXTRA_FROM_INDEX, -1)
+            val to = intent.getIntExtra(EXTRA_TO_INDEX, -1)
+            if (from != -1 && to != -1) {
+                player?.moveMediaItem(from, to)
+            }
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    @UnstableApi
+    private fun handlePlaybackError(error: androidx.media3.common.PlaybackException) {
+        val mediaItem = player?.currentMediaItem ?: return
+        val videoId = mediaItem.mediaId
+        
+        Log.e("MusicService", "Playback error for $videoId: ${error.errorCodeName} (${error.errorCode})", error)
+
+        // 403 or 404 might indicate expired URL
+        val isNetworkError = error.errorCode == androidx.media3.common.PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+                             || error.errorCode == androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+                             || error.errorCode == androidx.media3.common.PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
+        
+        if (isNetworkError && retryCount < MAX_RETRY) {
+            retryCount++
+            Log.d("MusicService", "Attempting re-resolution for $videoId (Retry $retryCount)")
+            ioSafe {
+                val newUrl = StreamResolver.resolveStreamUrl(videoId, forceRefresh = true)
+                if (newUrl != null) {
+                    main {
+                        val currentPos = player?.currentPosition ?: 0L
+                        val newMediaItem = mediaItem.buildUpon().setUri(newUrl).build()
+                        player?.setMediaItem(newMediaItem, currentPos)
+                        player?.prepare()
+                        player?.play()
+                        Log.d("MusicService", "Re-resolution success for $videoId")
+                    }
+                } else {
+                    Log.e("MusicService", "Re-resolution failed for $videoId")
+                }
+            }
+        }
     }
 
     private fun showNotification(title: String?, artist: String?) {
