@@ -109,12 +109,63 @@ object MusicColorHelper {
     }
 
     /**
+     * Calculates the contrast ratio between two colors.
+     * returns a value between 1.0 and 21.0.
+     */
+    fun calculateContrast(@ColorInt color1: Int, @ColorInt color2: Int): Float {
+        val l1 = calculateLuminance(color1) + 0.05f
+        val l2 = calculateLuminance(color2) + 0.05f
+        return if (l1 > l2) l1 / l2 else l2 / l1
+    }
+
+    /**
      * Darkens or lightens a color to ensure enough contrast for text.
      */
     @ColorInt
     fun ensureContrast(@ColorInt backgroundColor: Int, @ColorInt textColor: Int, minContrastRatio: Float = 4.5f): Int {
-        // Simple implementation: if background is dark, return light text, and vice versa
-        return if (calculateLuminance(backgroundColor) < 0.5f) Color.WHITE else Color.BLACK
+        var result = textColor
+        val bgLuminance = calculateLuminance(backgroundColor)
+        val isBgDark = bgLuminance < 0.5f
+        
+        val hsv = FloatArray(3)
+        Color.colorToHSV(result, hsv)
+        
+        var contrast = calculateContrast(backgroundColor, result)
+        var iterations = 0
+        
+        // Iteratively adjust luminance to reach contrast goal
+        while (contrast < minContrastRatio && iterations < 10) {
+            if (isBgDark) {
+                hsv[2] = minOf(1.0f, hsv[2] + 0.1f) // Lighten
+            } else {
+                hsv[2] = maxOf(0.0f, hsv[2] - 0.1f) // Darken
+            }
+            result = Color.HSVToColor(hsv)
+            contrast = calculateContrast(backgroundColor, result)
+            iterations++
+        }
+        
+        // If still not enough contrast, try adjusting saturation
+        if (contrast < minContrastRatio) {
+            iterations = 0
+            while (contrast < minContrastRatio && iterations < 5) {
+                if (isBgDark) {
+                    hsv[1] = maxOf(0.0f, hsv[1] - 0.1f) // Desaturate to make it whiter
+                } else {
+                    hsv[1] = minOf(1.0f, hsv[1] + 0.1f) // Saturate or leave it
+                }
+                result = Color.HSVToColor(hsv)
+                contrast = calculateContrast(backgroundColor, result)
+                iterations++
+            }
+        }
+        
+        // Final fallback
+        if (contrast < minContrastRatio) {
+            return if (isBgDark) Color.WHITE else Color.BLACK
+        }
+        
+        return result
     }
 
     /**
@@ -153,20 +204,8 @@ object MusicColorHelper {
         val tertiary = adjustAlpha(primary, 0.55f)
 
         // 4. Accent color (active lyric)
-        // Try to use vibrant color, but ensure it's readable on the background
-        var accent = palette.vibrantColor
-        val accentHsv = FloatArray(3)
-        Color.colorToHSV(accent, accentHsv)
-        
-        if (isLight) {
-            // Light background
-            if (accentHsv[2] > 0.5f) accentHsv[2] = 0.4f 
-        } else {
-            // Dark background
-            if (accentHsv[2] < 0.7f) accentHsv[2] = 0.9f 
-            if (accentHsv[1] < 0.2f) accentHsv[1] = 0.4f
-        }
-        accent = Color.HSVToColor(accentHsv)
+        // Ensure contrast against background
+        val accent = ensureContrast(lyricsBg, palette.vibrantColor)
 
         return LyricsPalette(
             background = lyricsBg,
@@ -217,6 +256,47 @@ object MusicColorHelper {
             foregroundTertiary = tertiary,
             isLight = isLight
         )
+    }
+
+    /**
+     * Generates a premium, artwork-driven dark background for the Mini Player.
+     * Uses luminance reduction and saturation control to keep it sophisticated.
+     */
+    @ColorInt
+    fun generatePremiumMiniPlayerBackground(palette: MusicPalette): Int {
+        // Prefer darkMutedColor, then darkVibrantColor, then darken the dominant color
+        val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) {
+            palette.darkMutedColor
+        } else if (palette.darkVibrantColor != DEFAULT_SURFACE) {
+            palette.darkVibrantColor
+        } else {
+            palette.dominantColor
+        }
+
+        val hsv = FloatArray(3)
+        Color.colorToHSV(baseColor, hsv)
+
+        // 1. Saturation control (Desaturate to prevent "cheap" look)
+        hsv[1] = hsv[1].coerceIn(0.1f, 0.4f) 
+
+        // 2. Luminance reduction (Ensure it's almost black but tinted)
+        hsv[2] = hsv[2].coerceIn(0.05f, 0.12f)
+
+        return Color.HSVToColor(hsv)
+    }
+
+    /**
+     * Extracts a vibrant accent color for progress and active icons.
+     */
+    @ColorInt
+    fun getVibrantAccent(palette: MusicPalette): Int {
+        return if (palette.vibrantColor != DEFAULT_ACCENT) {
+            palette.vibrantColor
+        } else if (palette.darkVibrantColor != DEFAULT_SURFACE) {
+            palette.darkVibrantColor
+        } else {
+            DEFAULT_ACCENT
+        }
     }
 
     @ColorInt

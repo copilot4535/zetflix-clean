@@ -317,11 +317,36 @@ class MusicActivity : AppCompatActivity() {
     fun getMediaControllerMedia3(): MediaController? = mediaController
 
     private fun setupGlobalMiniPlayer() {
-        binding.globalMiniPlayer.musicMiniPlayer.setOnClickListener {
-            val extras = FragmentNavigatorExtras(
-                binding.globalMiniPlayer.musicMiniThumbnailCard to "album_art"
-            )
-            this.navigate(R.id.global_to_navigation_music_player, extras = extras)
+        val gestureDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean {
+                val extras = FragmentNavigatorExtras(
+                    binding.globalMiniPlayer.musicMiniThumbnailCard to "album_art"
+                )
+                this@MusicActivity.navigate(R.id.global_to_navigation_music_player, extras = extras)
+                return true
+            }
+
+            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                if (e1 == null) return false
+                val diffX = e2.x - e1.x
+                if (Math.abs(diffX) > 100 && Math.abs(velocityX) > 100) {
+                    if (diffX > 0) {
+                        mediaController?.seekToPrevious()
+                    } else {
+                        mediaController?.seekToNext()
+                    }
+                    return true
+                }
+                return false
+            }
+        })
+
+        binding.globalMiniPlayer.musicMiniPlayer.setOnTouchListener { v, event ->
+            if (gestureDetector.onTouchEvent(event)) return@setOnTouchListener true
+            if (event.action == android.view.MotionEvent.ACTION_UP) {
+                v.performClick()
+            }
+            true
         }
 
         binding.globalMiniPlayer.musicMiniPlayPause.setOnClickListener {
@@ -330,12 +355,10 @@ class MusicActivity : AppCompatActivity() {
             }
         }
         
-        // Ensure thumbnail card also triggers navigation
-        binding.globalMiniPlayer.musicMiniThumbnailCard.setOnClickListener {
-            val extras = FragmentNavigatorExtras(
-                binding.globalMiniPlayer.musicMiniThumbnailCard to "album_art"
-            )
-            this.navigate(R.id.global_to_navigation_music_player, extras = extras)
+        binding.globalMiniPlayer.musicMiniLike.setOnClickListener {
+            viewModel.currentPlayingSong.value?.let { song ->
+                viewModel.toggleLikeSong(song)
+            }
         }
     }
 
@@ -389,8 +412,13 @@ class MusicActivity : AppCompatActivity() {
         
         val hasMedia = mediaController?.currentMediaItem != null
         val isIdle = mediaController?.playbackState == Player.STATE_IDLE
+        val isBuffering = mediaController?.playbackState == Player.STATE_BUFFERING
         
         val shouldShow = !isFullScreen && hasMedia && !isIdle
+        
+        // Update buffering state
+        binding.globalMiniPlayer.musicMiniLoading.isVisible = isBuffering
+        binding.globalMiniPlayer.musicMiniPlayPause.isVisible = !isBuffering
         
         if (shouldShow) {
             if (!binding.globalMiniPlayer.musicMiniPlayer.isVisible || binding.globalMiniPlayer.musicMiniPlayer.alpha < 1f) {
@@ -451,25 +479,42 @@ class MusicActivity : AppCompatActivity() {
     }
 
     private fun applyMiniPlayerTheming(palette: MusicPalette) {
-        // Prefer darkMutedColor, then darkVibrantColor, then darken the dominant color
-        val baseColor = if (palette.darkMutedColor != 0xFF1A1A1A.toInt()) {
-            palette.darkMutedColor
-        } else if (palette.darkVibrantColor != 0xFF1A1A1A.toInt()) {
-            palette.darkVibrantColor
-        } else {
-            palette.dominantColor
-        }
-        
-        // Further darken to ensure it's never too bright (70% original + 30% black)
-        val targetColor = MusicColorHelper.darkenColor(baseColor, 0.7f)
+        val targetColor = MusicColorHelper.generatePremiumMiniPlayerBackground(palette)
+        val accentColor = MusicColorHelper.getVibrantAccent(palette)
         
         MusicColorHelper.animateColorChange(currentMiniPlayerColor, targetColor) { color ->
             binding.globalMiniPlayer.musicMiniPlayer.setCardBackgroundColor(color)
             currentMiniPlayerColor = color
         }
+        
+        // Update progress bar and icons
+        binding.globalMiniPlayer.musicMiniProgress.progressDrawable.setTint(accentColor)
+        binding.globalMiniPlayer.musicMiniLoading.setIndicatorColor(accentColor)
+        
+        updateLikeIcon(accentColor)
+    }
+
+    private fun updateLikeIcon(accentColor: Int? = null) {
+        val currentSong = viewModel.currentPlayingSong.value
+        val isLiked = viewModel.likedSongs.value?.any { it.videoId == currentSong?.videoId } == true
+        
+        binding.globalMiniPlayer.musicMiniLike.setImageResource(
+            if (isLiked) R.drawable.ic_baseline_favorite_24 else R.drawable.ic_baseline_favorite_border_24
+        )
+        
+        val tint = if (isLiked) {
+            accentColor ?: ContextCompat.getColor(this, R.color.zetflix_accent)
+        } else {
+            android.graphics.Color.WHITE
+        }
+        binding.globalMiniPlayer.musicMiniLike.setColorFilter(tint)
     }
 
     private fun observeViewModel() {
+        viewModel.likedSongs.observe(this) {
+            updateLikeIcon()
+        }
+        
         viewModel.queueReady.observe(this) { event ->
             val content = event.peekContent()
             val (resource, requestId) = content

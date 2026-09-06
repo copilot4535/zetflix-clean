@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:background="@android:color/transparent"
     android:orientation="vertical"
-    android:paddingHorizontal="32dp"
+    android:paddingHorizontal="20dp"
     android:paddingBottom="8dp">
 
     <!-- Progress Bar Section -->

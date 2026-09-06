@@ -91,8 +91,15 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val currentIndex = currentLyrics.indexOfLast { it.timestampMs <= position }
         
         if (currentIndex != -1) {
-            val builder = SpannableStringBuilder()
             val palette = currentLyricsPalette
+            
+            // Update Live Lyric (Top)
+            binding?.musicPlayerLiveLyric?.apply {
+                text = currentLyrics[currentIndex].text
+                isVisible = true
+            }
+
+            val builder = SpannableStringBuilder()
             
             // Show active line and next 3 lines for a more immersive preview
             val maxLines = 4
@@ -117,6 +124,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             }
             
             binding?.musicPlayerLyricsSnippet?.text = builder
+        } else {
+            binding?.musicPlayerLiveLyric?.isVisible = false
         }
     }
 
@@ -272,6 +281,10 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
 
         binding?.musicPlayerLyricsPreview?.setOnClickListener {
+            openLyricsPanel()
+        }
+
+        binding?.musicPlayerLiveLyric?.setOnClickListener {
             openLyricsPanel()
         }
         
@@ -677,16 +690,21 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                     if (currentLyrics.isNotEmpty()) {
                         lyricsHandler.removeCallbacks(updateLyricsRunnable)
                         lyricsHandler.post(updateLyricsRunnable)
+                        binding?.musicPlayerLiveLyric?.isVisible = true
+                    } else {
+                        binding?.musicPlayerLiveLyric?.isVisible = false
                     }
                 } else if (!lyrics.plainLyrics.isNullOrBlank()) {
                     currentLyrics = emptyList()
                     lyricsHandler.removeCallbacks(updateLyricsRunnable)
                     val snippet = lyrics.plainLyrics.lines().filter { it.isNotBlank() }.take(2).joinToString("\n")
                     binding?.musicPlayerLyricsSnippet?.text = snippet
+                    binding?.musicPlayerLiveLyric?.isVisible = false
                 }
             } else {
                 currentLyrics = emptyList()
                 lyricsHandler.removeCallbacks(updateLyricsRunnable)
+                binding?.musicPlayerLiveLyric?.isVisible = false
             }
         }
 
@@ -717,6 +735,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         binding?.musicPlayerLyricsPreview?.setCardBackgroundColor(cardBg)
         binding?.musicPlayerAboutSongCard?.setCardBackgroundColor(cardBg)
         binding?.musicPlayerSongDnaCard?.setCardBackgroundColor(cardBg)
+        binding?.musicPlayerLiveLyric?.setTextColor(lyricsPalette.accent)
         
         updateLyricsPreview() // Refresh preview with new colors
 
