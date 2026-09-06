@@ -96,7 +96,15 @@
         android:id="@+id/navigation_music_player"
         android:name="com.lagradost.cloudstream3.ui.music.MusicPlayerFragment"
         android:label="Player"
-        tools:layout="@layout/fragment_music_player" />
+        tools:layout="@layout/fragment_music_player">
+        <action
+            android:id="@+id/action_navigation_music_player_to_navigation_lyrics"
+            app:destination="@id/navigation_lyrics"
+            app:enterAnim="@anim/enter_anim"
+            app:exitAnim="@anim/exit_anim"
+            app:popEnterAnim="@anim/enter_anim"
+            app:popExitAnim="@anim/pop_exit" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_lyrics"

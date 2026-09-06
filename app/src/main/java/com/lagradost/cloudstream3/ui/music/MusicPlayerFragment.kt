@@ -54,6 +54,7 @@ import kotlinx.serialization.json.Json
 import androidx.appcompat.app.AlertDialog
 import androidx.transition.Fade
 import com.lagradost.cloudstream3.utils.UIHelper.getSharedElementTransition
+import androidx.navigation.fragment.findNavController
 
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -152,9 +153,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 } else {
                     if (abs(diffY) > SWIPE_THRESHOLD && abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffY > SWIPE_THRESHOLD && binding?.musicPlayerScrollView?.scrollY == 0) {
-                            // Only minimize to Mini Player if we are NOT at the Lyrics layer.
-                            // The activity handles the back stack correctly if popBackStack() is called.
-                            activity?.onBackPressedDispatcher?.onBackPressed()
+                            // Localized popBackStack ensures we respect the stack hierarchy
+                            findNavController().popBackStack()
                             return true
                         } else if (diffY < -SWIPE_THRESHOLD) {
                             // Smooth scroll to lyrics if they are available
@@ -228,7 +228,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     @SuppressLint("ClickableViewAccessibility")
     private fun setupUI() {
         binding?.musicPlayerBack?.setOnClickListener {
-            activity?.onBackPressed()
+            findNavController().popBackStack()
         }
 
         binding?.musicPlayerView?.let { playerView ->
@@ -340,8 +340,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val hasLyrics = state?.status == LyricsStatus.AVAILABLE
 
         if (hasLyrics) {
-            // Spotify-style: Navigate to full immersive lyrics fragment
-            activity?.navigate(R.id.navigation_lyrics)
+            // Use explicit action to preserve hierarchy
+            findNavController().navigate(R.id.action_navigation_music_player_to_navigation_lyrics)
         } else {
             Toast.makeText(context, "Lyrics not available for this song", Toast.LENGTH_SHORT).show()
         }

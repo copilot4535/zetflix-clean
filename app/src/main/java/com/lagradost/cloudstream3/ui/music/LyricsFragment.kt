@@ -31,6 +31,7 @@ import coil3.asDrawable
 import android.content.res.ColorStateList
 import coil3.imageLoader
 import kotlin.math.abs
+import androidx.navigation.fragment.findNavController
 
 class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
     BindingCreator.Inflate(FragmentLyricsBinding::inflate)
@@ -76,7 +77,7 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
                         }
                         
                         if (isAtTop) {
-                            activity?.onBackPressedDispatcher?.onBackPressed()
+                            findNavController().popBackStack()
                             return true
                         }
                     }
@@ -111,7 +112,7 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
 
     private fun setupUI() {
         binding?.lyricsClose?.setOnClickListener {
-            activity?.onBackPressedDispatcher?.onBackPressed()
+            findNavController().popBackStack()
         }
 
         binding?.lyricsPlayPause?.setOnClickListener {

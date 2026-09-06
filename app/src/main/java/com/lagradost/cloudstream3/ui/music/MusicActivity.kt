@@ -190,13 +190,22 @@ class MusicActivity : AppCompatActivity() {
             )
 
             // Apply bottom inset to the bottom navigation container as margin
-            // Base margin is 24dp (as defined in XML)
-            val baseBottomMargin = (24 * resources.displayMetrics.density).toInt()
+            // Base margin is 8dp (compact floating look)
+            val baseBottomMargin = (8 * resources.displayMetrics.density).toInt()
             binding.musicBottomNavContainer.updateLayoutParams<android.view.ViewGroup.MarginLayoutParams> {
                 bottomMargin = if (isImmersive) 0 else (bottomInset + baseBottomMargin)
             }
             
+            // Ensure the BottomNavigationView itself DOES NOT add internal padding for insets
+            // This prevents the "Double Inset" gap inside the pill
+            binding.musicBottomNav.updatePadding(bottom = 0)
+            
             windowInsets
+        }
+
+        // Also explicitly disable internal inset handling on the nav view itself
+        ViewCompat.setOnApplyWindowInsetsListener(binding.musicBottomNav) { _, insets ->
+            insets // Return insets without consuming or applying them
         }
     }
 
@@ -271,11 +280,11 @@ class MusicActivity : AppCompatActivity() {
         val navHeight = if (navContainer.height > 0) 
             navContainer.height.toFloat() 
         else 
-            150 * resources.displayMetrics.density // Increased fallback for safety
+            80 * resources.displayMetrics.density // Updated fallback for 52dp + margin
             
         val targetAlpha = if (show) 1f else 0f
-        // Add 100dp extra to ensure it's completely off screen including margin
-        val targetTranslationY = if (show) 0f else (navHeight + 200f)
+        // Ensure it moves completely off screen
+        val targetTranslationY = if (show) 0f else (navHeight + 300f)
         
         // Use a small epsilon for float comparison to avoid redundant animations
         if (navContainer.isVisible == show && 
@@ -294,7 +303,7 @@ class MusicActivity : AppCompatActivity() {
         } else {
             navContainer.animate().cancel()
             navContainer.animate()
-                .translationY(navHeight + 200f)
+                .translationY(navHeight + 300f)
                 .alpha(0f)
                 .setDuration(300)
                 .setInterpolator(android.view.animation.AccelerateInterpolator())

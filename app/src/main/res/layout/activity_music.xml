@@ -22,7 +22,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             app:defaultNavHost="true"
-            app:layout_constraintBottom_toTopOf="@+id/music_bottom_nav_container"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -40,7 +40,7 @@
             android:id="@+id/music_bottom_nav_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="8dp"
             android:elevation="20dp"
             android:translationZ="20dp"
             android:clipChildren="false"
@@ -51,18 +51,24 @@
 
             <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/music_bottom_nav"
-                android:layout_width="280dp"
-                android:layout_height="80dp"
+                android:layout_width="180dp"
+                android:layout_height="52dp"
                 android:background="@drawable/bg_music_floating_nav"
-                app:elevation="20dp"
-                app:itemIconSize="24dp"
+                android:padding="0dp"
+                android:minHeight="0dp"
+                app:elevation="0dp"
+                app:itemIconSize="22dp"
                 app:itemIconTint="@color/music_bottom_nav_icon_color"
                 app:itemTextColor="@color/music_bottom_nav_icon_color"
-                app:labelVisibilityMode="labeled"
+                app:labelVisibilityMode="unlabeled"
                 app:itemHorizontalTranslationEnabled="false"
                 app:itemRippleColor="#33FFFFFF"
                 app:itemActiveIndicatorStyle="@null"
-                app:menu="@menu/music_bottom_nav_menu" />
+                app:menu="@menu/music_bottom_nav_menu"
+                app:paddingBottomSystemWindowInsets="false"
+                app:paddingLeftSystemWindowInsets="false"
+                app:paddingRightSystemWindowInsets="false"
+                app:paddingTopSystemWindowInsets="false" />
         </FrameLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
