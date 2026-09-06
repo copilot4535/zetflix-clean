@@ -5,10 +5,10 @@
     android:id="@+id/podcast_card_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
+    android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
     app:cardBackgroundColor="#121212"
-    app:cardCornerRadius="16dp"
+    app:cardCornerRadius="24dp"
     app:cardElevation="4dp"
     app:strokeWidth="0dp"
     android:clickable="true"
@@ -20,13 +20,14 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Top Row: Artwork and Title Info -->
+        <!-- Artwork -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/podcast_thumbnail_container"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            app:cardCornerRadius="8dp"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -39,113 +40,128 @@
                 tools:src="@drawable/default_cover" />
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:id="@+id/podcast_title"
+        <!-- More Actions (Top Right) -->
+        <ImageView
+            android:id="@+id/btn_more"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="12dp"
+            android:src="@drawable/ic_baseline_more_vert_24"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white"
+            android:contentDescription="More" />
+
+        <!-- Content Container -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/podcast_content_column"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginStart="16dp"
-            android:ellipsize="end"
-            android:fontFamily="@font/metropolis_bold"
-            android:maxLines="2"
-            android:textColor="@color/white"
-            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@id/podcast_thumbnail_container"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/podcast_thumbnail_container"
-            app:layout_constraintTop_toTopOf="@id/podcast_thumbnail_container"
-            tools:text="Podcast Episode Title: A Very Long One to Test Multiple Lines" />
+            app:layout_constraintTop_toTopOf="@id/podcast_thumbnail_container">
 
-        <TextView
-            android:id="@+id/podcast_show_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:fontFamily="@font/metropolis_regular"
-            android:maxLines="1"
-            android:textColor="#B3B3B3"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/podcast_title"
-            app:layout_constraintTop_toBottomOf="@id/podcast_title"
-            tools:text="Show Name" />
-
-        <!-- Description snippet -->
-        <TextView
-            android:id="@+id/podcast_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:ellipsize="end"
-            android:fontFamily="@font/metropolis_regular"
-            android:maxLines="3"
-            android:textColor="#D0D0D0"
-            android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@id/podcast_thumbnail_container"
-            tools:text="This is a description or subtitle for the podcast episode. It should provide some context about the content and look premium." />
-
-        <!-- Bottom Action Row -->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/action_row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/podcast_description">
-
-            <FrameLayout
-                android:id="@+id/btn_play"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_circle_white"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="@drawable/bg_circle_ripple"
-                app:layout_constraintBottom_toBottomOf="parent"
+            <TextView
+                android:id="@+id/podcast_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/metropolis_bold"
+                android:maxLines="2"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toStartOf="@id/guideline_actions"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Podcast Episode Title: A Very Long One to Test Multiple Lines" />
+
+            <TextView
+                android:id="@+id/podcast_show_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/metropolis_regular"
+                android:maxLines="1"
+                android:textColor="@color/music_text_secondary"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="@id/podcast_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/podcast_title"
+                tools:text="Show Name" />
+
+            <TextView
+                android:id="@+id/podcast_description"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/metropolis_regular"
+                android:maxLines="2"
+                android:textColor="#B3FFFFFF"
+                android:textSize="13sp"
+                app:layout_constraintEnd_toEndOf="@id/podcast_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/podcast_show_name"
+                tools:text="Exploring the events and stories surrounding one of the most infamous cases in American history..." />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.85" />
+
+            <LinearLayout
+                android:id="@+id/action_row"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <FrameLayout
+                    android:id="@+id/btn_play"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_circle_white"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="@drawable/bg_circle_ripple">
+
+                    <ImageView
+                        android:id="@+id/play_pause_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_baseline_play_arrow_24"
+                        app:tint="@color/black"
+                        android:contentDescription="Play" />
+                </FrameLayout>
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_baseline_play_arrow_24"
-                    app:tint="@color/black"
-                    android:contentDescription="Play" />
-            </FrameLayout>
+                    android:id="@+id/btn_add"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="12dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_baseline_add_24"
+                    app:tint="@color/white"
+                    android:contentDescription="Add to Playlist" />
 
-            <ImageView
-                android:id="@+id/btn_add"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="16dp"
-                android:background="@drawable/bg_circle_ripple"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_baseline_add_24"
-                app:layout_constraintBottom_toBottomOf="@id/btn_play"
-                app:layout_constraintStart_toEndOf="@id/btn_play"
-                app:layout_constraintTop_toTopOf="@id/btn_play"
-                app:tint="@color/white"
-                android:contentDescription="Add to Playlist" />
-
-            <ImageView
-                android:id="@+id/btn_more"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_circle_ripple"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_baseline_more_vert_24"
-                app:layout_constraintBottom_toBottomOf="@id/btn_play"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/btn_play"
-                app:tint="#B3B3B3"
-                android:contentDescription="More" />
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>
-

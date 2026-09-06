@@ -49,11 +49,14 @@ class MusicViewModel : ViewModel() {
     private val _streamUrl = MutableLiveData<Resource<Pair<String, MusicSearchResponse>>>()
     val streamUrl: LiveData<Resource<Pair<String, MusicSearchResponse>>> = _streamUrl
 
-    private val _lyrics = MutableLiveData<Resource<LyricsResponse>>()
-    val lyrics: LiveData<Resource<LyricsResponse>> = _lyrics
+    private val _lyricsUiState = MutableLiveData<LyricsUiState>(LyricsUiState())
+    val lyricsUiState: LiveData<LyricsUiState> = _lyricsUiState
 
     private val _currentPlayingSong = MutableLiveData<MusicSearchResponse?>()
     val currentPlayingSong: LiveData<MusicSearchResponse?> = _currentPlayingSong
+
+    private val _isPlaying = MutableLiveData<Boolean>(false)
+    val isPlaying: LiveData<Boolean> = _isPlaying
 
     private val _currentQueue = MutableLiveData<List<MusicSearchResponse>>(emptyList())
     val currentQueueLiveData: LiveData<List<MusicSearchResponse>> = _currentQueue
@@ -573,8 +576,16 @@ class MusicViewModel : ViewModel() {
         val song = currentQueueList.find { it.videoId == mediaId }
         if (song != null && _currentPlayingSong.value?.videoId != song.videoId) {
             _currentPlayingSong.postValue(song)
+            // Reset lyrics state immediately on track change to avoid showing stale lyrics
+            _lyricsUiState.postValue(LyricsUiState(status = LyricsStatus.LOADING, trackId = song.videoId))
             fetchLyrics(song)
             addToHistory(song)
+        }
+    }
+
+    fun updatePlaybackState(isPlaying: Boolean) {
+        if (_isPlaying.value != isPlaying) {
+            _isPlaying.postValue(isPlaying)
         }
     }
 
@@ -748,19 +759,49 @@ class MusicViewModel : ViewModel() {
     private fun fetchLyrics(song: MusicSearchResponse) {
         val artist = song.artist ?: ""
         val title = song.title
+        val trackId = song.videoId
+        
+        // Ensure we are in LOADING state for the new track
+        _lyricsUiState.postValue(LyricsUiState(status = LyricsStatus.LOADING, trackId = trackId))
         
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val url = "https://lrclib.net/api/get?artist_name=${artist.encodeUrl()}&track_name=${title.encodeUrl()}"
                 val response = app.get(url)
+                
+                // Only update if this result is for the currently requested track
+                if (_lyricsUiState.value?.trackId != trackId) return@launchSafe
+
                 if (response.isSuccessful) {
                     val lyricsData = response.parsed<LyricsResponse>()
-                    _lyrics.postValue(Resource.Success(lyricsData))
+                    val hasLyrics = !lyricsData.plainLyrics.isNullOrBlank() || !lyricsData.syncedLyrics.isNullOrBlank()
+                    
+                    _lyricsUiState.postValue(
+                        LyricsUiState(
+                            status = if (hasLyrics) LyricsStatus.AVAILABLE else LyricsStatus.NOT_AVAILABLE,
+                            lyrics = lyricsData,
+                            trackId = trackId
+                        )
+                    )
                 } else {
-                    _lyrics.postValue(Resource.Failure(false, "Lyrics not found"))
+                    _lyricsUiState.postValue(
+                        LyricsUiState(
+                            status = LyricsStatus.NOT_AVAILABLE,
+                            trackId = trackId
+                        )
+                    )
                 }
             } catch (e: Exception) {
-                _lyrics.postValue(Resource.Failure(false, "Lyrics error: ${e.message}"))
+                // Only update if this error is for the currently requested track
+                if (_lyricsUiState.value?.trackId != trackId) return@launchSafe
+
+                _lyricsUiState.postValue(
+                    LyricsUiState(
+                        status = LyricsStatus.ERROR,
+                        trackId = trackId,
+                        errorMessage = e.message
+                    )
+                )
             }
         }
     }

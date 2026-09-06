@@ -130,6 +130,14 @@ class MusicHomeFragment : BaseFragment<FragmentMusicHomeBinding>(
 
 
     private fun observeViewModel() {
+        viewModel.isPlaying.observe(viewLifecycleOwner) { isPlaying ->
+            homeAdapter.updatePlaybackState(viewModel.currentPlayingSong.value?.videoId, isPlaying)
+        }
+
+        viewModel.currentPlayingSong.observe(viewLifecycleOwner) { song ->
+            homeAdapter.updatePlaybackState(song?.videoId, viewModel.isPlaying.value == true)
+        }
+
         viewModel.queueReady.observe(viewLifecycleOwner) { event ->
             val content = event.peekContent()
             val (resource, requestId) = content

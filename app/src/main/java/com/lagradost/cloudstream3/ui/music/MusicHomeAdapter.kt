@@ -24,6 +24,7 @@ import com.lagradost.cloudstream3.databinding.LayoutMusicHomeHeaderBinding
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 import coil3.asDrawable
 import com.lagradost.cloudstream3.utils.drawableToBitmap
+import kotlinx.coroutines.*
 
 class MusicHomeAdapter(
     private val onSectionItemClick: (MusicHomeSection, Int) -> Unit,
@@ -32,6 +33,15 @@ class MusicHomeAdapter(
     private val onHeaderClick: (Int) -> Unit = {},
     private val onChipChecked: (Int) -> Unit = {}
 ) : ListAdapter<MusicHomeSection, RecyclerView.ViewHolder>(SectionDiffCallback()) {
+
+    private var currentPlayingMediaId: String? = null
+    private var isPlaying: Boolean = false
+
+    fun updatePlaybackState(mediaId: String?, playing: Boolean) {
+        currentPlayingMediaId = mediaId
+        isPlaying = playing
+        notifyDataSetChanged() // Simplest way to update all nested adapters
+    }
 
     companion object {
         const val TYPE_HEADER = 0
@@ -102,6 +112,7 @@ class MusicHomeAdapter(
             val itemAdapter = MusicHomeItemAdapter(itemViewType, { index ->
                 onSectionItemClick(section, index)
             }, onPrefetch)
+            itemAdapter.updatePlaybackState(currentPlayingMediaId, isPlaying)
             
             binding.sectionRecycler.apply {
                 setRecycledViewPool(viewPool)
@@ -136,6 +147,15 @@ class MusicHomeItemAdapter(
     private val onItemClick: (Int) -> Unit,
     private val onPrefetch: (String, String?) -> Unit = { _, _ -> }
 ) : ListAdapter<MusicHomeItem, RecyclerView.ViewHolder>(ItemDiffCallback()) {
+
+    private var currentPlayingMediaId: String? = null
+    private var isPlaying: Boolean = false
+
+    fun updatePlaybackState(mediaId: String?, playing: Boolean) {
+        currentPlayingMediaId = mediaId
+        isPlaying = playing
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, ignoredViewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -196,37 +216,91 @@ class MusicHomeItemAdapter(
     }
 
     inner class PodcastVerticalViewHolder(private val binding: ItemMusicPodcastCardVerticalBinding) : RecyclerView.ViewHolder(binding.root) {
+        private var currentPalette: HomePodcastCardPalette? = null
+        private val paletteCache = mutableMapOf<String, HomePodcastCardPalette>()
+
         fun bind(item: MusicHomeItem, position: Int) {
             binding.podcastTitle.text = item.title
-            
+
             val subtitleParts = item.subtitle?.split("•", limit = 2)
             val showName = subtitleParts?.getOrNull(0)?.trim()
-            val description = subtitleParts?.getOrNull(1)?.trim() ?: item.subtitle
-            
-            binding.podcastShowName.text = showName ?: "ZetFlix Podcast"
+            val description = subtitleParts?.getOrNull(1)?.trim()
+
+            binding.podcastShowName.text = showName ?: "Podcast"
             binding.podcastDescription.text = description
-            
+            binding.podcastDescription.visibility = if (description.isNullOrBlank()) View.GONE else View.VISIBLE
+
+            // Update Play/Pause icon based on playback state
+            val isCurrentItem = item.id == currentPlayingMediaId
+            val showPause = isCurrentItem && isPlaying
+            binding.playPauseIcon.setImageResource(
+                if (showPause) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
+            )
+
+            // Dynamic theming
+            val cachedPalette = paletteCache[item.thumbnailUrl ?: ""]
+            if (cachedPalette != null) {
+                applyPalette(cachedPalette, animate = false)
+            } else {
+                // Fallback while loading
+                binding.podcastCardRoot.setCardBackgroundColor(Color.parseColor("#121212"))
+                binding.podcastTitle.setTextColor(Color.WHITE)
+                binding.podcastShowName.setTextColor(Color.parseColor("#B3B3B3"))
+                binding.podcastDescription.setTextColor(Color.parseColor("#99B3B3B3"))
+            }
+
             binding.podcastThumbnail.loadImage(item.thumbnailUrl) {
                 listener(onSuccess = { _, result ->
                     val bitmap = drawableToBitmap(result.image.asDrawable(binding.root.resources))
                     if (bitmap != null) {
-                        androidx.palette.graphics.Palette.from(bitmap).generate { palette ->
-                            val color = palette?.getDarkMutedColor(Color.parseColor("#121212")) ?: Color.parseColor("#121212")
-                            val darkenedColor = MusicColorHelper.darkenColor(color, 0.4f)
-                            binding.podcastCardRoot.setCardBackgroundColor(darkenedColor)
+                        GlobalScope.launch(Dispatchers.Default) {
+                            val musicPalette = MusicColorHelper.getPalette(item.id, bitmap)
+                            val podcastPalette = MusicColorHelper.generateHomePodcastCardPalette(musicPalette)
+                            
+                            withContext(Dispatchers.Main) {
+                                paletteCache[item.thumbnailUrl ?: ""] = podcastPalette
+                                applyPalette(podcastPalette, animate = true)
+                            }
                         }
                     }
                 })
             }
 
             binding.btnPlay.setOnClickListener { onItemClick(position) }
-            binding.btnAdd.setOnClickListener { 
+            binding.btnAdd.setOnClickListener {
                 // Add to library / playlist
             }
             binding.btnMore.setOnClickListener {
                 // Show more options
             }
             binding.root.setOnClickListener { onItemClick(position) }
+        }
+
+        private fun applyPalette(palette: HomePodcastCardPalette, animate: Boolean) {
+            if (animate) {
+                val fromColors = currentPalette?.let { 
+                    intArrayOf(it.startColor, it.middleColor, it.endColor) 
+                } ?: intArrayOf(Color.parseColor("#121212"), Color.parseColor("#121212"), Color.parseColor("#121212"))
+                
+                val toColors = intArrayOf(palette.startColor, palette.middleColor, palette.endColor)
+                
+                MusicColorHelper.animateGradientChange(binding.podcastCardRoot, fromColors, toColors)
+            } else {
+                val gradient = GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM,
+                    intArrayOf(palette.startColor, palette.middleColor, palette.endColor)
+                )
+                gradient.cornerRadius = 24f * binding.root.resources.displayMetrics.density
+                binding.podcastCardRoot.background = gradient
+            }
+
+            binding.podcastTitle.setTextColor(palette.foregroundPrimary)
+            binding.podcastShowName.setTextColor(palette.foregroundSecondary)
+            binding.podcastDescription.setTextColor(palette.foregroundTertiary)
+            binding.btnMore.imageTintList = android.content.res.ColorStateList.valueOf(palette.foregroundPrimary)
+            binding.btnAdd.imageTintList = android.content.res.ColorStateList.valueOf(palette.foregroundPrimary)
+
+            currentPalette = palette
         }
     }
 

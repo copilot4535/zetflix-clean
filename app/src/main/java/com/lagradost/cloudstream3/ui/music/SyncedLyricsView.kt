@@ -12,7 +12,8 @@ class SyncedLyricsView @JvmOverloads constructor(
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
     private val lyricsAdapter = LyricsLineAdapter()
-    private var isUserScrolling = false
+    var autoScrollEnabled = true
+        private set
 
     init {
         layoutManager = LinearLayoutManager(context)
@@ -20,25 +21,40 @@ class SyncedLyricsView @JvmOverloads constructor(
         
         addOnScrollListener(object : OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                isUserScrolling = newState != SCROLL_STATE_IDLE
+                if (newState == SCROLL_STATE_DRAGGING) {
+                    autoScrollEnabled = false
+                }
             }
         })
     }
 
     fun setLyrics(lines: List<LyricLine>) {
         lyricsAdapter.submitList(lines)
+        autoScrollEnabled = true
+    }
+
+    fun setPalette(palette: LyricsPalette) {
+        lyricsAdapter.setPalette(palette)
+    }
+
+    fun resumeAutoScroll() {
+        autoScrollEnabled = true
+        val index = lyricsAdapter.currentLineIndex
+        if (index != -1) {
+            scrollToPositionCentered(index)
+        }
     }
 
     fun updateProgress(currentMs: Long) {
-        if (isUserScrolling) return
-
         val lines = lyricsAdapter.currentList
         if (lines.isEmpty()) return
 
         val index = lines.indexOfLast { it.timestampMs <= currentMs }
         if (index != -1 && index != lyricsAdapter.currentLineIndex) {
             lyricsAdapter.currentLineIndex = index
-            scrollToPositionCentered(index)
+            if (autoScrollEnabled) {
+                scrollToPositionCentered(index)
+            }
         }
     }
 
@@ -46,13 +62,20 @@ class SyncedLyricsView @JvmOverloads constructor(
         val layoutManager = layoutManager as? LinearLayoutManager ?: return
         
         post {
-            if (isUserScrolling || index < 0 || index >= lyricsAdapter.itemCount) return@post
+            if (index < 0 || index >= lyricsAdapter.itemCount) return@post
             
             val smoothScroller = object : androidx.recyclerview.widget.LinearSmoothScroller(context) {
                 override fun getVerticalSnapPreference(): Int = SNAP_TO_ANY
                 
                 override fun calculateDtToFit(viewStart: Int, viewEnd: Int, boxStart: Int, boxEnd: Int, snapPreference: Int): Int {
-                    return (boxStart + (boxEnd - boxStart) / 2) - (viewStart + (viewEnd - viewStart) / 2)
+                    // Target approximately 1/3 down from the top for a more premium reading focus
+                    val targetY = boxStart + (boxEnd - boxStart) / 3
+                    return targetY - viewStart
+                }
+
+                override fun calculateSpeedPerPixel(displayMetrics: android.util.DisplayMetrics): Float {
+                    // Slightly slower, smoother scroll for a premium feel
+                    return 80f / displayMetrics.densityDpi
                 }
             }
             smoothScroller.targetPosition = index

@@ -133,16 +133,16 @@ class MusicActivity : AppCompatActivity() {
                 binding.musicPreloaderLayout.isVisible = false
                 isTransitioning = false
                 
-                // Ensure bottom nav is shown if we are on a home destination
+                // Ensure bottom nav is shown correctly based on current destination
                 val navHostFragment = supportFragmentManager
                     .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
                 val destinationId = navHostFragment?.navController?.currentDestination?.id
-                val showNav = destinationId == R.id.music_nav_home || 
-                              destinationId == R.id.music_nav_search || 
-                              destinationId == R.id.music_nav_library
-                if (showNav) {
-                    toggleBottomNav(true)
-                }
+                
+                // Show nav for all destinations except immersive ones (player/lyrics)
+                val isImmersive = destinationId == R.id.navigation_music_player || 
+                                 destinationId == R.id.navigation_lyrics
+                
+                toggleBottomNav(!isImmersive)
             }
             .start()
     }
@@ -183,11 +183,18 @@ class MusicActivity : AppCompatActivity() {
             val topInset = maxOf(systemBars.top, displayCutout.top)
             val bottomInset = systemBars.bottom
             
-            // For standard screens, pad the top and bottom to respect system bars
+            // Pad only top for non-immersive screens
             v.updatePadding(
                 top = if (isImmersive) 0 else topInset,
-                bottom = if (isImmersive) 0 else bottomInset
+                bottom = 0
             )
+
+            // Apply bottom inset to the bottom navigation container as margin
+            // Base margin is 24dp (as defined in XML)
+            val baseBottomMargin = (24 * resources.displayMetrics.density).toInt()
+            binding.musicBottomNavContainer.updateLayoutParams<android.view.ViewGroup.MarginLayoutParams> {
+                bottomMargin = if (isImmersive) 0 else (bottomInset + baseBottomMargin)
+            }
             
             windowInsets
         }
@@ -240,11 +247,11 @@ class MusicActivity : AppCompatActivity() {
             val isHome = destination.id == R.id.music_nav_home
             binding.btnReturnToMovies.isVisible = isHome
 
-            val showNav = destination.id == R.id.music_nav_home || 
-                          destination.id == R.id.music_nav_search || 
-                          destination.id == R.id.music_nav_library
+            // Show bottom navigation for all primary music screens, hide only for full-screen experiences
+            val isImmersive = destination.id == R.id.navigation_music_player || 
+                             destination.id == R.id.navigation_lyrics
             
-            toggleBottomNav(showNav)
+            toggleBottomNav(!isImmersive)
             updateMiniPlayerVisibility()
             
             // Re-apply insets when destination changes to handle immersive/non-immersive transitions
@@ -260,34 +267,39 @@ class MusicActivity : AppCompatActivity() {
     }
 
     private fun toggleBottomNav(show: Boolean) {
-        val navHeight = if (binding.musicBottomNavContainer.height > 0) 
-            binding.musicBottomNavContainer.height.toFloat() 
+        val navContainer = binding.musicBottomNavContainer
+        val navHeight = if (navContainer.height > 0) 
+            navContainer.height.toFloat() 
         else 
-            100 * resources.displayMetrics.density // Fallback if not laid out
+            150 * resources.displayMetrics.density // Increased fallback for safety
             
         val targetAlpha = if (show) 1f else 0f
+        // Add 100dp extra to ensure it's completely off screen including margin
         val targetTranslationY = if (show) 0f else (navHeight + 200f)
         
-        if (binding.musicBottomNavContainer.isVisible == show && 
-            binding.musicBottomNavContainer.alpha == targetAlpha &&
-            binding.musicBottomNavContainer.translationY == targetTranslationY) return
+        // Use a small epsilon for float comparison to avoid redundant animations
+        if (navContainer.isVisible == show && 
+            Math.abs(navContainer.alpha - targetAlpha) < 0.01f &&
+            Math.abs(navContainer.translationY - targetTranslationY) < 1f) return
         
         if (show) {
-            binding.musicBottomNavContainer.isVisible = true
-            binding.musicBottomNavContainer.animate()
+            navContainer.isVisible = true
+            navContainer.animate().cancel()
+            navContainer.animate()
                 .translationY(0f)
                 .alpha(1f)
                 .setDuration(300)
                 .setInterpolator(android.view.animation.DecelerateInterpolator())
                 .start()
         } else {
-            binding.musicBottomNavContainer.animate()
+            navContainer.animate().cancel()
+            navContainer.animate()
                 .translationY(navHeight + 200f)
                 .alpha(0f)
                 .setDuration(300)
                 .setInterpolator(android.view.animation.AccelerateInterpolator())
                 .withEndAction {
-                    binding.musicBottomNavContainer.isVisible = false
+                    navContainer.isVisible = false
                 }
                 .start()
         }
@@ -327,6 +339,7 @@ class MusicActivity : AppCompatActivity() {
                 mediaController?.addListener(object : Player.Listener {
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                         updatePlayPauseIcon(isPlaying)
+                        viewModel.updatePlaybackState(isPlaying)
                     }
 
                     override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
@@ -341,6 +354,7 @@ class MusicActivity : AppCompatActivity() {
                         mediaItem?.mediaMetadata?.let { updateMiniPlayerMetadata(it) }
                         updateMiniPlayerVisibility()
                         viewModel.updateCurrentSong(mediaItem?.mediaId)
+                        mediaController?.let { viewModel.updatePlaybackState(it.isPlaying) }
                     }
                 })
                 // Initial state sync
@@ -349,6 +363,7 @@ class MusicActivity : AppCompatActivity() {
                     it.currentMediaItem?.mediaMetadata?.let { metadata -> updateMiniPlayerMetadata(metadata) }
                     updateMiniPlayerVisibility()
                     viewModel.updateCurrentSong(it.currentMediaItem?.mediaId)
+                    viewModel.updatePlaybackState(it.isPlaying)
                 }
             } catch (e: Exception) {
                 Log.e("MusicActivity", "Error getting media controller", e)

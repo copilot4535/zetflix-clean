@@ -140,14 +140,9 @@
         android:label="Import Playlist" />
 
     <dialog
-        android:id="@+id/navigation_music_combined_panel"
-        android:name="com.lagradost.cloudstream3.ui.music.MusicCombinedBottomSheetFragment"
-        android:label="Lyrics and Queue">
-        <argument
-            android:name="initial_tab"
-            android:defaultValue="0"
-            app:argType="integer" />
-    </dialog>
+        android:id="@+id/navigation_music_queue_sheet"
+        android:name="com.lagradost.cloudstream3.ui.music.MusicQueueBottomSheetFragment"
+        android:label="Queue" />
 
     <fragment
         android:id="@+id/navigation_music_charts"

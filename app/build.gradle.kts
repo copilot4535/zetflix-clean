@@ -218,6 +218,10 @@ android {
     }
 
     packaging {
+        resources {
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
+        }
         jniLibs {
             // Enables legacy JNI packaging to reduce APK size (similar to builds before minSdk 23).
             // Note: This may increase app startup time slightly.

@@ -46,7 +46,7 @@ class MusicQueueFragment : BaseFragment<FragmentMusicQueueBinding>(
     override fun onViewReady(view: View, savedInstanceState: Bundle?) {
         super.onViewReady(view, savedInstanceState)
         
-        val isChild = arguments?.getBoolean(MusicCombinedBottomSheetFragment.ARG_IS_CHILD) ?: false
+        val isChild = arguments?.getBoolean(MusicQueueBottomSheetFragment.ARG_IS_CHILD) ?: false
         binding?.musicQueueToolbar?.isVisible = !isChild
         
         setupRecyclerView()

@@ -833,4 +833,10 @@
     <string name="music_failed_to_load_charts">Failed to load charts</string>
     <string name="music_start_radio">Start Radio</string>
     <string name="music_show_credits">Show Credits</string>
+    <string name="action_save">Save</string>
+    <string name="action_add_to_playlist">Add to Playlist</string>
+    <string name="music_add_to_queue">Add to Queue</string>
+    <string name="action_go_to_artist">Go to Artist</string>
+    <string name="action_about_the_song">About the Song</string>
+    <string name="lyrics">Lyrics</string>
 </resources>

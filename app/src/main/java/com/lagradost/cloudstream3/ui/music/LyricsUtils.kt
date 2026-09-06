@@ -15,6 +15,20 @@ data class LyricsResponse(
     val syncedLyrics: String? = null
 )
 
+enum class LyricsStatus {
+    LOADING,
+    AVAILABLE,
+    NOT_AVAILABLE,
+    ERROR
+}
+
+data class LyricsUiState(
+    val status: LyricsStatus = LyricsStatus.NOT_AVAILABLE,
+    val lyrics: LyricsResponse? = null,
+    val trackId: String? = null,
+    val errorMessage: String? = null
+)
+
 @Serializable
 data class LyricLine(
     val timestampMs: Long,

@@ -16,8 +16,15 @@ import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.view.View
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.media3.common.Player
@@ -63,11 +70,66 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     private var lastThemedMediaId: String? = null
     private var currentGradientColors = intArrayOf(Color.BLACK, Color.BLACK, Color.BLACK)
     private var backgroundAnimator: android.animation.ValueAnimator? = null
+    private var isScrubbing = false
+
+    private var currentLyrics: List<LyricLine> = emptyList()
+    private var currentLyricsPalette: LyricsPalette? = null
+    private val lyricsHandler = Handler(Looper.getMainLooper())
+    private val updateLyricsRunnable = object : Runnable {
+        override fun run() {
+            updateLyricsPreview()
+            lyricsHandler.postDelayed(this, 500L)
+        }
+    }
+
+    private fun updateLyricsPreview() {
+        val controller = mediaController ?: return
+        if (currentLyrics.isEmpty()) return
+
+        val position = controller.currentPosition
+        val currentIndex = currentLyrics.indexOfLast { it.timestampMs <= position }
+        
+        if (currentIndex != -1) {
+            val builder = SpannableStringBuilder()
+            val palette = currentLyricsPalette
+            
+            // Show active line and next 3 lines for a more immersive preview
+            val maxLines = 4
+            val endIdx = minOf(currentIndex + maxLines, currentLyrics.size)
+            
+            for (i in currentIndex until endIdx) {
+                val line = currentLyrics[i]
+                val start = builder.length
+                builder.append(line.text)
+                val end = builder.length
+                
+                if (palette != null) {
+                    if (i == currentIndex) {
+                        builder.setSpan(StyleSpan(android.graphics.Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        builder.setSpan(ForegroundColorSpan(palette.foregroundPrimary), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    } else {
+                        builder.setSpan(ForegroundColorSpan(palette.foregroundSecondary), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                }
+                
+                if (i < endIdx - 1) builder.append("\n")
+            }
+            
+            binding?.musicPlayerLyricsSnippet?.text = builder
+        }
+    }
 
     private val swipeGestureDetector by lazy {
         GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
             private val SWIPE_THRESHOLD = 100
             private val SWIPE_VELOCITY_THRESHOLD = 100
+
+            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                mediaController?.let {
+                    if (it.isPlaying) it.pause() else it.play()
+                }
+                return true
+            }
 
             override fun onFling(
                 e1: MotionEvent?,
@@ -81,7 +143,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 if (abs(diffX) > abs(diffY)) {
                     if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
-                            mediaController?.seekToPreviousMediaItem()
+                            mediaController?.let { MusicPlayerHelper.handlePrevious(it) }
                         } else {
                             mediaController?.seekToNextMediaItem()
                         }
@@ -89,15 +151,17 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                     }
                 } else {
                     if (abs(diffY) > SWIPE_THRESHOLD && abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffY > 0) {
-                            activity?.onBackPressed()
-                        } else {
-                            val args = Bundle().apply {
-                                putInt(MusicCombinedBottomSheetFragment.ARG_INITIAL_TAB, MusicCombinedBottomSheetFragment.TAB_LYRICS)
+                        if (diffY > SWIPE_THRESHOLD && binding?.musicPlayerScrollView?.scrollY == 0) {
+                            // Only minimize to Mini Player if we are NOT at the Lyrics layer.
+                            // The activity handles the back stack correctly if popBackStack() is called.
+                            activity?.onBackPressedDispatcher?.onBackPressed()
+                            return true
+                        } else if (diffY < -SWIPE_THRESHOLD) {
+                            // Smooth scroll to lyrics if they are available
+                            if (binding?.musicPlayerLyricsPreview?.isVisible == true) {
+                                binding?.musicPlayerScrollView?.smoothScrollTo(0, binding?.musicPlayerLyricsPreview?.top ?: 0)
                             }
-                            activity?.navigate(R.id.navigation_music_combined_panel, args)
                         }
-                        return true
                     }
                 }
                 return false
@@ -126,6 +190,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         
         setupUI()
         setupController()
+        setupScrubbing()
         observeViewModel()
 
         binding?.musicPlayerView?.apply {
@@ -147,10 +212,38 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (mediaController?.isPlaying == true && currentLyrics.isNotEmpty()) {
+            lyricsHandler.removeCallbacks(updateLyricsRunnable)
+            lyricsHandler.post(updateLyricsRunnable)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        lyricsHandler.removeCallbacks(updateLyricsRunnable)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private fun setupUI() {
         binding?.musicPlayerBack?.setOnClickListener {
             activity?.onBackPressed()
+        }
+
+        binding?.musicPlayerView?.let { playerView ->
+            val playPauseButton = playerView.findViewById<ImageButton>(R.id.exo_play_pause)
+            playPauseButton?.setOnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100).start()
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start()
+                    }
+                }
+                false
+            }
         }
 
         binding?.musicPlayerAlbumArtCard?.setOnTouchListener { _, event ->
@@ -168,23 +261,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             }
         }
 
-        binding?.musicPlayerMore?.setOnClickListener { view ->
-            viewModel.currentPlayingSong.value?.let { song ->
-                val options = listOf(
-                    0 to "Sleep Timer",
-                    1 to getString(R.string.music_show_credits),
-                    2 to getString(R.string.music_start_radio),
-                    3 to getString(R.string.result_share)
-                )
-                view.popupMenuNoIconsAndNoStringRes(options) {
-                    when (itemId) {
-                        0 -> showSleepTimerDialog()
-                        1 -> activity?.navigate(R.id.navigation_song_credits)
-                        2 -> viewModel.startRadio(song.videoId)
-                        3 -> shareCurrentSong()
-                    }
-                }
-            }
+        binding?.musicPlayerMore?.setOnClickListener {
+            activity?.navigate(R.id.navigation_track_options)
         }
 
         binding?.musicPlayerLike?.setOnClickListener {
@@ -218,33 +296,55 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             }
 
             playerView.findViewById<View>(R.id.music_player_queue)?.setOnClickListener {
-                val args = Bundle().apply { 
-                    putInt(MusicCombinedBottomSheetFragment.ARG_INITIAL_TAB, MusicCombinedBottomSheetFragment.TAB_QUEUE) 
-                }
-                activity?.navigate(R.id.navigation_music_combined_panel, args)
+                activity?.navigate(R.id.navigation_music_queue_sheet)
+            }
+
+            playerView.findViewById<View>(R.id.music_player_devices)?.setOnClickListener {
+                Toast.makeText(context, "Device picker coming soon", Toast.LENGTH_SHORT).show()
+            }
+
+            playerView.findViewById<View>(R.id.music_player_share)?.setOnClickListener {
+                shareCurrentSong()
             }
         }
+    }
+
+    private fun setupScrubbing() {
+        binding?.musicPlayerView?.findViewById<androidx.media3.ui.DefaultTimeBar>(R.id.exo_progress)?.addListener(
+            object : androidx.media3.ui.TimeBar.OnScrubListener {
+                override fun onScrubStart(timeBar: androidx.media3.ui.TimeBar, position: Long) {
+                    isScrubbing = true
+                }
+
+                override fun onScrubMove(timeBar: androidx.media3.ui.TimeBar, position: Long) {
+                    updateScrubbingTime(position)
+                }
+
+                override fun onScrubStop(timeBar: androidx.media3.ui.TimeBar, position: Long, canceled: Boolean) {
+                    isScrubbing = false
+                    if (!canceled) {
+                        mediaController?.seekTo(position)
+                    }
+                }
+            }
+        )
+    }
+
+    private fun updateScrubbingTime(position: Long) {
+        val positionText = androidx.media3.common.util.Util.getStringForTime(StringBuilder(), java.util.Formatter(), position)
+        binding?.musicPlayerView?.findViewById<TextView>(R.id.exo_position)?.text = positionText
     }
 
     private fun openLyricsPanel() {
-        val lyrics = viewModel.lyrics.value
-        val hasLyrics = when (lyrics) {
-            is Resource.Success -> !lyrics.value.plainLyrics.isNullOrBlank() || !lyrics.value.syncedLyrics.isNullOrBlank()
-            else -> false
-        }
+        val state = viewModel.lyricsUiState.value
+        val hasLyrics = state?.status == LyricsStatus.AVAILABLE
 
         if (hasLyrics) {
-            val args = Bundle().apply {
-                putInt(MusicCombinedBottomSheetFragment.ARG_INITIAL_TAB, MusicCombinedBottomSheetFragment.TAB_LYRICS)
-            }
-            activity?.navigate(R.id.navigation_music_combined_panel, args)
+            // Spotify-style: Navigate to full immersive lyrics fragment
+            activity?.navigate(R.id.navigation_lyrics)
         } else {
             Toast.makeText(context, "Lyrics not available for this song", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun showSleepTimerDialog() {
-        activity?.navigate(R.id.navigation_sleep_timer)
     }
 
     private fun setupController() {
@@ -289,6 +389,16 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     }
 
     private val playerListener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            updatePlayPauseAnimation(isPlaying)
+            if (isPlaying) {
+                lyricsHandler.removeCallbacks(updateLyricsRunnable)
+                lyricsHandler.post(updateLyricsRunnable)
+            } else {
+                lyricsHandler.removeCallbacks(updateLyricsRunnable)
+            }
+        }
+
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
             updateShuffleIcon(shuffleModeEnabled)
         }
@@ -302,10 +412,33 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
     }
 
-    private fun updateMetadata(metadata: androidx.media3.common.MediaMetadata) {
+    private fun updatePlayPauseAnimation(isPlaying: Boolean) {
+        val playPauseButton = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.exo_play_pause) ?: return
+        
+        val targetIcon = if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
+        
+        // Premium crossfade morph transition
+        playPauseButton.animate()
+            .alpha(0.5f)
+            .scaleX(0.9f)
+            .scaleY(0.9f)
+            .setDuration(100)
+            .withEndAction {
+                playPauseButton.setImageResource(targetIcon)
+                playPauseButton.animate()
+                    .alpha(1f)
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(100)
+                    .start()
+            }
+            .start()
+    }
+
+    private fun updateMetadata(mediaMetadata: androidx.media3.common.MediaMetadata) {
         val song = viewModel.currentPlayingSong.value
-        val title = if (!metadata.title.isNullOrBlank()) metadata.title else song?.title
-        val artist = if (!metadata.artist.isNullOrBlank()) metadata.artist else song?.artist
+        val title = if (!mediaMetadata.title.isNullOrBlank()) mediaMetadata.title else song?.title
+        val artist = if (!mediaMetadata.artist.isNullOrBlank()) mediaMetadata.artist else song?.artist
 
         binding?.musicPlayerTitle?.apply {
             text = title ?: "Unknown Title"
@@ -313,9 +446,20 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
         binding?.musicPlayerArtist?.text = artist ?: "Unknown Artist"
         
-        val artworkUri = metadata.artworkUri?.toString()
-        val url = if (!artworkUri.isNullOrBlank()) artworkUri else song?.thumbnailUrl
-        loadArtworkAndTheme(url, song?.videoId)
+        val artworkUri = mediaMetadata.artworkUri?.toString()
+        val rawUrl = if (!artworkUri.isNullOrBlank()) artworkUri else song?.thumbnailUrl
+        val highResUrl = getHighResArtwork(rawUrl, song?.videoId) ?: rawUrl
+        loadArtworkAndTheme(highResUrl, song?.videoId)
+    }
+
+    private fun getHighResArtwork(url: String?, videoId: String?): String? {
+        if (url.isNullOrBlank()) return null
+        // Strategy 1: Use maxresdefault for YouTube videos
+        if (!videoId.isNullOrBlank() && (url.contains("ytimg.com") || url.contains("googleusercontent.com"))) {
+            return "https://i.ytimg.com/vi/$videoId/maxresdefault.jpg"
+        }
+        // Strategy 2: Upgrade InnerTube size parameters to 1080
+        return url.replace(Regex("(=w|\\bw)[0-9]+(-h[0-9]+)?"), "$11080-h1080")
     }
 
     private fun loadArtworkAndTheme(url: String?, videoId: String?) {
@@ -439,7 +583,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 binding?.musicPlayerTitle?.text = song.title
                 binding?.musicPlayerArtist?.text = song.artist ?: "Unknown Artist"
                 
-                loadArtworkAndTheme(song.thumbnailUrl, song.videoId)
+                val highResUrl = getHighResArtwork(song.thumbnailUrl, song.videoId) ?: song.thumbnailUrl
+                loadArtworkAndTheme(highResUrl, song.videoId)
 
                 viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     val liked = MusicPersistence.isSongLiked(song.videoId)
@@ -453,8 +598,35 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 viewModel.updateRateStatus(song.videoId)
                 viewModel.loadRelatedSongs(song.videoId)
 
+                // Mock About the Song content
+                binding?.musicPlayerAboutSongCard?.isVisible = true
+                binding?.musicPlayerAboutSongContent?.text = "Discover the inspiration behind \"${song.title}\". This track marks a significant evolution in ${song.artist}'s sound, blending soulful melodies with modern production."
+
                 // Try to get album if controller is available
                 mediaController?.currentMediaItem?.mediaMetadata?.let { updateMetadata(it) }
+            }
+        }
+
+        viewModel.relatedSongs.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    val songs = resource.value
+                    binding?.musicPlayerSongDnaCard?.isVisible = songs.isNotEmpty()
+                    if (songs.isNotEmpty()) {
+                        val itemAdapter = MusicHomeItemAdapter(MusicHomeAdapter.ItemViewType.NORMAL, { index ->
+                            viewModel.loadStreamAndPlay(songs[index])
+                        })
+                        binding?.musicPlayerSongDnaList?.apply {
+                            layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
+                            adapter = itemAdapter
+                            isNestedScrollingEnabled = false
+                        }
+                        itemAdapter.submitList(songs.map { MusicHomeItem(it.title, it.artist, it.videoId, it.thumbnailUrl, MusicItemType.SONG) })
+                    }
+                }
+                else -> {
+                    binding?.musicPlayerSongDnaCard?.isVisible = false
+                }
             }
         }
 
@@ -493,28 +665,28 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             }
         }
 
-        viewModel.lyrics.observe(viewLifecycleOwner) { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    val plain = resource.value.plainLyrics
-                    val synced = resource.value.syncedLyrics
-                    val hasLyrics = !plain.isNullOrBlank() || !synced.isNullOrBlank()
-                    
-                    binding?.musicPlayerLyricsPreview?.isVisible = hasLyrics
-                    if (hasLyrics) {
-                        val snippet = if (!plain.isNullOrBlank()) {
-                            plain.lines().filter { it.isNotBlank() }.take(2).joinToString("\n")
-                        } else {
-                            // Extract snippet from synced lyrics if plain is not available
-                            synced?.lines()?.filter { it.contains("]") }?.take(2)
-                                ?.joinToString("\n") { it.substringAfter("]").trim() }
-                        }
-                        binding?.musicPlayerLyricsSnippet?.text = snippet
+        viewModel.lyricsUiState.observe(viewLifecycleOwner) { state ->
+            val status = state.status
+            val lyrics = state.lyrics
+            val hasLyrics = status == LyricsStatus.AVAILABLE && lyrics != null
+            
+            binding?.musicPlayerLyricsPreview?.isVisible = hasLyrics
+            if (hasLyrics && lyrics != null) {
+                if (!lyrics.syncedLyrics.isNullOrBlank()) {
+                    currentLyrics = LrcParser.parse(lyrics.syncedLyrics)
+                    if (currentLyrics.isNotEmpty()) {
+                        lyricsHandler.removeCallbacks(updateLyricsRunnable)
+                        lyricsHandler.post(updateLyricsRunnable)
                     }
+                } else if (!lyrics.plainLyrics.isNullOrBlank()) {
+                    currentLyrics = emptyList()
+                    lyricsHandler.removeCallbacks(updateLyricsRunnable)
+                    val snippet = lyrics.plainLyrics.lines().filter { it.isNotBlank() }.take(2).joinToString("\n")
+                    binding?.musicPlayerLyricsSnippet?.text = snippet
                 }
-                else -> {
-                    binding?.musicPlayerLyricsPreview?.isVisible = false
-                }
+            } else {
+                currentLyrics = emptyList()
+                lyricsHandler.removeCallbacks(updateLyricsRunnable)
             }
         }
 
@@ -536,25 +708,92 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
         val dominant = if (palette.dominantColor != Color.BLACK && palette.dominantColor != 0xFF1A1A1A.toInt()) palette.dominantColor else defaultSurface
         val vibrant = if (palette.vibrantColor != Color.BLACK && palette.vibrantColor != 0xFFE50914.toInt()) palette.vibrantColor else defaultAccent
-        val darkMuted = if (palette.darkMutedColor != Color.BLACK) palette.darkMutedColor else Color.BLACK
 
-        val targetColors = intArrayOf(vibrant, dominant, darkMuted)
+        // Content cards background
+        val lyricsPalette = MusicColorHelper.generateLyricsPalette(palette)
+        currentLyricsPalette = lyricsPalette
+        val cardBg = lyricsPalette.background
+        
+        binding?.musicPlayerLyricsPreview?.setCardBackgroundColor(cardBg)
+        binding?.musicPlayerAboutSongCard?.setCardBackgroundColor(cardBg)
+        binding?.musicPlayerSongDnaCard?.setCardBackgroundColor(cardBg)
+        
+        updateLyricsPreview() // Refresh preview with new colors
+
+        // Ensure player background gradient follows the specification (Vibrant -> Dominant -> DarkMuted/Black)
+        val colorTop = MusicColorHelper.darkenColor(vibrant, 0.4f)
+        val colorMid = MusicColorHelper.darkenColor(dominant, 0.2f)
+        val colorBot = Color.BLACK
+
+        val targetColors = intArrayOf(colorTop, colorMid, colorBot)
         MusicColorHelper.animateGradientChange(binding?.musicPlayerBackgroundGradient, currentGradientColors, targetColors)
         currentGradientColors = targetColors
 
-        val buttonTint = ColorStateList.valueOf(vibrant)
+        // Foreground/UI Colors based on luminance
+        val isLight = MusicColorHelper.calculateLuminance(colorTop) > 0.6f
+        val foregroundColor = if (isLight) Color.BLACK else Color.WHITE
+        val secondaryForegroundColor = if (isLight) 0x99000000.toInt() else 0xB3FFFFFF.toInt()
+        val foregroundTint = ColorStateList.valueOf(foregroundColor)
 
         binding?.let { b ->
-            b.musicPlayerView.findViewById<ImageButton>(R.id.music_player_shuffle)?.imageTintList = buttonTint
-            b.musicPlayerView.findViewById<ImageButton>(R.id.music_player_repeat)?.imageTintList = buttonTint
-            b.musicPlayerView.findViewById<ImageButton>(R.id.music_player_like)?.imageTintList = buttonTint
-            b.musicPlayerView.findViewById<ImageButton>(R.id.music_player_share)?.imageTintList = buttonTint
-            b.musicPlayerView.findViewById<ImageButton>(R.id.music_player_queue)?.imageTintList = buttonTint
-            b.musicPlayerView.findViewById<ImageButton>(R.id.music_player_download)?.imageTintList = buttonTint
+            b.musicPlayerTitle.setTextColor(foregroundColor)
+            b.musicPlayerArtist.setTextColor(secondaryForegroundColor)
+            b.musicPlayerBack.imageTintList = foregroundTint
+            b.musicPlayerMore.imageTintList = foregroundTint
+            
+            // Section labels
+            b.musicPlayerLyricsLabel.setTextColor(secondaryForegroundColor)
+            b.musicPlayerAboutSongLabel.setTextColor(secondaryForegroundColor)
+            b.musicPlayerSongDnaLabel.setTextColor(secondaryForegroundColor)
+            b.musicPlayerAboutSongContent.setTextColor(foregroundColor)
+            
+            // Player View controls
+            val playerView = b.musicPlayerView
+            playerView.findViewById<ImageButton>(R.id.exo_prev)?.imageTintList = foregroundTint
+            playerView.findViewById<ImageButton>(R.id.exo_next)?.imageTintList = foregroundTint
+            
+            playerView.findViewById<ImageButton>(R.id.music_player_devices)?.imageTintList = foregroundTint
+            playerView.findViewById<ImageButton>(R.id.music_player_lyrics)?.imageTintList = foregroundTint
+            playerView.findViewById<ImageButton>(R.id.music_player_share)?.imageTintList = foregroundTint
+            playerView.findViewById<ImageButton>(R.id.music_player_download)?.imageTintList = foregroundTint
+            playerView.findViewById<ImageButton>(R.id.music_player_queue)?.imageTintList = foregroundTint
+            
+            // Handle Media3 TextViews safely
+            context?.let { ctx ->
+                val posId = ctx.resources.getIdentifier("exo_position", "id", ctx.packageName)
+                val durId = ctx.resources.getIdentifier("exo_duration", "id", ctx.packageName)
+                if (posId != 0) playerView.findViewById<TextView>(posId)?.setTextColor(secondaryForegroundColor)
+                if (durId != 0) playerView.findViewById<TextView>(durId)?.setTextColor(secondaryForegroundColor)
+            }
+
+            // System bar icons
+            activity?.let { act ->
+                val window = act.window
+                val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+                insetsController.isAppearanceLightStatusBars = isLight
+                insetsController.isAppearanceLightNavigationBars = isLight
+            }
+            
+            // Re-sync state-dependent buttons
+            mediaController?.let {
+                updateShuffleIcon(it.shuffleModeEnabled)
+                updateRepeatIcon(it.repeatMode)
+            }
+            viewModel.currentPlayingSong.value?.let { song ->
+                viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    val liked = MusicPersistence.isSongLiked(song.videoId)
+                    val downloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }
+                    viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        updateLikeIcon(liked)
+                        updateDownloadIcon(downloaded)
+                    }
+                }
+            }
         }
     }
 
     override fun onDestroyView() {
+        lyricsHandler.removeCallbacks(updateLyricsRunnable)
         mediaController?.removeListener(playerListener)
         controllerFuture?.let {
             MediaController.releaseFuture(it)
