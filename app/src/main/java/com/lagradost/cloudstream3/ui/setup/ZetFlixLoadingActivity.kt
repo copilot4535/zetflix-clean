@@ -95,7 +95,7 @@ class ZetFlixLoadingActivity : AppCompatActivity() {
 
             try {
                 // Update and load all online plugins
-                withTimeoutOrNull(60000L) {
+                withTimeoutOrNull(180000L) {
                     PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_updateAllOnlinePluginsAndLoadThem(this@ZetFlixLoadingActivity)
                 }
             } catch (e: Exception) {

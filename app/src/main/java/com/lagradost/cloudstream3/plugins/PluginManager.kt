@@ -59,6 +59,7 @@ import com.lagradost.cloudstream3.utils.downloader.DownloadFileManagement.saniti
 import com.lagradost.cloudstream3.utils.extractorApis
 import com.lagradost.cloudstream3.utils.txt
 import dalvik.system.PathClassLoader
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -283,7 +284,7 @@ object PluginManager {
 
         val urls = RepositoryManager.getRepositories()
 
-        val onlinePlugins = urls.toList().amap {
+        val onlinePlugins = urls.toList().amap(concurrencyLimit = 5) {
             getRepoPlugins(it) ?: emptyList()
         }.flatten().distinctBy { it.plugin.url }
 
@@ -304,7 +305,7 @@ object PluginManager {
 
         val updatedPlugins = mutableListOf<String>()
 
-        outdatedPlugins.amap { pluginData ->
+        outdatedPlugins.amap(concurrencyLimit = 5) { pluginData ->
             if (pluginData.isDisabled) {
                 //updatedPlugins.add(activity.getString(R.string.single_plugin_disabled, pluginData.onlineData.second.name))
                 unloadPlugin(pluginData.savedData.filePath)
@@ -361,7 +362,7 @@ object PluginManager {
         val newDownloadPlugins = mutableListOf<String>()
         val urls = (getKey<Array<RepositoryData>>(REPOSITORIES_KEY)
             ?: emptyArray()) + PREBUILT_REPOSITORIES
-        val onlinePlugins = urls.toList().amap {
+        val onlinePlugins = urls.toList().amap(concurrencyLimit = 5) {
             getRepoPlugins(it)?.toList() ?: emptyList()
         }.flatten().distinctBy { it.plugin.url }
 
@@ -421,7 +422,7 @@ object PluginManager {
         }
         //Log.i(TAG, "notDownloadedPlugins => ${notDownloadedPlugins.toJson()}")
 
-        notDownloadedPlugins.amap { pluginData ->
+        notDownloadedPlugins.amap(concurrencyLimit = 5) { pluginData ->
             downloadPlugin(
                 activity,
                 pluginData.onlineData.plugin.url,
@@ -468,7 +469,7 @@ object PluginManager {
         assertNonRecursiveCallstack()
 
         // Load all plugins as fast as possible!
-        (getPluginsOnline()).toList().amap { pluginData ->
+        (getPluginsOnline()).toList().amap(concurrencyLimit = 5) { pluginData ->
             loadPlugin(
                 context,
                 File(pluginData.filePath),
@@ -540,7 +541,7 @@ object PluginManager {
         // Make sure all local plugins are fully refreshed.
         removeKey(PLUGINS_KEY_LOCAL)
 
-        sortedPlugins?.sortedBy { it.name }?.amap { file ->
+        sortedPlugins?.sortedBy { it.name }?.amap(concurrencyLimit = 5) { file ->
             try {
                 val destinationFile = File(pluginDirectory, file.name)
 
@@ -680,6 +681,7 @@ object PluginManager {
             currentlyLoading = null
             true
         } catch (e: Throwable) {
+            if (e is CancellationException) throw e
             Log.e(TAG, "Failed to load $file: ${Log.getStackTraceString(e)}")
             if (!quiet) {
                 main {
@@ -848,7 +850,7 @@ object PluginManager {
         afterPluginsLoadedEvent.invoke(false)
 
         val urls = RepositoryManager.getRepositories()
-        val onlinePlugins = urls.toList().amap {
+        val onlinePlugins = urls.toList().amap(concurrencyLimit = 5) {
             getRepoPlugins(it) ?: emptyList()
         }.flatten().distinctBy { it.plugin.url }
 
@@ -862,7 +864,7 @@ object PluginManager {
 
         val updatedPlugins = mutableListOf<String>()
 
-        allPlugins.amap { pluginData ->
+        allPlugins.amap(concurrencyLimit = 5) { pluginData ->
             if (pluginData.isDisabled) {
                 Log.e(
                     "PluginManager",

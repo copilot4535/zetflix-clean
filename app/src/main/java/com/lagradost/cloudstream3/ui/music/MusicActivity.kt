@@ -213,7 +213,6 @@ class MusicActivity : AppCompatActivity() {
         // 1. Resource Teardown
         try {
             mediaController?.let {
-                it.stop()
                 it.release()
             }
             controllerFuture?.let {
@@ -396,6 +395,7 @@ class MusicActivity : AppCompatActivity() {
                     updateMiniPlayerVisibility()
                     viewModel.updateCurrentSong(it.currentMediaItem?.mediaId)
                     viewModel.updatePlaybackState(it.isPlaying)
+                    viewModel.reconcileWithPlayer(it)
                 }
             } catch (e: Exception) {
                 Log.e("MusicActivity", "Error getting media controller", e)

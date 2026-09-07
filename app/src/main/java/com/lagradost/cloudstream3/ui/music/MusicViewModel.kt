@@ -13,6 +13,8 @@ import com.lagradost.cloudstream3.mvvm.launchSafe
 import com.lagradost.cloudstream3.utils.StringUtils.encodeUrl
 import com.maxrave.kotlinytmusicscraper.YouTube
 import com.lagradost.cloudstream3.services.music.MusicService
+import androidx.media3.common.Player
+import androidx.media3.session.MediaController
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
@@ -118,6 +120,52 @@ class MusicViewModel : ViewModel() {
     }
 
     private val activeDownloadRequests = mutableMapOf<String, MusicSearchResponse>()
+
+    @UnstableApi
+    fun reconcileWithPlayer(controller: MediaController?) {
+        val player = controller ?: return
+        val currentItem = player.currentMediaItem ?: return
+        val mediaId = currentItem.mediaId
+
+        viewModelScope.launch(Dispatchers.IO) {
+            // 1. Reconstruct the queue list from player timeline
+            val newQueue = mutableListOf<MusicSearchResponse>()
+            for (i in 0 until player.mediaItemCount) {
+                val item = player.getMediaItemAt(i)
+                val metadata = item.mediaMetadata
+                newQueue.add(
+                    MusicSearchResponse(
+                        title = metadata.title?.toString() ?: "Unknown",
+                        artist = metadata.artist?.toString(),
+                        videoId = item.mediaId,
+                        thumbnailUrl = metadata.artworkUri?.toString(),
+                        params = null // Not easily recoverable from MediaItem without custom extras
+                    )
+                )
+            }
+
+            // 2. Update local state
+            currentQueueList.clear()
+            currentQueueList.addAll(newQueue)
+            _currentQueue.postValue(newQueue)
+
+            // 3. Update current song
+            val currentSong = newQueue.find { it.videoId == mediaId }
+            if (currentSong != null) {
+                _currentPlayingSong.postValue(currentSong)
+                // Trigger metadata-dependent loads (lyrics, etc.)
+                fetchLyrics(currentSong)
+                loadRelatedSongs(currentSong.videoId)
+            }
+        }
+    }
+
+    override fun onCleared() {
+        sleepTimerJob?.cancel()
+        queueJob?.cancel()
+        prefetchJob.cancel()
+        super.onCleared()
+    }
 
     init {
         // We now call loadPersistenceData via initMusic for better control
@@ -445,8 +493,10 @@ class MusicViewModel : ViewModel() {
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val songs = repository.getRelatedSongs(videoId)
+                if (_currentPlayingSong.value?.videoId != videoId) return@launchSafe
                 _relatedSongs.postValue(Resource.Success(songs))
             } catch (e: Exception) {
+                if (_currentPlayingSong.value?.videoId != videoId) return@launchSafe
                 _relatedSongs.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
             }
         }
@@ -493,18 +543,22 @@ class MusicViewModel : ViewModel() {
     fun loadStreamAndPlay(song: MusicSearchResponse) {
         _streamUrl.postValue(Resource.Loading())
         _currentPlayingSong.postValue(song)
+        val trackId = song.videoId
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val streamUrlFound = extractStreamUrl(song.videoId, song.params)
 
                 if (!streamUrlFound.isNullOrBlank()) {
+                    if (_currentPlayingSong.value?.videoId != trackId) return@launchSafe
                     _streamUrl.postValue(Resource.Success(streamUrlFound to song))
                     fetchLyrics(song)
                     addToHistory(song)
                 } else {
+                    if (_currentPlayingSong.value?.videoId != trackId) return@launchSafe
                     _streamUrl.postValue(Resource.Failure(false, "Could not extract audio stream for: ${song.title}"))
                 }
             } catch (e: Exception) {
+                if (_currentPlayingSong.value?.videoId != trackId) return@launchSafe
                 Log.e("MusicViewModel", "Total stream extraction failure", e)
                 _streamUrl.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
             }
@@ -541,7 +595,7 @@ class MusicViewModel : ViewModel() {
         try {
             initNewPipe()
             val service = ServiceList.YouTube
-            val info = StreamInfo.getInfo(service, videoId)
+            val info = StreamInfo.getInfo(service, "https://www.youtube.com/watch?v=$videoId")
             val url = info.audioStreams.firstOrNull()?.content
             if (!url.isNullOrBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
                 return url
@@ -564,6 +618,7 @@ class MusicViewModel : ViewModel() {
 
     fun prefetchUrl(videoId: String, params: String? = null) {
         if (StreamUrlCache.get(videoId) != null) return
+        if (!prefetchJob.isActive) return
         prefetchScope.launch {
             prefetchSemaphore.withPermit {
                 extractAndCache(videoId, params)

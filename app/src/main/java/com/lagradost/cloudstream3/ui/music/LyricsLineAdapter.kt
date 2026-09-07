@@ -70,11 +70,14 @@ class LyricsLineAdapter : ListAdapter<LyricLine, LyricsLineAdapter.LyricsLineVie
         }
 
         fun bind(line: LyricLine, position: Int) {
+            cancelAnimations()
             textView.text = line.text
             
             val p = palette ?: run {
                 textView.setTextColor(Color.WHITE)
                 textView.alpha = if (position == currentLineIndex) 1.0f else 0.5f
+                textView.scaleX = 1.0f
+                textView.scaleY = 1.0f
                 return
             }
 
@@ -112,6 +115,14 @@ class LyricsLineAdapter : ListAdapter<LyricLine, LyricsLineAdapter.LyricsLineVie
             textView.typeface = targetTypeface
             textView.setTextColor(targetColor)
             
+            // Apply immediate state for non-animated properties or if not attached
+            if (!itemView.isAttachedToWindow) {
+                textView.alpha = targetAlpha
+                textView.scaleX = targetScale
+                textView.scaleY = targetScale
+                return
+            }
+
             // Smooth transitions for alpha and scale
             textView.animate()
                 .alpha(targetAlpha)
