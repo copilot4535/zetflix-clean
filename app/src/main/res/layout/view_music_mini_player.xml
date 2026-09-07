@@ -7,7 +7,7 @@
     android:layout_height="72dp"
     android:layout_marginHorizontal="12dp"
     android:layout_marginBottom="8dp"
-    app:cardBackgroundColor="@color/music_surface_dark"
+    app:cardBackgroundColor="@color/zetflix_surface"
     app:cardCornerRadius="8dp"
     app:cardElevation="6dp"
     app:strokeWidth="0dp"
@@ -70,7 +70,7 @@
                 android:ellipsize="end"
                 android:fontFamily="@font/metropolis_regular"
                 android:maxLines="1"
-                android:textColor="#B3B3B3"
+                android:textColor="@color/zetflix_text_secondary"
                 android:textSize="12sp"
                 android:alpha="0.8"
                 tools:text="Artist Name" />

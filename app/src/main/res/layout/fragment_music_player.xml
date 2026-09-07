@@ -138,13 +138,13 @@
                 android:layout_marginTop="20dp"
                 android:fontFamily="@font/metropolis_bold"
                 android:gravity="center"
-                android:lines="2"
-                android:minLines="2"
+                android:lines="1"
+                android:minLines="1"
                 android:textColor="@color/white"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@id/music_player_album_art_card"
-                tools:text="Live active lyric line goes here\nSecond line reserved"
+                tools:text="Active lyric line"
                 tools:visibility="visible" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -175,7 +175,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textColor="#B3B3B3"
+                    android:textColor="#B4B4BE"
                     android:textSize="16sp"
                     android:fontFamily="@font/metropolis_regular"
                     android:maxLines="1"

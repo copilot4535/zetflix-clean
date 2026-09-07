@@ -93,7 +93,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         if (currentIndex != -1) {
             val palette = currentLyricsPalette
             
-            // Update Live Lyric (Top)
+            // Update Live Lyric (Top) - Spotify 2026 style (Single line)
             binding?.musicPlayerLiveLyric?.apply {
                 text = currentLyrics[currentIndex].text
                 isVisible = true
@@ -101,8 +101,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
             val builder = SpannableStringBuilder()
             
-            // Show active line and next 3 lines for a more immersive preview
-            val maxLines = 4
+            // Show current active line in the card, but limit to avoid clutter
+            val maxLines = 2
             val endIdx = minOf(currentIndex + maxLines, currentLyrics.size)
             
             for (i in currentIndex until endIdx) {
@@ -523,7 +523,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_shuffle)
         button?.let {
             it.alpha = if (enabled) 1.0f else 0.6f
-            it.drawable?.setTint(if (enabled) context?.getColor(R.color.music_spotify_green) ?: Color.GREEN else Color.WHITE)
+            it.drawable?.setTint(if (enabled) context?.getColor(R.color.zetflix_accent) ?: Color.RED else Color.WHITE)
         }
     }
 
@@ -531,7 +531,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_repeat)
         button?.let {
             it.alpha = if (mode != Player.REPEAT_MODE_OFF) 1.0f else 0.6f
-            it.drawable?.setTint(if (mode != Player.REPEAT_MODE_OFF) context?.getColor(R.color.music_spotify_green) ?: Color.GREEN else Color.WHITE)
+            it.drawable?.setTint(if (mode != Player.REPEAT_MODE_OFF) context?.getColor(R.color.zetflix_accent) ?: Color.RED else Color.WHITE)
         }
     }
 
@@ -740,9 +740,9 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         updateLyricsPreview() // Refresh preview with new colors
 
         // Ensure player background gradient follows the specification (Vibrant -> Dominant -> DarkMuted/Black)
-        val colorTop = MusicColorHelper.darkenColor(vibrant, 0.4f)
-        val colorMid = MusicColorHelper.darkenColor(dominant, 0.2f)
-        val colorBot = Color.BLACK
+        val colorTop = MusicColorHelper.darkenColor(vibrant, 0.6f)
+        val colorMid = MusicColorHelper.darkenColor(dominant, 0.4f)
+        val colorBot = Color.parseColor("#0B0B0F")
 
         val targetColors = intArrayOf(colorTop, colorMid, colorBot)
         MusicColorHelper.animateGradientChange(binding?.musicPlayerBackgroundGradient, currentGradientColors, targetColors)
@@ -772,8 +772,9 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             playerView.findViewById<ImageButton>(R.id.exo_next)?.imageTintList = foregroundTint
             
             val playPauseButton = playerView.findViewById<ImageButton>(R.id.exo_play_pause)
-            playPauseButton?.backgroundTintList = ColorStateList.valueOf(vibrant)
-            playPauseButton?.imageTintList = ColorStateList.valueOf(if (MusicColorHelper.calculateLuminance(vibrant) > 0.6f) Color.BLACK else Color.WHITE)
+            val accentColor = context?.getColor(R.color.zetflix_accent) ?: vibrant
+            playPauseButton?.backgroundTintList = ColorStateList.valueOf(accentColor)
+            playPauseButton?.imageTintList = ColorStateList.valueOf(if (MusicColorHelper.calculateLuminance(accentColor) > 0.6f) Color.BLACK else Color.WHITE)
 
             playerView.findViewById<ImageButton>(R.id.music_player_devices)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.music_player_lyrics)?.imageTintList = foregroundTint

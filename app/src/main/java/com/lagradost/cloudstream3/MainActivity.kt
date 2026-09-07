@@ -338,7 +338,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         val isNavVisible = listOf(
             R.id.navigation_home,
-            R.id.navigation_search,
+            R.id.navigation_livestream,
             R.id.navigation_library,
             R.id.navigation_downloads,
             R.id.navigation_settings,
@@ -566,20 +566,9 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         // Check if we are already at the selected destination
         if (navController.currentDestination?.id == destinationId) {
             when (destinationId) {
-                R.id.navigation_home -> {
+                R.id.navigation_home, R.id.navigation_livestream -> {
                     binding?.root?.findViewById<RecyclerView>(R.id.home_master_recycler)
                         ?.smoothScrollToTop()
-                }
-
-                R.id.navigation_search -> {
-                    for (recyclerId in arrayOf(
-                        R.id.search_master_recycler,
-                        R.id.search_autofit_results,
-                        R.id.search_history_recycler
-                    )) {
-                        binding?.root?.findViewById<RecyclerView>(recyclerId)
-                            ?.smoothScrollToTop()
-                    }
                 }
 
                 R.id.navigation_downloads -> {
@@ -1127,8 +1116,8 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 NavigationRailView.LABEL_VISIBILITY_UNLABELED
             
             binding?.navRailView?.getHeaderView()?.apply {
-                findViewById<View>(R.id.nav_rail_search)?.setOnClickListener {
-                    navController.navigate(R.id.navigation_search)
+                findViewById<View>(R.id.nav_rail_livestream)?.setOnClickListener {
+                    navController.navigate(R.id.navigation_livestream)
                 }
                 findViewById<View>(R.id.nav_rail_avatar)?.setOnClickListener {
                     navController.navigate(R.id.navigation_account)
@@ -1146,17 +1135,10 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             }
 
 
-            view?.findViewById<View?>(R.id.navigation_search)?.setOnLongClickListener {
-                for (recyclerId in arrayOf(
-                    R.id.search_master_recycler,
-                    R.id.search_autofit_results,
-                    R.id.search_history_recycler
-                )) {
-                    val recycler = binding?.root?.findViewById<RecyclerView?>(recyclerId)
-                        ?: return@setOnLongClickListener false
-                    recycler.smoothScrollToPosition(0)
-                }
-                return@setOnLongClickListener true
+            view?.findViewById<View?>(R.id.navigation_livestream)?.setOnLongClickListener {
+                val recycler = binding?.root?.findViewById<RecyclerView?>(R.id.home_master_recycler)
+                recycler?.smoothScrollToPosition(0)
+                return@setOnLongClickListener recycler != null
             }
 
             view?.findViewById<View?>(R.id.navigation_downloads)?.setOnLongClickListener {
