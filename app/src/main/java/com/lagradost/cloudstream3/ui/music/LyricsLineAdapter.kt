@@ -73,7 +73,7 @@ class LyricsLineAdapter : ListAdapter<LyricLine, LyricsLineAdapter.LyricsLineVie
             cancelAnimations()
             textView.text = line.text
             
-            val p = palette ?: run {
+            if (palette == null) {
                 textView.setTextColor(Color.WHITE)
                 textView.alpha = if (position == currentLineIndex) 1.0f else 0.5f
                 textView.scaleX = 1.0f
@@ -84,7 +84,11 @@ class LyricsLineAdapter : ListAdapter<LyricLine, LyricsLineAdapter.LyricsLineVie
             val distance = kotlin.math.abs(position - currentLineIndex)
             val isActive = distance == 0 && currentLineIndex != -1
 
-            // Typography Hierarchy
+            // Redesigned Typography Hierarchy: Spotify-inspired premium look
+            // Active: White, Large, Semibold, 100% Opacity
+            // Near: White, Medium, ~70% Opacity
+            // Distant: White, Medium, ~40% Opacity
+
             val targetSize = when {
                 isActive -> 32f
                 distance <= 3 -> 26f
@@ -93,20 +97,15 @@ class LyricsLineAdapter : ListAdapter<LyricLine, LyricsLineAdapter.LyricsLineVie
             
             val targetTypeface = when {
                 isActive -> Typeface.create("sans-serif-black", Typeface.BOLD)
-                distance <= 3 -> Typeface.create("sans-serif-medium", Typeface.BOLD)
-                else -> Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                else -> Typeface.create("sans-serif-medium", Typeface.BOLD)
             }
 
-            val targetColor = when {
-                isActive -> p.accent
-                distance <= 3 -> p.foregroundSecondary
-                else -> p.foregroundTertiary
-            }
+            val targetColor = Color.WHITE
 
             val targetAlpha = when {
                 isActive -> 1.0f
-                distance <= 3 -> 0.75f
-                else -> 0.5f
+                distance <= 3 -> 0.7f
+                else -> 0.4f
             }
 
             val targetScale = if (isActive) 1.05f else 1.0f

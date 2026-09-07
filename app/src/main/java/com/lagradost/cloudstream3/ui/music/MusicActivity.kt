@@ -321,7 +321,7 @@ class MusicActivity : AppCompatActivity() {
         val gestureDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
             override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean {
                 val extras = FragmentNavigatorExtras(
-                    binding.globalMiniPlayer.musicMiniThumbnailCard to "album_art"
+                    binding.globalMiniPlayer.musicMiniThumbnail to "album_art"
                 )
                 this@MusicActivity.navigate(R.id.global_to_navigation_music_player, extras = extras)
                 return true
@@ -454,7 +454,7 @@ class MusicActivity : AppCompatActivity() {
 
     private fun updatePlayPauseIcon(isPlaying: Boolean) {
         val icon = if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
-        binding.globalMiniPlayer.musicMiniPlayPause.setIconResource(icon)
+        binding.globalMiniPlayer.musicMiniPlayPause.setImageResource(icon)
     }
 
     private var currentMiniPlayerColor: Int = 0xFF121212.toInt()
@@ -502,14 +502,8 @@ class MusicActivity : AppCompatActivity() {
         binding.globalMiniPlayer.musicMiniProgress.progressDrawable.setTint(accentColor)
         binding.globalMiniPlayer.musicMiniLoading.setIndicatorColor(accentColor)
         
-        // Update Play/Pause button background
-        binding.globalMiniPlayer.musicMiniPlayPause.backgroundTintList = ColorStateList.valueOf(accentColor)
-        
-        // Ensure high contrast for play/pause icon
-        val isAccentLight = MusicColorHelper.calculateLuminance(accentColor) > 0.6f
-        binding.globalMiniPlayer.musicMiniPlayPause.iconTint = ColorStateList.valueOf(
-            if (isAccentLight) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-        )
+        // Play/Pause button styling - Integrated neutral look
+        binding.globalMiniPlayer.musicMiniPlayPause.imageTintList = ColorStateList.valueOf(android.graphics.Color.WHITE)
         
         updateLikeIcon(accentColor)
     }

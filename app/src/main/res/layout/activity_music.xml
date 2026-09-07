@@ -33,7 +33,6 @@
             android:id="@+id/global_mini_player"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
             app:layout_constraintBottom_toTopOf="@+id/music_bottom_nav_container" />
 
         <FrameLayout

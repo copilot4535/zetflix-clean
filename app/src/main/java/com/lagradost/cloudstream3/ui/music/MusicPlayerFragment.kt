@@ -91,39 +91,15 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val currentIndex = currentLyrics.indexOfLast { it.timestampMs <= position }
         
         if (currentIndex != -1) {
-            val palette = currentLyricsPalette
-            
-            // Update Live Lyric (Top) - Spotify 2026 style (Single line)
+            // Redesigned Integrated active lyric display
             binding?.musicPlayerLiveLyric?.apply {
                 text = currentLyrics[currentIndex].text
                 isVisible = true
-            }
-
-            val builder = SpannableStringBuilder()
-            
-            // Show current active line in the card, but limit to avoid clutter
-            val maxLines = 2
-            val endIdx = minOf(currentIndex + maxLines, currentLyrics.size)
-            
-            for (i in currentIndex until endIdx) {
-                val line = currentLyrics[i]
-                val start = builder.length
-                builder.append(line.text)
-                val end = builder.length
                 
-                if (palette != null) {
-                    if (i == currentIndex) {
-                        builder.setSpan(StyleSpan(android.graphics.Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        builder.setSpan(ForegroundColorSpan(palette.foregroundPrimary), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    } else {
-                        builder.setSpan(ForegroundColorSpan(palette.foregroundSecondary), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    }
-                }
-                
-                if (i < endIdx - 1) builder.append("\n")
+                // Active lyric hierarchy: White, Large, Semibold
+                setTextColor(Color.WHITE)
+                alpha = 0.9f
             }
-            
-            binding?.musicPlayerLyricsSnippet?.text = builder
         } else {
             binding?.musicPlayerLiveLyric?.isVisible = false
         }
@@ -167,8 +143,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                             return true
                         } else if (diffY < -SWIPE_THRESHOLD) {
                             // Smooth scroll to lyrics if they are available
-                            if (binding?.musicPlayerLyricsPreview?.isVisible == true) {
-                                binding?.musicPlayerScrollView?.smoothScrollTo(0, binding?.musicPlayerLyricsPreview?.top ?: 0)
+                            if (binding?.musicPlayerLiveLyric?.isVisible == true) {
+                                binding?.musicPlayerScrollView?.smoothScrollTo(0, binding?.musicPlayerLiveLyric?.top ?: 0)
                             }
                         }
                     }
@@ -255,7 +231,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             }
         }
 
-        binding?.musicPlayerAlbumArtCard?.setOnTouchListener { _, event ->
+        binding?.musicPlayerAlbumArt?.setOnTouchListener { _, event ->
             swipeGestureDetector.onTouchEvent(event)
             true
         }
@@ -278,10 +254,6 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             viewModel.currentPlayingSong.value?.let { song ->
                 viewModel.toggleLikeSong(song)
             }
-        }
-
-        binding?.musicPlayerLyricsPreview?.setOnClickListener {
-            openLyricsPanel()
         }
 
         binding?.musicPlayerLiveLyric?.setOnClickListener {
@@ -683,7 +655,6 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             val lyrics = state.lyrics
             val hasLyrics = status == LyricsStatus.AVAILABLE && lyrics != null
             
-            binding?.musicPlayerLyricsPreview?.isVisible = hasLyrics
             if (hasLyrics && lyrics != null) {
                 if (!lyrics.syncedLyrics.isNullOrBlank()) {
                     currentLyrics = LrcParser.parse(lyrics.syncedLyrics)
@@ -697,8 +668,6 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 } else if (!lyrics.plainLyrics.isNullOrBlank()) {
                     currentLyrics = emptyList()
                     lyricsHandler.removeCallbacks(updateLyricsRunnable)
-                    val snippet = lyrics.plainLyrics.lines().filter { it.isNotBlank() }.take(2).joinToString("\n")
-                    binding?.musicPlayerLyricsSnippet?.text = snippet
                     binding?.musicPlayerLiveLyric?.isVisible = false
                 }
             } else {
@@ -727,31 +696,30 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val dominant = if (palette.dominantColor != Color.BLACK && palette.dominantColor != 0xFF1A1A1A.toInt()) palette.dominantColor else defaultSurface
         val vibrant = if (palette.vibrantColor != Color.BLACK && palette.vibrantColor != 0xFFE50914.toInt()) palette.vibrantColor else defaultAccent
 
-        // Content cards background
+        // Content cards background - LrcLib/Spotify style dark atmospheric
         val lyricsPalette = MusicColorHelper.generateLyricsPalette(palette)
         currentLyricsPalette = lyricsPalette
         val cardBg = lyricsPalette.background
         
-        binding?.musicPlayerLyricsPreview?.setCardBackgroundColor(cardBg)
+        // Locked sections remain visually integrated but their colors are darkened
         binding?.musicPlayerAboutSongCard?.setCardBackgroundColor(cardBg)
         binding?.musicPlayerSongDnaCard?.setCardBackgroundColor(cardBg)
-        binding?.musicPlayerLiveLyric?.setTextColor(lyricsPalette.accent)
         
         updateLyricsPreview() // Refresh preview with new colors
 
-        // Ensure player background gradient follows the specification (Vibrant -> Dominant -> DarkMuted/Black)
-        val colorTop = MusicColorHelper.darkenColor(vibrant, 0.6f)
-        val colorMid = MusicColorHelper.darkenColor(dominant, 0.4f)
+        // Enforce VERY DARK BUT PERCEPTIBLY DYNAMIC atmospheric background
+        // Pipeline: Extract -> Darken Significantly -> Reduce Saturation -> Limit Brightness
+        val colorTop = MusicColorHelper.darkenColor(vibrant, 0.4f)
+        val colorMid = MusicColorHelper.darkenColor(dominant, 0.3f)
         val colorBot = Color.parseColor("#0B0B0F")
 
         val targetColors = intArrayOf(colorTop, colorMid, colorBot)
         MusicColorHelper.animateGradientChange(binding?.musicPlayerBackgroundGradient, currentGradientColors, targetColors)
         currentGradientColors = targetColors
 
-        // Foreground/UI Colors based on luminance
-        val isLight = MusicColorHelper.calculateLuminance(colorTop) > 0.6f
-        val foregroundColor = if (isLight) Color.BLACK else Color.WHITE
-        val secondaryForegroundColor = if (isLight) 0x99000000.toInt() else 0xB3FFFFFF.toInt()
+        // Foreground/UI Colors - STICK TO NEUTRAL (White/Gray)
+        val foregroundColor = Color.WHITE
+        val secondaryForegroundColor = 0xB3FFFFFF.toInt()
         val foregroundTint = ColorStateList.valueOf(foregroundColor)
 
         binding?.let { b ->
@@ -760,21 +728,21 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             b.musicPlayerBack.imageTintList = foregroundTint
             b.musicPlayerMore.imageTintList = foregroundTint
             
-            // Section labels
-            b.musicPlayerLyricsLabel.setTextColor(secondaryForegroundColor)
+            // Section labels (LOCKED UI components)
             b.musicPlayerAboutSongLabel.setTextColor(secondaryForegroundColor)
             b.musicPlayerSongDnaLabel.setTextColor(secondaryForegroundColor)
             b.musicPlayerAboutSongContent.setTextColor(foregroundColor)
             
-            // Player View controls
+            // Player View controls - Neutral premium look
             val playerView = b.musicPlayerView
             playerView.findViewById<ImageButton>(R.id.exo_prev)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.exo_next)?.imageTintList = foregroundTint
             
             val playPauseButton = playerView.findViewById<ImageButton>(R.id.exo_play_pause)
-            val accentColor = context?.getColor(R.color.zetflix_accent) ?: vibrant
-            playPauseButton?.backgroundTintList = ColorStateList.valueOf(accentColor)
-            playPauseButton?.imageTintList = ColorStateList.valueOf(if (MusicColorHelper.calculateLuminance(accentColor) > 0.6f) Color.BLACK else Color.WHITE)
+            
+            // In the new integrated design, play/pause is an ImageButton without the giant white circle
+            playPauseButton?.imageTintList = foregroundTint
+            playPauseButton?.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
 
             playerView.findViewById<ImageButton>(R.id.music_player_devices)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.music_player_lyrics)?.imageTintList = foregroundTint
@@ -794,8 +762,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             activity?.let { act ->
                 val window = act.window
                 val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
-                insetsController.isAppearanceLightStatusBars = isLight
-                insetsController.isAppearanceLightNavigationBars = isLight
+                insetsController.isAppearanceLightStatusBars = false
+                insetsController.isAppearanceLightNavigationBars = false
             }
             
             // Re-sync state-dependent buttons

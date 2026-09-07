@@ -278,9 +278,9 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
         )
         currentGradientColors = targetColors
 
-        // Contrast-aware foreground hierarchy
-        val foregroundColor = palette.foregroundPrimary
-        val secondaryColor = palette.foregroundSecondary
+        // NEUTRAL premium foreground hierarchy (White/Gray)
+        val foregroundColor = Color.WHITE
+        val secondaryColor = 0xB3FFFFFF.toInt()
         val tint = ColorStateList.valueOf(foregroundColor)
 
         binding?.let { b ->
@@ -292,27 +292,27 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
             b.lyricsExoPosition.setTextColor(secondaryColor)
             b.lyricsExoDuration.setTextColor(secondaryColor)
             
-            // Apply palette to synced lyrics view
+            // Apply palette to synced lyrics view (Active line will be White)
             b.lyricsSyncedView.setPalette(palette)
 
             // Spotify-style "Back to current" button styling
-            b.lyricsBackToCurrent.setTextColor(if (palette.isLight) Color.BLACK else Color.WHITE)
-            b.lyricsBackToCurrent.backgroundTintList = ColorStateList.valueOf(palette.accent)
+            b.lyricsBackToCurrent.setTextColor(Color.BLACK)
+            b.lyricsBackToCurrent.backgroundTintList = ColorStateList.valueOf(Color.WHITE)
 
-            // Theme the play/pause button
-            b.lyricsPlayPause.backgroundTintList = ColorStateList.valueOf(palette.accent)
-            b.lyricsPlayPause.imageTintList = ColorStateList.valueOf(if (palette.isLight) Color.BLACK else Color.WHITE)
+            // Theme the play/pause button - Neutral integrated look
+            b.lyricsPlayPause.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            b.lyricsPlayPause.imageTintList = ColorStateList.valueOf(Color.WHITE)
 
-            // Theme the seek bar
-            b.lyricsExoProgress.setScrubberColor(palette.accent)
-            b.lyricsExoProgress.setPlayedColor(palette.accent)
+            // Theme the seek bar - White accent for lyrics screen
+            b.lyricsExoProgress.setScrubberColor(Color.WHITE)
+            b.lyricsExoProgress.setPlayedColor(Color.WHITE)
             
-            // System bar icons
+            // System bar icons - Always dark mode for cinematic feel
             activity?.let { act ->
                 val window = act.window
                 val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
-                insetsController.isAppearanceLightStatusBars = palette.isLight
-                insetsController.isAppearanceLightNavigationBars = palette.isLight
+                insetsController.isAppearanceLightStatusBars = false
+                insetsController.isAppearanceLightNavigationBars = false
             }
         }
     }

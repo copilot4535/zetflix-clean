@@ -100,12 +100,16 @@ object MusicColorHelper {
      * @param ratio The amount of the original color to keep (0.0 to 1.0).
      */
     @ColorInt
-    fun darkenColor(@ColorInt color: Int, ratio: Float = 0.7f): Int {
+    fun darkenColor(@ColorInt color: Int, ratio: Float = 0.4f): Int {
         val a = Color.alpha(color)
-        val r = (Color.red(color) * ratio).toInt()
-        val g = (Color.green(color) * ratio).toInt()
-        val b = (Color.blue(color) * ratio).toInt()
-        return Color.argb(a, r, g, b)
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+        
+        // Darken significantly and reduce saturation for a cinematic look
+        hsv[1] = (hsv[1] * 0.5f).coerceIn(0.05f, 0.4f)
+        hsv[2] = (hsv[2] * ratio).coerceIn(0.02f, 0.15f)
+        
+        return Color.HSVToColor(a, hsv)
     }
 
     /**
@@ -175,37 +179,22 @@ object MusicColorHelper {
         // 1. Blend Dominant and Dark Muted colors (60-75%)
         var lyricsBg = blendColors(palette.dominantColor, palette.darkMutedColor, 0.7f)
 
-        // 2. Tone-map for readability
-        val luminance = calculateLuminance(lyricsBg)
+        // 2. Tone-map for readability - DARK CINEMATIC REDESIGN
         val hsv = FloatArray(3)
         Color.colorToHSV(lyricsBg, hsv)
 
-        if (luminance > 0.4f) {
-            // Reduce brightness if too high
-            hsv[2] *= 0.6f
-        }
-        
-        if (hsv[1] > 0.7f) {
-            // Reduce saturation if excessively high
-            hsv[1] *= 0.8f
-        }
+        // Force background to be very dark and desaturated
+        hsv[1] = (hsv[1] * 0.4f).coerceIn(0.05f, 0.3f) 
+        hsv[2] = (hsv[2] * 0.3f).coerceIn(0.02f, 0.1f)
+        lyricsBg = Color.HSVToColor(hsv)
 
-        // Keep the original character if already dark
-        if (luminance > 0.15f) {
-            lyricsBg = Color.HSVToColor(hsv)
-        }
+        // 3. Foreground logic - White for active, lower opacity for others
+        val primary = Color.WHITE
+        val secondary = adjustAlpha(primary, 0.7f)
+        val tertiary = adjustAlpha(primary, 0.45f)
 
-        // 3. Foreground logic
-        val bgLuminance = calculateLuminance(lyricsBg)
-        val isLight = bgLuminance > 0.5f
-        
-        val primary = if (isLight) Color.BLACK else Color.WHITE
-        val secondary = adjustAlpha(primary, 0.75f)
-        val tertiary = adjustAlpha(primary, 0.55f)
-
-        // 4. Accent color (active lyric)
-        // Ensure contrast against background
-        val accent = ensureContrast(lyricsBg, palette.vibrantColor)
+        // 4. Accent color (active lyric) - Ensure it's white or high contrast ZetFlix red
+        val accent = Color.WHITE
 
         return LyricsPalette(
             background = lyricsBg,
@@ -213,7 +202,7 @@ object MusicColorHelper {
             foregroundSecondary = secondary,
             foregroundTertiary = tertiary,
             accent = accent,
-            isLight = isLight
+            isLight = false
         )
     }
 
@@ -277,10 +266,10 @@ object MusicColorHelper {
         Color.colorToHSV(baseColor, hsv)
 
         // 1. Saturation control (Desaturate to prevent "cheap" look)
-        hsv[1] = hsv[1].coerceIn(0.1f, 0.4f) 
+        hsv[1] = (hsv[1] * 0.4f).coerceIn(0.05f, 0.3f) 
 
         // 2. Luminance reduction (Ensure it's almost black but tinted)
-        hsv[2] = hsv[2].coerceIn(0.05f, 0.12f)
+        hsv[2] = (hsv[2] * 0.5f).coerceIn(0.02f, 0.1f)
 
         return Color.HSVToColor(hsv)
     }
