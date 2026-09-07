@@ -299,6 +299,10 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
             b.lyricsBackToCurrent.setTextColor(if (palette.isLight) Color.BLACK else Color.WHITE)
             b.lyricsBackToCurrent.backgroundTintList = ColorStateList.valueOf(palette.accent)
 
+            // Theme the play/pause button
+            b.lyricsPlayPause.backgroundTintList = ColorStateList.valueOf(palette.accent)
+            b.lyricsPlayPause.imageTintList = ColorStateList.valueOf(if (palette.isLight) Color.BLACK else Color.WHITE)
+
             // Theme the seek bar
             b.lyricsExoProgress.setScrubberColor(palette.accent)
             b.lyricsExoProgress.setPlayedColor(palette.accent)

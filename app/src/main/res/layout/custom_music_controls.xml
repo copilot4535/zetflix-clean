@@ -74,37 +74,26 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/baseline_skip_previous_24"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/exo_play_pause_container"
+            app:layout_constraintEnd_toStartOf="@+id/exo_play_pause"
             app:layout_constraintStart_toEndOf="@+id/music_player_shuffle"
             app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/white"
             android:contentDescription="@string/previous" />
 
-        <FrameLayout
-            android:id="@+id/exo_play_pause_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageButton
+            android:id="@+id/exo_play_pause"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="@drawable/bg_circle_white"
+            android:src="@drawable/ic_baseline_play_arrow_24"
+            android:padding="24dp"
+            android:scaleType="fitCenter"
+            app:tint="@color/black"
+            android:contentDescription="Play or Pause"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/exo_next"
             app:layout_constraintStart_toEndOf="@+id/exo_prev"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <View
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:background="@drawable/bg_circle_white" />
-
-            <ImageButton
-                android:id="@+id/exo_play_pause"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_baseline_play_arrow_24"
-                android:padding="24dp"
-                android:scaleType="fitCenter"
-                app:tint="@color/black"
-                android:contentDescription="Play or Pause" />
-        </FrameLayout>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/exo_next"
@@ -114,7 +103,7 @@
             android:src="@drawable/ic_baseline_skip_next_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/music_player_repeat"
-            app:layout_constraintStart_toEndOf="@+id/exo_play_pause_container"
+            app:layout_constraintStart_toEndOf="@+id/exo_play_pause"
             app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/white"
             android:contentDescription="@string/next" />

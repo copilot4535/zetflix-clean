@@ -771,6 +771,10 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             playerView.findViewById<ImageButton>(R.id.exo_prev)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.exo_next)?.imageTintList = foregroundTint
             
+            val playPauseButton = playerView.findViewById<ImageButton>(R.id.exo_play_pause)
+            playPauseButton?.backgroundTintList = ColorStateList.valueOf(vibrant)
+            playPauseButton?.imageTintList = ColorStateList.valueOf(if (MusicColorHelper.calculateLuminance(vibrant) > 0.6f) Color.BLACK else Color.WHITE)
+
             playerView.findViewById<ImageButton>(R.id.music_player_devices)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.music_player_lyrics)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.music_player_share)?.imageTintList = foregroundTint

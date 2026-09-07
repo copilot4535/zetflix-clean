@@ -1,5 +1,6 @@
 package com.lagradost.cloudstream3.ui.music
 
+import android.content.res.ColorStateList
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
@@ -43,6 +44,7 @@ import androidx.media3.common.util.UnstableApi
 
 import coil3.asDrawable
 import coil3.imageLoader
+import coil3.request.crossfade
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
@@ -451,29 +453,38 @@ class MusicActivity : AppCompatActivity() {
     }
 
     private fun updatePlayPauseIcon(isPlaying: Boolean) {
-        binding.globalMiniPlayer.musicMiniPlayPause.setImageResource(
-            if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
-        )
+        val icon = if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
+        binding.globalMiniPlayer.musicMiniPlayPause.setIconResource(icon)
     }
 
     private var currentMiniPlayerColor: Int = 0xFF121212.toInt()
 
     private fun updateMiniPlayerMetadata(metadata: MediaMetadata) {
-        binding.globalMiniPlayer.musicMiniTitle.text = metadata.title ?: "Unknown Title"
-        binding.globalMiniPlayer.musicMiniTitle.isSelected = true // For marquee
-        binding.globalMiniPlayer.musicMiniArtist.text = metadata.artist ?: "Unknown Artist"
-        
         val mediaId = mediaController?.currentMediaItem?.mediaId
+        
+        // Coordinated update: Load image first, then update everything together
         binding.globalMiniPlayer.musicMiniThumbnail.loadImage(metadata.artworkUri?.toString()) {
+            // Enable crossfade for smooth transition
+            crossfade(400)
+            
             listener(onSuccess = { _, result ->
                 val drawable = result.image.asDrawable(resources)
                 val bitmap = drawableToBitmap(drawable)
-                if (bitmap != null) {
-                    lifecycleScope.launch {
-                        val palette = MusicColorHelper.getPalette(mediaId, bitmap)
-                        applyMiniPlayerTheming(palette)
-                    }
+                
+                lifecycleScope.launch {
+                    val palette = if (bitmap != null) MusicColorHelper.getPalette(mediaId, bitmap) else null
+                    
+                    // Update text and theme together
+                    binding.globalMiniPlayer.musicMiniTitle.text = metadata.title ?: "Unknown Title"
+                    binding.globalMiniPlayer.musicMiniTitle.isSelected = true
+                    binding.globalMiniPlayer.musicMiniArtist.text = metadata.artist ?: "Unknown Artist"
+                    
+                    palette?.let { applyMiniPlayerTheming(it) }
                 }
+            }, onError = { _, _ ->
+                // Fallback if image fails
+                binding.globalMiniPlayer.musicMiniTitle.text = metadata.title ?: "Unknown Title"
+                binding.globalMiniPlayer.musicMiniArtist.text = metadata.artist ?: "Unknown Artist"
             })
         }
     }
@@ -490,6 +501,15 @@ class MusicActivity : AppCompatActivity() {
         // Update progress bar and icons
         binding.globalMiniPlayer.musicMiniProgress.progressDrawable.setTint(accentColor)
         binding.globalMiniPlayer.musicMiniLoading.setIndicatorColor(accentColor)
+        
+        // Update Play/Pause button background
+        binding.globalMiniPlayer.musicMiniPlayPause.backgroundTintList = ColorStateList.valueOf(accentColor)
+        
+        // Ensure high contrast for play/pause icon
+        val isAccentLight = MusicColorHelper.calculateLuminance(accentColor) > 0.6f
+        binding.globalMiniPlayer.musicMiniPlayPause.iconTint = ColorStateList.valueOf(
+            if (isAccentLight) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+        )
         
         updateLikeIcon(accentColor)
     }

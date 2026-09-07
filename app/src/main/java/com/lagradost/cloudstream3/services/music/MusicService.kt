@@ -46,9 +46,11 @@ class MusicService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
     private var player: ExoPlayer? = null
+    private var lastWidgetUpdate = 0L
 
     override fun onCreate() {
         super.onCreate()
+        MusicDownloadManager.init(this)
         val dataSourceFactory = MusicDownloadManager.getReadOnlyDataSourceFactory(this)
         val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
             .setUsage(androidx.media3.common.C.USAGE_MEDIA)
@@ -63,7 +65,11 @@ class MusicService : MediaSessionService() {
         player = exoPlayer
         exoPlayer.addListener(object : androidx.media3.common.Player.Listener {
             override fun onEvents(player: androidx.media3.common.Player, events: androidx.media3.common.Player.Events) {
-                updateWidget()
+                val now = System.currentTimeMillis()
+                if (now - lastWidgetUpdate > 500) {
+                    lastWidgetUpdate = now
+                    updateWidget()
+                }
             }
         })
         mediaSession = MediaSession.Builder(this, exoPlayer)
@@ -87,11 +93,13 @@ class MusicService : MediaSessionService() {
             })
             .build()
 
-        try {
-            NewPipe.getDownloader()
-        } catch (e: Exception) {
-            DownloaderTestImpl.getInstance()?.let {
-                NewPipe.init(it)
+        ioSafe {
+            try {
+                NewPipe.getDownloader()
+            } catch (e: Exception) {
+                DownloaderTestImpl.getInstance()?.let {
+                    NewPipe.init(it)
+                }
             }
         }
     }

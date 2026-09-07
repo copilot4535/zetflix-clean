@@ -108,6 +108,7 @@ class MusicViewModel : ViewModel() {
     private val prefetchJob = SupervisorJob()
     private val prefetchScope = CoroutineScope(Dispatchers.IO + prefetchJob)
     private val prefetchSemaphore = kotlinx.coroutines.sync.Semaphore(5)
+    private val batchDownloadSemaphore = kotlinx.coroutines.sync.Semaphore(3)
 
     private fun initNewPipe() {
         try {
@@ -176,7 +177,9 @@ class MusicViewModel : ViewModel() {
                 states.values.forEach { state ->
                     if (state.state == androidx.media3.exoplayer.offline.Download.STATE_COMPLETED) {
                         activeDownloadRequests.remove(state.videoId)?.let { song ->
-                            if (MusicPersistence.getDownloadedSongs().none { it.videoId == song.videoId }) {
+                            // Batch check: avoid redundant SharedPreferences writes if already present
+                            val currentDownloaded = _downloadedSongs.value ?: MusicPersistence.getDownloadedSongs()
+                            if (currentDownloaded.none { it.videoId == song.videoId }) {
                                 MusicPersistence.addDownloadedSong(song)
                                 _downloadedSongs.postValue(MusicPersistence.getDownloadedSongs())
                             }
@@ -678,7 +681,7 @@ class MusicViewModel : ViewModel() {
                     fetchLyrics(selectedSong)
                     addToHistory(selectedSong)
 
-                    // 2. Extract remaining songs in parallel
+                    // 2. Extract remaining songs in parallel but throttled
                     val maxQueueSize = 30
                     val subset = songs.take(maxQueueSize)
                     
@@ -688,8 +691,10 @@ class MusicViewModel : ViewModel() {
                                 if (song.videoId == selectedSong.videoId) {
                                     song to firstUrl
                                 } else {
-                                    val url = extractAndCache(song.videoId, song.params)
-                                    if (url != null) song to url else null
+                                    batchDownloadSemaphore.withPermit {
+                                        val url = extractAndCache(song.videoId, song.params)
+                                        if (url != null) song to url else null
+                                    }
                                 }
                             }
                         }.awaitAll().filterNotNull()

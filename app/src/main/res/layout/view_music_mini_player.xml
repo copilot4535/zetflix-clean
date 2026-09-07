@@ -20,10 +20,10 @@
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/music_mini_thumbnail_card"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="8dp"
-            app:cardCornerRadius="6dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="10dp"
+            app:cardCornerRadius="8dp"
             app:cardElevation="0dp"
             android:transitionName="album_art"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -60,7 +60,7 @@
                 android:singleLine="true"
                 android:fontFamily="@font/metropolis_bold"
                 android:textColor="@color/white"
-                android:textSize="15sp"
+                android:textSize="14sp"
                 tools:text="Song Title" />
 
             <TextView
@@ -71,14 +71,15 @@
                 android:fontFamily="@font/metropolis_regular"
                 android:maxLines="1"
                 android:textColor="#B3B3B3"
-                android:textSize="13sp"
+                android:textSize="12sp"
+                android:alpha="0.8"
                 tools:text="Artist Name" />
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/music_mini_like"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_baseline_favorite_border_24"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -89,20 +90,29 @@
 
         <FrameLayout
             android:id="@+id/music_mini_play_pause_container"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <ImageButton
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/music_mini_play_pause"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_baseline_play_arrow_24"
-                app:tint="@color/white"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:padding="0dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                app:icon="@drawable/ic_baseline_play_arrow_24"
+                app:iconSize="28dp"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/zetflix_accent"
+                app:cornerRadius="20dp"
                 tools:ignore="ContentDescription" />
 
             <com.google.android.material.progressindicator.CircularProgressIndicator

@@ -90,18 +90,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="20dp"
             android:fontFamily="@font/metropolis_bold"
             android:text="Top Tracks"
             android:textColor="@color/white"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/music_artist_top_tracks"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:clipToPadding="false"
             tools:listitem="@layout/item_music_song" />
 
@@ -110,11 +110,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:fontFamily="@font/metropolis_bold"
             android:text="Albums"
             android:textColor="@color/white"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/music_artist_albums"
