@@ -87,6 +87,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val controller = mediaController ?: return
         if (currentLyrics.isEmpty()) {
             binding?.musicPlayerLiveLyric?.text = ""
+            binding?.musicPlayerLyricsSnippet?.text = ""
             return
         }
 
@@ -94,17 +95,38 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val currentIndex = currentLyrics.indexOfLast { it.timestampMs <= position }
         
         if (currentIndex != -1) {
-            // Update the reserved 2-line lyric preview
+            // 1. Update the reserved 2-line inline lyric preview (between art and title)
             val currentLine = currentLyrics[currentIndex].text
             val nextLine = if (currentIndex + 1 < currentLyrics.size) currentLyrics[currentIndex + 1].text else ""
             
             binding?.musicPlayerLiveLyric?.apply {
                 text = if (nextLine.isNotBlank()) "$currentLine\n$nextLine" else currentLine
-                // Keep alpha subtle as it's a preview
-                alpha = 0.8f
+                alpha = 1.0f
             }
+
+            // 2. Update the dedicated Lyrics Preview Card snippet (large bold text)
+            val builder = SpannableStringBuilder()
+            val maxLines = 4
+            val endIdx = minOf(currentIndex + maxLines, currentLyrics.size)
+            
+            for (i in currentIndex until endIdx) {
+                val line = currentLyrics[i]
+                val start = builder.length
+                builder.append(line.text)
+                val end = builder.length
+                
+                if (i == currentIndex) {
+                    builder.setSpan(ForegroundColorSpan(Color.WHITE), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                } else {
+                    builder.setSpan(ForegroundColorSpan(0xB3FFFFFF.toInt()), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                
+                if (i < endIdx - 1) builder.append("\n")
+            }
+            binding?.musicPlayerLyricsSnippet?.text = builder
         } else {
             binding?.musicPlayerLiveLyric?.text = ""
+            binding?.musicPlayerLyricsSnippet?.text = ""
         }
     }
 
@@ -258,6 +280,10 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
 
         binding?.musicPlayerLiveLyric?.setOnClickListener {
+            openLyricsPanel()
+        }
+
+        binding?.musicPlayerLyricsPreviewCard?.setOnClickListener {
             openLyricsPanel()
         }
         
@@ -534,10 +560,6 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 viewModel.updateRateStatus(song.videoId)
                 viewModel.loadRelatedSongs(song.videoId)
 
-                // Mock About the Song content
-                binding?.musicPlayerAboutSongCard?.isVisible = true
-                binding?.musicPlayerAboutSongContent?.text = "Discover the inspiration behind \"${song.title}\". This track marks a significant evolution in ${song.artist}'s sound, blending soulful melodies with modern production."
-
                 // Try to get album if controller is available
                 mediaController?.currentMediaItem?.mediaMetadata?.let { updateMetadata(it) }
             }
@@ -595,6 +617,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             val lyrics = state.lyrics
             val hasLyrics = status == LyricsStatus.AVAILABLE && lyrics != null
             
+            binding?.musicPlayerLyricsPreviewCard?.isVisible = hasLyrics
             if (hasLyrics && lyrics != null) {
                 if (!lyrics.syncedLyrics.isNullOrBlank()) {
                     currentLyrics = LrcParser.parse(lyrics.syncedLyrics)
@@ -606,11 +629,13 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                     currentLyrics = emptyList()
                     lyricsHandler.removeCallbacks(updateLyricsRunnable)
                     binding?.musicPlayerLiveLyric?.text = lyrics.plainLyrics.lines().firstOrNull { it.isNotBlank() } ?: ""
+                    binding?.musicPlayerLyricsSnippet?.text = lyrics.plainLyrics
                 }
             } else {
                 currentLyrics = emptyList()
                 lyricsHandler.removeCallbacks(updateLyricsRunnable)
                 binding?.musicPlayerLiveLyric?.text = ""
+                binding?.musicPlayerLyricsSnippet?.text = ""
             }
         }
 
@@ -633,7 +658,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val cardBg = lyricsPalette.background
         
         // Locked sections remain visually integrated with the atmospheric theme
-        binding?.musicPlayerAboutSongCard?.setCardBackgroundColor(cardBg)
+        binding?.musicPlayerLyricsPreviewCard?.setCardBackgroundColor(cardBg)
         binding?.musicPlayerSongDnaCard?.setCardBackgroundColor(cardBg)
         
         updateLyricsPreview() // Refresh preview with new colors
@@ -654,10 +679,9 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             b.musicPlayerBack.imageTintList = foregroundTint
             b.musicPlayerMore.imageTintList = foregroundTint
             
-            // Section labels (LOCKED UI components)
-            b.musicPlayerAboutSongLabel.setTextColor(secondaryForegroundColor)
+            // Section labels
+            b.musicPlayerLyricsLabel.setTextColor(secondaryForegroundColor)
             b.musicPlayerSongDnaLabel.setTextColor(secondaryForegroundColor)
-            b.musicPlayerAboutSongContent.setTextColor(foregroundColor)
             
             // Player View controls - Neutral premium look
             val playerView = b.musicPlayerView
