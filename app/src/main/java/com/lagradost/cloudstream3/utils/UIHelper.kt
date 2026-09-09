@@ -493,9 +493,11 @@ object UIHelper {
                     ?: view.resources.getDimensionPixelSize(it).also { h ->
                         view.setTag(R.id.initial_height, h)
                     }
-                view.updateLayoutParams {
-                    height =
-                        initialHeight + (if (padTop) insets.top else 0) + (if (padBottom) insets.bottom else 0)
+                val targetHeight = initialHeight + (if (padTop) insets.top else 0) + (if (padBottom) insets.bottom else 0)
+                if (view.layoutParams.height != targetHeight) {
+                    view.updateLayoutParams {
+                        height = targetHeight
+                    }
                 }
             }
 
@@ -504,9 +506,12 @@ object UIHelper {
                     ?: view.resources.getDimensionPixelSize(it).also { w ->
                         view.setTag(R.id.initial_width, w)
                     }
-                view.updateLayoutParams {
-                    val startInset = if (view.isRtl()) insets.right else insets.left
-                    width = if (startInset > 0) initialWidth + startInset else initialWidth
+                val startInset = if (view.isRtl()) insets.right else insets.left
+                val targetWidth = if (startInset > 0) initialWidth + startInset else initialWidth
+                if (view.layoutParams.width != targetWidth) {
+                    view.updateLayoutParams {
+                        width = targetWidth
+                    }
                 }
             }
 

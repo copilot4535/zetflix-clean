@@ -194,8 +194,13 @@ class MusicActivity : AppCompatActivity() {
             // Apply bottom inset to the bottom navigation container as margin
             // Base margin is 8dp (compact floating look)
             val baseBottomMargin = (8 * resources.displayMetrics.density).toInt()
-            binding.musicBottomNavContainer.updateLayoutParams<android.view.ViewGroup.MarginLayoutParams> {
-                bottomMargin = if (isImmersive) 0 else (bottomInset + baseBottomMargin)
+            val targetBottomMargin = if (isImmersive) 0 else (bottomInset + baseBottomMargin)
+            
+            val lp = binding.musicBottomNavContainer.layoutParams as? android.view.ViewGroup.MarginLayoutParams
+            if (lp?.bottomMargin != targetBottomMargin) {
+                binding.musicBottomNavContainer.updateLayoutParams<android.view.ViewGroup.MarginLayoutParams> {
+                    bottomMargin = targetBottomMargin
+                }
             }
             
             // Ensure the BottomNavigationView itself DOES NOT add internal padding for insets
@@ -320,10 +325,7 @@ class MusicActivity : AppCompatActivity() {
     private fun setupGlobalMiniPlayer() {
         val gestureDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
             override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean {
-                val extras = FragmentNavigatorExtras(
-                    binding.globalMiniPlayer.musicMiniThumbnail to "album_art"
-                )
-                this@MusicActivity.navigate(R.id.global_to_navigation_music_player, extras = extras)
+                openFullPlayer()
                 return true
             }
 
@@ -341,6 +343,11 @@ class MusicActivity : AppCompatActivity() {
                 return false
             }
         })
+
+        // Root click listener for the mini player
+        binding.globalMiniPlayer.musicMiniPlayer.setOnClickListener {
+            openFullPlayer()
+        }
 
         binding.globalMiniPlayer.musicMiniPlayer.setOnTouchListener { v, event ->
             if (gestureDetector.onTouchEvent(event)) return@setOnTouchListener true
@@ -361,6 +368,13 @@ class MusicActivity : AppCompatActivity() {
                 viewModel.toggleLikeSong(song)
             }
         }
+    }
+
+    private fun openFullPlayer() {
+        val extras = FragmentNavigatorExtras(
+            binding.globalMiniPlayer.musicMiniThumbnail to "album_art"
+        )
+        this@MusicActivity.navigate(R.id.global_to_navigation_music_player, extras = extras)
     }
 
     private fun setupController() {
@@ -490,19 +504,20 @@ class MusicActivity : AppCompatActivity() {
     }
 
     private fun applyMiniPlayerTheming(palette: MusicPalette) {
-        val targetColor = MusicColorHelper.generatePremiumMiniPlayerBackground(palette)
+        val targetColor = MusicColorHelper.generateSpotifyMiniPlayerBackground(palette)
         val accentColor = MusicColorHelper.getVibrantAccent(palette)
         
-        MusicColorHelper.animateColorChange(currentMiniPlayerColor, targetColor) { color ->
+        miniPlayerAnimator?.cancel()
+        miniPlayerAnimator = MusicColorHelper.animateColorChange(currentMiniPlayerColor, targetColor) { color ->
             binding.globalMiniPlayer.musicMiniPlayer.setCardBackgroundColor(color)
             currentMiniPlayerColor = color
         }
         
-        // Update progress bar and icons
+        // Update progress bar and icons - use pure white/gray for icons as per spec
         binding.globalMiniPlayer.musicMiniProgress.progressDrawable.setTint(accentColor)
         binding.globalMiniPlayer.musicMiniLoading.setIndicatorColor(accentColor)
         
-        // Play/Pause button styling - Integrated neutral look
+        // Controls remain neutral white
         binding.globalMiniPlayer.musicMiniPlayPause.imageTintList = ColorStateList.valueOf(android.graphics.Color.WHITE)
         
         updateLikeIcon(accentColor)

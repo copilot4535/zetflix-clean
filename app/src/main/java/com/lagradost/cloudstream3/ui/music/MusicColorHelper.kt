@@ -95,113 +95,96 @@ object MusicColorHelper {
     }
 
     /**
-     * Blends the given color with black to ensure it's suitable for a background.
-     * @param color The color to darken.
-     * @param ratio The amount of the original color to keep (0.0 to 1.0).
+     * Darkens a color by a certain ratio.
      */
     @ColorInt
-    fun darkenColor(@ColorInt color: Int, ratio: Float = 0.4f): Int {
+    fun darkenColor(@ColorInt color: Int, ratio: Float = 0.25f): Int {
         val a = Color.alpha(color)
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
-        
-        // Darken significantly and reduce saturation for a cinematic look
-        hsv[1] = (hsv[1] * 0.5f).coerceIn(0.05f, 0.4f)
-        hsv[2] = (hsv[2] * ratio).coerceIn(0.02f, 0.15f)
-        
+        hsv[2] = (hsv[2] * ratio).coerceIn(0f, 1f)
         return Color.HSVToColor(a, hsv)
     }
 
     /**
-     * Calculates the contrast ratio between two colors.
-     * returns a value between 1.0 and 21.0.
-     */
-    fun calculateContrast(@ColorInt color1: Int, @ColorInt color2: Int): Float {
-        val l1 = calculateLuminance(color1) + 0.05f
-        val l2 = calculateLuminance(color2) + 0.05f
-        return if (l1 > l2) l1 / l2 else l2 / l1
-    }
-
-    /**
-     * Darkens or lightens a color to ensure enough contrast for text.
+     * Desaturates a color by a certain ratio.
      */
     @ColorInt
-    fun ensureContrast(@ColorInt backgroundColor: Int, @ColorInt textColor: Int, minContrastRatio: Float = 4.5f): Int {
-        var result = textColor
-        val bgLuminance = calculateLuminance(backgroundColor)
-        val isBgDark = bgLuminance < 0.5f
-        
+    fun desaturateColor(@ColorInt color: Int, ratio: Float = 0.5f): Int {
+        val a = Color.alpha(color)
         val hsv = FloatArray(3)
-        Color.colorToHSV(result, hsv)
-        
-        var contrast = calculateContrast(backgroundColor, result)
-        var iterations = 0
-        
-        // Iteratively adjust luminance to reach contrast goal
-        while (contrast < minContrastRatio && iterations < 10) {
-            if (isBgDark) {
-                hsv[2] = minOf(1.0f, hsv[2] + 0.1f) // Lighten
-            } else {
-                hsv[2] = maxOf(0.0f, hsv[2] - 0.1f) // Darken
-            }
-            result = Color.HSVToColor(hsv)
-            contrast = calculateContrast(backgroundColor, result)
-            iterations++
-        }
-        
-        // If still not enough contrast, try adjusting saturation
-        if (contrast < minContrastRatio) {
-            iterations = 0
-            while (contrast < minContrastRatio && iterations < 5) {
-                if (isBgDark) {
-                    hsv[1] = maxOf(0.0f, hsv[1] - 0.1f) // Desaturate to make it whiter
-                } else {
-                    hsv[1] = minOf(1.0f, hsv[1] + 0.1f) // Saturate or leave it
-                }
-                result = Color.HSVToColor(hsv)
-                contrast = calculateContrast(backgroundColor, result)
-                iterations++
-            }
-        }
-        
-        // Final fallback
-        if (contrast < minContrastRatio) {
-            return if (isBgDark) Color.WHITE else Color.BLACK
-        }
-        
-        return result
+        Color.colorToHSV(color, hsv)
+        hsv[1] = (hsv[1] * ratio).coerceIn(0f, 1f)
+        return Color.HSVToColor(a, hsv)
     }
 
     /**
-     * Generates a Spotify-style lyrics palette based on artwork colors.
+     * Generates a Spotify-style background gradient.
+     * Starts with a darker, desaturated version of the artwork color at the top,
+     * fading to black at the bottom.
+     */
+    fun generateSpotifyGradient(palette: MusicPalette): IntArray {
+        // Prefer darkMuted or dominant for a moodier look
+        val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) palette.darkMutedColor else palette.dominantColor
+        
+        val hsv = FloatArray(3)
+        Color.colorToHSV(baseColor, hsv)
+
+        // Spotify top color is very desaturated (~20-30%) and dark (~15-25%)
+        hsv[1] = hsv[1].coerceIn(0.15f, 0.35f)
+        hsv[2] = hsv[2].coerceIn(0.15f, 0.25f)
+        val topColor = Color.HSVToColor(hsv)
+
+        // Mid color is even darker
+        hsv[2] *= 0.5f
+        val midColor = Color.HSVToColor(hsv)
+
+        // Bottom color is always near-black/black
+        val bottomColor = Color.parseColor("#0B0B0F")
+        
+        return intArrayOf(topColor, midColor, bottomColor)
+    }
+
+    /**
+     * Generates a Spotify-style mini player background.
+     * Usually a very dark, desaturated version of the artwork color.
+     */
+    @ColorInt
+    fun generateSpotifyMiniPlayerBackground(palette: MusicPalette): Int {
+        val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) palette.darkMutedColor else palette.dominantColor
+        
+        val hsv = FloatArray(3)
+        Color.colorToHSV(baseColor, hsv)
+        
+        // Spotify mini player is slightly more saturated than the full player top tint
+        // but very dark (~10-15% value)
+        hsv[1] = hsv[1].coerceIn(0.2f, 0.4f)
+        hsv[2] = hsv[2].coerceIn(0.08f, 0.15f)
+        
+        return Color.HSVToColor(hsv)
+    }
+
+    /**
+     * Generates a Spotify-style lyrics palette.
      */
     fun generateLyricsPalette(palette: MusicPalette): LyricsPalette {
-        // 1. Blend Dominant and Dark Muted colors (60-75%)
-        var lyricsBg = blendColors(palette.dominantColor, palette.darkMutedColor, 0.7f)
-
-        // 2. Tone-map for readability - DARK CINEMATIC REDESIGN
+        val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) palette.darkMutedColor else palette.dominantColor
+        
         val hsv = FloatArray(3)
-        Color.colorToHSV(lyricsBg, hsv)
-
-        // Force background to be very dark and desaturated
-        hsv[1] = (hsv[1] * 0.4f).coerceIn(0.05f, 0.3f) 
-        hsv[2] = (hsv[2] * 0.3f).coerceIn(0.02f, 0.1f)
-        lyricsBg = Color.HSVToColor(hsv)
-
-        // 3. Foreground logic - White for active, lower opacity for others
-        val primary = Color.WHITE
-        val secondary = adjustAlpha(primary, 0.7f)
-        val tertiary = adjustAlpha(primary, 0.45f)
-
-        // 4. Accent color (active lyric) - Ensure it's white or high contrast ZetFlix red
-        val accent = Color.WHITE
+        Color.colorToHSV(baseColor, hsv)
+        
+        // Lyrics background should be slightly more vibrant than full player top
+        // but still dark for text contrast
+        hsv[1] = hsv[1].coerceIn(0.3f, 0.5f)
+        hsv[2] = hsv[2].coerceIn(0.1f, 0.25f)
+        val lyricsBg = Color.HSVToColor(hsv)
 
         return LyricsPalette(
             background = lyricsBg,
-            foregroundPrimary = primary,
-            foregroundSecondary = secondary,
-            foregroundTertiary = tertiary,
-            accent = accent,
+            foregroundPrimary = Color.WHITE,
+            foregroundSecondary = adjustAlpha(Color.WHITE, 0.7f),
+            foregroundTertiary = adjustAlpha(Color.WHITE, 0.4f),
+            accent = Color.WHITE,
             isLight = false
         )
     }
@@ -210,8 +193,6 @@ object MusicColorHelper {
      * Generates a premium, artwork-driven palette for Home Podcast Cards.
      */
     fun generateHomePodcastCardPalette(palette: MusicPalette): HomePodcastCardPalette {
-        // 1. Base color selection
-        // We want a color that represents the artwork but isn't too bright
         val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) {
             palette.darkMutedColor
         } else if (palette.darkVibrantColor != DEFAULT_SURFACE) {
@@ -220,15 +201,10 @@ object MusicColorHelper {
             darkenColor(palette.dominantColor, 0.5f)
         }
 
-        // 2. Tonal gradient colors
-        // Start: The vibrant base
         val start = baseColor
-        // Middle: Muted version
         val middle = darkenColor(baseColor, 0.8f)
-        // End: Very dark version for depth
         val end = darkenColor(baseColor, 0.4f)
 
-        // 3. Contrast-aware foregrounds
         val luminance = calculateLuminance(middle)
         val isLight = luminance > 0.5f
         
@@ -245,33 +221,6 @@ object MusicColorHelper {
             foregroundTertiary = tertiary,
             isLight = isLight
         )
-    }
-
-    /**
-     * Generates a premium, artwork-driven dark background for the Mini Player.
-     * Uses luminance reduction and saturation control to keep it sophisticated.
-     */
-    @ColorInt
-    fun generatePremiumMiniPlayerBackground(palette: MusicPalette): Int {
-        // Prefer darkMutedColor, then darkVibrantColor, then darken the dominant color
-        val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) {
-            palette.darkMutedColor
-        } else if (palette.darkVibrantColor != DEFAULT_SURFACE) {
-            palette.darkVibrantColor
-        } else {
-            palette.dominantColor
-        }
-
-        val hsv = FloatArray(3)
-        Color.colorToHSV(baseColor, hsv)
-
-        // 1. Saturation control (Desaturate to prevent "cheap" look)
-        hsv[1] = (hsv[1] * 0.4f).coerceIn(0.05f, 0.3f) 
-
-        // 2. Luminance reduction (Ensure it's almost black but tinted)
-        hsv[2] = (hsv[2] * 0.5f).coerceIn(0.02f, 0.1f)
-
-        return Color.HSVToColor(hsv)
     }
 
     /**

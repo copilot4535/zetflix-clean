@@ -85,23 +85,26 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
     private fun updateLyricsPreview() {
         val controller = mediaController ?: return
-        if (currentLyrics.isEmpty()) return
+        if (currentLyrics.isEmpty()) {
+            binding?.musicPlayerLiveLyric?.text = ""
+            return
+        }
 
         val position = controller.currentPosition
         val currentIndex = currentLyrics.indexOfLast { it.timestampMs <= position }
         
         if (currentIndex != -1) {
-            // Redesigned Integrated active lyric display
+            // Update the reserved 2-line lyric preview
+            val currentLine = currentLyrics[currentIndex].text
+            val nextLine = if (currentIndex + 1 < currentLyrics.size) currentLyrics[currentIndex + 1].text else ""
+            
             binding?.musicPlayerLiveLyric?.apply {
-                text = currentLyrics[currentIndex].text
-                isVisible = true
-                
-                // Active lyric hierarchy: White, Large, Semibold
-                setTextColor(Color.WHITE)
-                alpha = 0.9f
+                text = if (nextLine.isNotBlank()) "$currentLine\n$nextLine" else currentLine
+                // Keep alpha subtle as it's a preview
+                alpha = 0.8f
             }
         } else {
-            binding?.musicPlayerLiveLyric?.isVisible = false
+            binding?.musicPlayerLiveLyric?.text = ""
         }
     }
 
@@ -142,10 +145,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                             findNavController().popBackStack()
                             return true
                         } else if (diffY < -SWIPE_THRESHOLD) {
-                            // Smooth scroll to lyrics if they are available
-                            if (binding?.musicPlayerLiveLyric?.isVisible == true) {
-                                binding?.musicPlayerScrollView?.smoothScrollTo(0, binding?.musicPlayerLiveLyric?.top ?: 0)
-                            }
+                            // Smooth scroll down to supplementary content
+                            binding?.musicPlayerScrollView?.smoothScrollTo(0, binding?.musicPlayerView?.bottom ?: 0)
                         }
                     }
                 }
@@ -261,23 +262,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
         
         binding?.musicPlayerView?.let { playerView ->
-            playerView.findViewById<View>(R.id.music_player_lyrics)?.setOnClickListener {
-                openLyricsPanel()
-            }
-
-            playerView.findViewById<View>(R.id.music_player_download)?.setOnClickListener {
-                viewModel.currentPlayingSong.value?.let { song ->
-                    viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                        val isDownloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }
-                        viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
-                            if (isDownloaded) {
-                                viewModel.removeDownload(song.videoId)
-                            } else {
-                                viewModel.downloadSong(song)
-                            }
-                        }
-                    }
-                }
+            playerView.findViewById<View>(R.id.music_player_share)?.setOnClickListener {
+                shareCurrentSong()
             }
 
             playerView.findViewById<View>(R.id.music_player_queue)?.setOnClickListener {
@@ -286,10 +272,6 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
             playerView.findViewById<View>(R.id.music_player_devices)?.setOnClickListener {
                 Toast.makeText(context, "Device picker coming soon", Toast.LENGTH_SHORT).show()
-            }
-
-            playerView.findViewById<View>(R.id.music_player_share)?.setOnClickListener {
-                shareCurrentSong()
             }
         }
     }
@@ -400,36 +382,24 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     private fun updatePlayPauseAnimation(isPlaying: Boolean) {
         val playPauseButton = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.exo_play_pause) ?: return
         
-        val targetIcon = if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
+        val targetIcon = if (isPlaying) R.drawable.rdpause else R.drawable.ic_baseline_play_arrow_24
         
-        // Premium crossfade morph transition
-        playPauseButton.animate()
-            .alpha(0.5f)
-            .scaleX(0.9f)
-            .scaleY(0.9f)
-            .setDuration(100)
-            .withEndAction {
-                playPauseButton.setImageResource(targetIcon)
-                playPauseButton.animate()
-                    .alpha(1f)
-                    .scaleX(1.0f)
-                    .scaleY(1.0f)
-                    .setDuration(100)
-                    .start()
-            }
-            .start()
+        // Spotify style: quick toggle without excessive scaling
+        playPauseButton.setImageResource(targetIcon)
     }
 
     private fun updateMetadata(mediaMetadata: androidx.media3.common.MediaMetadata) {
         val song = viewModel.currentPlayingSong.value
         val title = if (!mediaMetadata.title.isNullOrBlank()) mediaMetadata.title else song?.title
         val artist = if (!mediaMetadata.artist.isNullOrBlank()) mediaMetadata.artist else song?.artist
+        val album = if (!mediaMetadata.albumTitle.isNullOrBlank()) mediaMetadata.albumTitle else "Unknown Album"
 
         binding?.musicPlayerTitle?.apply {
             text = title ?: "Unknown Title"
             isSelected = true
         }
         binding?.musicPlayerArtist?.text = artist ?: "Unknown Artist"
+        binding?.musicPlayerAlbumName?.text = album
         
         val artworkUri = mediaMetadata.artworkUri?.toString()
         val rawUrl = if (!artworkUri.isNullOrBlank()) artworkUri else song?.thumbnailUrl
@@ -525,30 +495,11 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     }
 
     private fun updateDownloadProgress(state: MusicDownloadState) {
-        val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_download)
-        button?.let {
-            when (state.state) {
-                androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING -> {
-                    it.setImageResource(R.drawable.download_icon_load)
-                    it.alpha = 0.5f + (state.progress / 200f) // Simple visual progress
-                }
-                androidx.media3.exoplayer.offline.Download.STATE_COMPLETED -> {
-                    updateDownloadIcon(true)
-                }
-                else -> {
-                    it.setImageResource(R.drawable.netflix_download)
-                    it.alpha = 1.0f
-                }
-            }
-        }
+        // Removed old download progress update
     }
 
     private fun updateDownloadIcon(downloaded: Boolean) {
-        val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_download)
-        button?.let {
-            it.setImageResource(if (downloaded) R.drawable.download_icon_done else R.drawable.netflix_download)
-            it.drawable?.setTint(if (downloaded) context?.getColor(R.color.zetflix_accent) ?: android.graphics.Color.RED else android.graphics.Color.WHITE)
-        }
+        // Removed old download icon update
     }
 
     private fun shareCurrentSong() {
@@ -633,19 +584,8 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.downloadStates.collect { states ->
-                    viewModel.currentPlayingSong.value?.let { song ->
-                        states[song.videoId]?.let { state ->
-                            updateDownloadProgress(state)
-                        } ?: run {
-                            viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                val isDownloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }
-                                viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
-                                    updateDownloadIcon(isDownloaded)
-                                }
-                            }
-                        }
-                    }
+                viewModel.downloadStates.collect { _ ->
+                    // Removed old download progress update as UI button is gone from full player
                 }
             }
         }
@@ -661,19 +601,16 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                     if (currentLyrics.isNotEmpty()) {
                         lyricsHandler.removeCallbacks(updateLyricsRunnable)
                         lyricsHandler.post(updateLyricsRunnable)
-                        binding?.musicPlayerLiveLyric?.isVisible = true
-                    } else {
-                        binding?.musicPlayerLiveLyric?.isVisible = false
                     }
                 } else if (!lyrics.plainLyrics.isNullOrBlank()) {
                     currentLyrics = emptyList()
                     lyricsHandler.removeCallbacks(updateLyricsRunnable)
-                    binding?.musicPlayerLiveLyric?.isVisible = false
+                    binding?.musicPlayerLiveLyric?.text = lyrics.plainLyrics.lines().firstOrNull { it.isNotBlank() } ?: ""
                 }
             } else {
                 currentLyrics = emptyList()
                 lyricsHandler.removeCallbacks(updateLyricsRunnable)
-                binding?.musicPlayerLiveLyric?.isVisible = false
+                binding?.musicPlayerLiveLyric?.text = ""
             }
         }
 
@@ -690,36 +627,25 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     }
 
     private fun applyDynamicTheming(palette: MusicPalette) {
-        val defaultSurface = 0xFF121212.toInt()
-        val defaultAccent = context?.getColor(R.color.zetflix_accent) ?: Color.RED
-
-        val dominant = if (palette.dominantColor != Color.BLACK && palette.dominantColor != 0xFF1A1A1A.toInt()) palette.dominantColor else defaultSurface
-        val vibrant = if (palette.vibrantColor != Color.BLACK && palette.vibrantColor != 0xFFE50914.toInt()) palette.vibrantColor else defaultAccent
-
-        // Content cards background - LrcLib/Spotify style dark atmospheric
+        // Content cards background - Spotify/ZetFlix dark atmospheric
         val lyricsPalette = MusicColorHelper.generateLyricsPalette(palette)
         currentLyricsPalette = lyricsPalette
         val cardBg = lyricsPalette.background
         
-        // Locked sections remain visually integrated but their colors are darkened
+        // Locked sections remain visually integrated with the atmospheric theme
         binding?.musicPlayerAboutSongCard?.setCardBackgroundColor(cardBg)
         binding?.musicPlayerSongDnaCard?.setCardBackgroundColor(cardBg)
         
         updateLyricsPreview() // Refresh preview with new colors
 
-        // Enforce VERY DARK BUT PERCEPTIBLY DYNAMIC atmospheric background
-        // Pipeline: Extract -> Darken Significantly -> Reduce Saturation -> Limit Brightness
-        val colorTop = MusicColorHelper.darkenColor(vibrant, 0.4f)
-        val colorMid = MusicColorHelper.darkenColor(dominant, 0.3f)
-        val colorBot = Color.parseColor("#0B0B0F")
-
-        val targetColors = intArrayOf(colorTop, colorMid, colorBot)
+        // Enforce Spotify-style background gradient
+        val targetColors = MusicColorHelper.generateSpotifyGradient(palette)
         MusicColorHelper.animateGradientChange(binding?.musicPlayerBackgroundGradient, currentGradientColors, targetColors)
         currentGradientColors = targetColors
 
-        // Foreground/UI Colors - STICK TO NEUTRAL (White/Gray)
+        // Foreground/UI Colors - FIXED NEUTRAL (White/Gray)
         val foregroundColor = Color.WHITE
-        val secondaryForegroundColor = 0xB3FFFFFF.toInt()
+        val secondaryForegroundColor = 0xB3FFFFFF.toInt() // ~70% White
         val foregroundTint = ColorStateList.valueOf(foregroundColor)
 
         binding?.let { b ->
@@ -739,18 +665,15 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             playerView.findViewById<ImageButton>(R.id.exo_next)?.imageTintList = foregroundTint
             
             val playPauseButton = playerView.findViewById<ImageButton>(R.id.exo_play_pause)
-            
-            // In the new integrated design, play/pause is an ImageButton without the giant white circle
-            playPauseButton?.imageTintList = foregroundTint
-            playPauseButton?.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            // Spotify style: Black icon on white background
+            playPauseButton?.imageTintList = ColorStateList.valueOf(Color.BLACK)
+            playPauseButton?.backgroundTintList = ColorStateList.valueOf(Color.WHITE)
 
             playerView.findViewById<ImageButton>(R.id.music_player_devices)?.imageTintList = foregroundTint
-            playerView.findViewById<ImageButton>(R.id.music_player_lyrics)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.music_player_share)?.imageTintList = foregroundTint
-            playerView.findViewById<ImageButton>(R.id.music_player_download)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.music_player_queue)?.imageTintList = foregroundTint
             
-            // Handle Media3 TextViews safely
+            // Handle Media3 TextViews
             context?.let { ctx ->
                 val posId = ctx.resources.getIdentifier("exo_position", "id", ctx.packageName)
                 val durId = ctx.resources.getIdentifier("exo_duration", "id", ctx.packageName)
@@ -758,7 +681,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 if (durId != 0) playerView.findViewById<TextView>(durId)?.setTextColor(secondaryForegroundColor)
             }
 
-            // System bar icons
+            // System bar icons - Always dark for immersion
             activity?.let { act ->
                 val window = act.window
                 val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
@@ -766,20 +689,10 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 insetsController.isAppearanceLightNavigationBars = false
             }
             
-            // Re-sync state-dependent buttons
+            // Re-sync
             mediaController?.let {
                 updateShuffleIcon(it.shuffleModeEnabled)
                 updateRepeatIcon(it.repeatMode)
-            }
-            viewModel.currentPlayingSong.value?.let { song ->
-                viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                    val liked = MusicPersistence.isSongLiked(song.videoId)
-                    val downloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }
-                    viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
-                        updateLikeIcon(liked)
-                        updateDownloadIcon(downloaded)
-                    }
-                }
             }
         }
     }

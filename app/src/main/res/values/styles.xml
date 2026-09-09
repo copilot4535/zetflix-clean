@@ -673,6 +673,21 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <style name="MusicAlbumArtStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="MusicMiniAlbumArtStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="MusicMiniCardStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
     <style name="RoundedCorner5">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">5dp</item>

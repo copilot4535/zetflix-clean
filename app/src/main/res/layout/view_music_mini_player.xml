@@ -4,9 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/music_mini_player"
     android:layout_width="match_parent"
-    android:layout_height="64dp"
-    app:cardBackgroundColor="@color/zetflix_surface"
-    app:cardCornerRadius="0dp"
+    android:layout_height="60dp"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardBackgroundColor="@color/player_surface_base"
+    app:cardCornerRadius="12dp"
     app:cardElevation="8dp"
     app:strokeWidth="0dp"
     android:visibility="gone"
@@ -16,12 +18,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/music_mini_thumbnail"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="10dp"
             android:scaleType="centerCrop"
+            android:transitionName="album_art"
+            app:shapeAppearanceOverlay="@style/MusicMiniAlbumArtStyle"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -36,7 +40,7 @@
             android:layout_marginEnd="8dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/music_mini_like"
+            app:layout_constraintEnd_toStartOf="@+id/music_mini_devices"
             app:layout_constraintStart_toEndOf="@id/music_mini_thumbnail"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -48,9 +52,9 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:singleLine="true"
                 android:fontFamily="@font/metropolis_bold"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                tools:text="Song Title" />
+                android:textColor="@color/player_text_primary"
+                android:textSize="13sp"
+                tools:text="Blinding Lights - Major Lazer Remix" />
 
             <TextView
                 android:id="@+id/music_mini_artist"
@@ -59,64 +63,84 @@
                 android:ellipsize="end"
                 android:fontFamily="@font/metropolis_regular"
                 android:maxLines="1"
-                android:textColor="@color/zetflix_text_secondary"
-                android:textSize="12sp"
-                android:alpha="0.8"
-                tools:text="Artist Name" />
+                android:textColor="@color/player_text_secondary"
+                android:textSize="11sp"
+                tools:text="The Weeknd, Major Lazer" />
         </LinearLayout>
 
         <ImageButton
-            android:id="@+id/music_mini_like"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="8dp"
+            android:id="@+id/music_mini_devices"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_baseline_favorite_border_24"
+            android:src="@drawable/ic_baseline_tv_24"
+            android:alpha="0.8"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/music_mini_like"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/player_text_primary"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/music_mini_like"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_baseline_add_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/music_mini_play_pause_container"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
+            app:tint="@color/player_text_primary"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
             tools:ignore="ContentDescription" />
 
         <FrameLayout
             android:id="@+id/music_mini_play_pause_container"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="10dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageButton
                 android:id="@+id/music_mini_play_pause"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:layout_gravity="center"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_baseline_play_arrow_24"
-                app:tint="@color/white"
+                app:tint="@color/player_text_primary"
+                android:scaleType="fitCenter"
                 tools:ignore="ContentDescription" />
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/music_mini_loading"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:indeterminate="true"
                 android:visibility="gone"
-                app:indicatorSize="32dp"
-                app:trackThickness="3dp"
-                app:indicatorColor="@color/white" />
+                app:indicatorSize="24dp"
+                app:trackThickness="2.5dp"
+                app:indicatorColor="@color/player_text_primary" />
         </FrameLayout>
 
         <ProgressBar
             android:id="@+id/music_mini_progress"
             style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="2dp"
+            android:layout_marginHorizontal="12dp"
             android:progress="0"
             android:progressDrawable="@drawable/music_mini_progress_drawable"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -30,6 +30,17 @@
     <color name="music_scrim_gradient_start">#00000000</color>
     <color name="music_scrim_gradient_end">#CC000000</color>
 
+    <!-- Player-Specific Design Tokens (Isolated from Home) -->
+    <color name="player_text_primary">#FFFFFF</color>
+    <color name="player_text_secondary">#B3B3B3</color>
+    <color name="player_text_muted">#777777</color>
+    <color name="player_accent">#E50914</color>
+    <color name="player_surface_base">#101010</color>
+    <color name="player_surface_elevated">#181818</color>
+    <color name="player_divider">#2A2A2A</color>
+    <color name="player_progress_unplayed">#33FFFFFF</color>
+    <color name="player_progress_buffered">#1AFFFFFF</color>
+
     <color name="colorPrimary">@color/zetflix_accent</color>
     <color name="colorPrimarySecond">@color/zetflix_accent</color>
     <color name="colorSearch">@color/zetflix_surface</color>

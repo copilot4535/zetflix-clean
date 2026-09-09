@@ -15,12 +15,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:scrubber_color="@color/white"
-        app:played_color="@color/zetflix_accent"
-        app:unplayed_color="#33FFFFFF"
-        app:buffered_color="#1AFFFFFF"
+        app:played_color="@color/white"
+        app:unplayed_color="@color/player_progress_unplayed"
+        app:buffered_color="@color/player_progress_buffered"
         app:bar_height="1.5dp"
         app:scrubber_enabled_size="8dp"
-        app:scrubber_dragged_size="12dp" />
+        app:scrubber_dragged_size="10dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -32,8 +32,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/metropolis_medium"
-            android:textColor="#B3B3B3"
-            android:textSize="12sp"
+            android:textColor="@color/player_text_secondary"
+            android:textSize="11sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -42,17 +42,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/metropolis_medium"
-            android:textColor="#B3B3B3"
-            android:textSize="12sp"
+            android:textColor="@color/player_text_secondary"
+            android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Main Controls Row: Shuffle | Prev | Play/Pause | Next | Repeat -->
+    <!-- Main Controls Row: Shuffle | Prev | Play/Pause | Next | Timer -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="16dp">
 
         <ImageButton
             android:id="@+id/music_player_shuffle"
@@ -63,7 +63,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
+            app:tint="@color/player_text_primary"
             android:alpha="0.6"
             android:contentDescription="Shuffle" />
 
@@ -77,18 +77,19 @@
             app:layout_constraintEnd_toStartOf="@+id/exo_play_pause"
             app:layout_constraintStart_toEndOf="@+id/music_player_shuffle"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
+            app:tint="@color/player_text_primary"
             android:contentDescription="@string/previous" />
 
+        <!-- Large White Play/Pause Button as per reference -->
         <ImageButton
             android:id="@+id/exo_play_pause"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/bg_circle_white"
             android:src="@drawable/ic_baseline_play_arrow_24"
-            android:padding="8dp"
+            android:padding="20dp"
             android:scaleType="fitCenter"
-            app:tint="@color/white"
+            app:tint="@color/black"
             android:contentDescription="Play or Pause"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/exo_next"
@@ -105,7 +106,7 @@
             app:layout_constraintEnd_toStartOf="@+id/music_player_repeat"
             app:layout_constraintStart_toEndOf="@+id/exo_play_pause"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
+            app:tint="@color/player_text_primary"
             android:contentDescription="@string/next" />
 
         <ImageButton
@@ -113,21 +114,21 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_refresh"
+            android:src="@drawable/ic_baseline_clock_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
+            app:tint="@color/player_text_primary"
             android:alpha="0.6"
-            android:contentDescription="Repeat" />
+            android:contentDescription="Sleep Timer" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Bottom Actions Row: Devices | Lyrics | Share | Download | Queue -->
+    <!-- Bottom Actions Row: Devices | Share | Queue -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="24dp">
 
         <ImageButton
             android:id="@+id/music_player_devices"
@@ -138,23 +139,17 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
-            android:alpha="0.8"
+            app:tint="@color/player_text_primary"
+            android:alpha="0.7"
             android:contentDescription="Devices" />
 
-        <ImageButton
-            android:id="@+id/music_player_lyrics"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_lyrics"
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/music_player_share"
-            app:layout_constraintStart_toEndOf="@+id/music_player_devices"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
-            android:alpha="0.8"
-            android:contentDescription="Lyrics" />
+            app:layout_constraintEnd_toStartOf="@id/music_player_share"
+            app:layout_constraintStart_toEndOf="@id/music_player_devices"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/music_player_share"
@@ -163,26 +158,11 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_outline_share_24"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/music_player_download"
-            app:layout_constraintStart_toEndOf="@+id/music_player_lyrics"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
-            android:alpha="0.8"
-            android:contentDescription="@string/result_share" />
-
-        <ImageButton
-            android:id="@+id/music_player_download"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/netflix_download"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/music_player_queue"
-            app:layout_constraintStart_toEndOf="@+id/music_player_share"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
-            android:alpha="0.8"
-            android:contentDescription="@string/download" />
+            app:tint="@color/player_text_primary"
+            android:alpha="0.7"
+            android:contentDescription="@string/result_share" />
 
         <ImageButton
             android:id="@+id/music_player_queue"
@@ -193,8 +173,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
-            android:alpha="0.8"
+            app:tint="@color/player_text_primary"
+            android:alpha="0.7"
             android:contentDescription="@string/music_now_playing_queue" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
