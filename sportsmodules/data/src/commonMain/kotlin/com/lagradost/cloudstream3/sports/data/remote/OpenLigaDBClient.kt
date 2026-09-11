@@ -42,4 +42,13 @@ class OpenLigaDBClient {
             emptyList()
         }
     }
+
+    suspend fun getCurrentGroup(leagueShortcut: String): OLDBGroup? {
+        val url = "$baseUrl/getcurrentgroup/$leagueShortcut"
+        return try {
+            app.get(url).parsed<OLDBGroup>()
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

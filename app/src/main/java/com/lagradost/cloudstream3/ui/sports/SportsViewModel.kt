@@ -10,6 +10,7 @@ import com.lagradost.cloudstream3.sports.data.SportsRepositoryImpl
 import com.lagradost.cloudstream3.sports.domain.models.League
 import com.lagradost.cloudstream3.sports.domain.models.Match
 import com.lagradost.cloudstream3.sports.domain.models.MatchStatus
+import com.lagradost.cloudstream3.sports.domain.models.Matchday
 import com.lagradost.cloudstream3.sports.domain.models.Sport
 import com.lagradost.cloudstream3.sports.domain.models.Standing
 import kotlinx.coroutines.Job
@@ -40,6 +41,9 @@ class SportsViewModel : ViewModel() {
     private val _filterMode = MutableLiveData<FilterMode>(FilterMode.LIVE)
     val filterMode: LiveData<FilterMode> = _filterMode
 
+    private val _currentMatchday = MutableLiveData<SportsResource<Matchday>>()
+    val currentMatchday: LiveData<SportsResource<Matchday>> = _currentMatchday
+
     private val _standings = MutableLiveData<SportsResource<List<Standing>>>()
     val standings: LiveData<SportsResource<List<Standing>>> = _standings
 
@@ -53,19 +57,27 @@ class SportsViewModel : ViewModel() {
     init {
         _displayMatches.addSource(_matches) { updateDisplayMatches() }
         _displayMatches.addSource(_filterMode) { updateDisplayMatches() }
+        _displayMatches.addSource(_currentMatchday) { updateDisplayMatches() }
     }
 
     private fun updateDisplayMatches() {
         val resource = _matches.value ?: return
         val mode = _filterMode.value ?: FilterMode.LIVE
+        val matchday = (_currentMatchday.value as? SportsResource.Success)?.data
 
         if (resource is SportsResource.Success) {
-            val filtered = when (mode) {
+            var filtered = when (mode) {
                 FilterMode.LIVE -> resource.data.filter { it.status == MatchStatus.LIVE }
                 FilterMode.FIXTURES -> resource.data.filter { it.status == MatchStatus.UPCOMING }
                 FilterMode.RESULTS -> resource.data.filter { it.status == MatchStatus.FINISHED }
                 FilterMode.STANDINGS -> emptyList() // Standings has its own LiveData
             }
+
+            // Further filter by current matchday if we are in fixtures/results mode
+            if (matchday != null && (mode == FilterMode.FIXTURES || mode == FilterMode.RESULTS)) {
+                filtered = filtered.filter { it.matchdayOrder == matchday.order }
+            }
+
             _displayMatches.value = SportsResource.Success(filtered)
         } else {
             _displayMatches.value = resource
@@ -83,7 +95,16 @@ class SportsViewModel : ViewModel() {
 
     fun selectLeague(league: League?) {
         _selectedLeague.value = league
-        league?.let { restartPolling(it.shortcut) }
+        league?.let { 
+            loadMatchday(it.shortcut)
+            restartPolling(it.shortcut) 
+        }
+    }
+
+    private fun loadMatchday(shortcut: String) = viewModelScope.launch {
+        repository.getCurrentMatchday(shortcut).collectLatest {
+            _currentMatchday.postValue(it)
+        }
     }
 
     fun setFilterMode(mode: FilterMode) {

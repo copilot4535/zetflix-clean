@@ -95,6 +95,15 @@ class SportsHomeFragment : Fragment() {
     }
 
     private fun observeData() {
+        viewModel.currentMatchday.observe(viewLifecycleOwner) { resource ->
+            if (resource is SportsResource.Success) {
+                binding?.sportsMatchdayInfo?.text = resource.data.name
+                binding?.sportsMatchdayInfo?.isVisible = true
+            } else {
+                binding?.sportsMatchdayInfo?.isVisible = false
+            }
+        }
+
         viewModel.displayMatches.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is SportsResource.Success -> {

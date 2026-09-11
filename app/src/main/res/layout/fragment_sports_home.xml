@@ -34,12 +34,25 @@
             app:singleSelection="true" />
     </HorizontalScrollView>
 
+    <TextView
+        android:id="@+id/sports_matchday_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/zetflix_text_secondary"
+        android:textSize="14sp"
+        android:fontFamily="@font/google_sans"
+        app:layout_constraintTop_toBottomOf="@+id/sports_league_chips_scroll"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Current Matchday: 24. Spieltag" />
+
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/sports_filter_tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        app:layout_constraintTop_toBottomOf="@+id/sports_league_chips_scroll"
+        app:layout_constraintTop_toBottomOf="@+id/sports_matchday_info"
         app:tabIndicatorColor="@color/sports_accent"
         app:tabSelectedTextColor="@color/white"
         app:tabTextColor="@color/zetflix_text_secondary">

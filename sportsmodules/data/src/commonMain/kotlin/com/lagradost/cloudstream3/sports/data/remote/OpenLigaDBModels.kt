@@ -10,11 +10,19 @@ data class OLDBMatch(
     @SerialName("leagueId") val leagueId: Int? = null,
     @SerialName("leagueShortcut") val leagueShortcut: String? = null,
     @SerialName("leagueName") val leagueName: String? = null,
+    @SerialName("group") val group: OLDBGroup? = null,
     @SerialName("team1") val team1: OLDBTeam,
     @SerialName("team2") val team2: OLDBTeam,
     @SerialName("matchIsFinished") val matchIsFinished: Boolean,
     @SerialName("matchResults") val matchResults: List<OLDBMatchResult> = emptyList(),
     @SerialName("goals") val goals: List<OLDBGoal> = emptyList()
+)
+
+@Serializable
+data class OLDBGroup(
+    @SerialName("groupName") val groupName: String,
+    @SerialName("groupOrderID") val groupOrderId: Int,
+    @SerialName("groupID") val groupId: Int
 )
 
 @Serializable

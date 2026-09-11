@@ -14,6 +14,8 @@ data class Match(
     val status: MatchStatus,
     val leagueId: String,
     val leagueName: String? = null,
+    val matchdayName: String? = null,
+    val matchdayOrder: Int? = null,
     val goals: List<Goal> = emptyList()
 )
 

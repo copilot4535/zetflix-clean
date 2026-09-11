@@ -23,6 +23,8 @@ object OpenLigaDBNormalizer {
             status = mapStatus(oldbMatch, startTime),
             leagueId = oldbMatch.leagueShortcut ?: oldbMatch.leagueId?.toString() ?: "",
             leagueName = oldbMatch.leagueName,
+            matchdayName = oldbMatch.group?.groupName,
+            matchdayOrder = oldbMatch.group?.groupOrderId,
             goals = oldbMatch.goals.map { normalizeGoal(it) }.sortedBy { it.minute }
         )
     }
@@ -95,6 +97,16 @@ object OpenLigaDBNormalizer {
             goalsAgainst = oldbStanding.opponentGoals,
             goalDifference = oldbStanding.goalDiff,
             points = oldbStanding.points
+        )
+    }
+
+    fun normalizeGroup(oldbGroup: com.lagradost.cloudstream3.sports.data.remote.OLDBGroup, leagueShortcut: String, season: String): com.lagradost.cloudstream3.sports.domain.models.Matchday {
+        return com.lagradost.cloudstream3.sports.domain.models.Matchday(
+            id = oldbGroup.groupId.toString(),
+            name = oldbGroup.groupName,
+            order = oldbGroup.groupOrderId,
+            leagueShortcut = leagueShortcut,
+            season = season
         )
     }
 }
