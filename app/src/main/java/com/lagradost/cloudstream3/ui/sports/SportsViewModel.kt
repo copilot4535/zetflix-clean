@@ -11,6 +11,7 @@ import com.lagradost.cloudstream3.sports.domain.models.League
 import com.lagradost.cloudstream3.sports.domain.models.Match
 import com.lagradost.cloudstream3.sports.domain.models.MatchStatus
 import com.lagradost.cloudstream3.sports.domain.models.Sport
+import com.lagradost.cloudstream3.sports.domain.models.Standing
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -37,6 +38,9 @@ class SportsViewModel : ViewModel() {
 
     private val _filterMode = MutableLiveData<FilterMode>(FilterMode.LIVE)
     val filterMode: LiveData<FilterMode> = _filterMode
+
+    private val _standings = MutableLiveData<SportsResource<List<Standing>>>()
+    val standings: LiveData<SportsResource<List<Standing>>> = _standings
 
     private val _matches = MutableLiveData<SportsResource<List<Match>>>()
     
@@ -82,6 +86,17 @@ class SportsViewModel : ViewModel() {
 
     fun setFilterMode(mode: FilterMode) {
         _filterMode.value = mode
+        if (mode == FilterMode.RESULTS) {
+            loadStandings()
+        }
+    }
+
+    fun loadStandings() = viewModelScope.launch {
+        val league = _selectedLeague.value ?: return@launch
+        // Default to 2024 for now, future work will handle multi-season
+        repository.getStandings(league.shortcut, "2024").collectLatest {
+            _standings.postValue(it)
+        }
     }
 
     private fun restartPolling(shortcut: String) {

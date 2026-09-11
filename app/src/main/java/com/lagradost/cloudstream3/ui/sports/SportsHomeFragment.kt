@@ -4,17 +4,26 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.chip.Chip
 import com.google.android.material.tabs.TabLayout
+import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentSportsHomeBinding
 import com.lagradost.cloudstream3.sports.common.util.SportsResource
 
 class SportsHomeFragment : Fragment() {
     private var binding: FragmentSportsHomeBinding? = null
     private lateinit var viewModel: SportsViewModel
-    private val adapter = MatchAdapter()
+    private val matchAdapter = MatchAdapter { match ->
+        val bundle = Bundle().apply {
+            putString(MatchDetailsFragment.ARG_MATCH_ID, match.id)
+        }
+        findNavController().navigate(R.id.action_navigation_sports_home_to_matchDetailsFragment, bundle)
+    }
+    private val standingAdapter = StandingAdapter()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,11 +39,12 @@ class SportsHomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         viewModel = ViewModelProvider(this)[SportsViewModel::class.java]
         
-        binding?.sportsMatchesRecycler?.adapter = adapter
+        binding?.sportsMatchesRecycler?.adapter = matchAdapter
+        binding?.sportsStandingsRecycler?.adapter = standingAdapter
 
         setupLeagueSelection()
         setupFilterTabs()
-        observeMatches()
+        observeData()
 
         viewModel.loadLeagues()
     }
@@ -74,25 +84,31 @@ class SportsHomeFragment : Fragment() {
                     else -> FilterMode.LIVE
                 }
                 viewModel.setFilterMode(mode)
+                
+                binding?.sportsMatchesRecycler?.isVisible = mode != FilterMode.RESULTS
+                binding?.sportsStandingsRecycler?.isVisible = mode == FilterMode.RESULTS
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
     }
 
-    private fun observeMatches() {
+    private fun observeData() {
         viewModel.displayMatches.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is SportsResource.Success -> {
-                    adapter.submitList(resource.data)
-                    // Show empty state if list is empty
+                    matchAdapter.submitList(resource.data)
                 }
-                is SportsResource.Loading -> {
-                    // Show loading if needed
+                else -> {}
+            }
+        }
+
+        viewModel.standings.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is SportsResource.Success -> {
+                    standingAdapter.submitList(resource.data)
                 }
-                is SportsResource.Error -> {
-                    // Show error
-                }
+                else -> {}
             }
         }
     }

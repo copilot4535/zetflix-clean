@@ -8,20 +8,21 @@ import androidx.recyclerview.widget.RecyclerView
 import com.lagradost.cloudstream3.databinding.ItemMatchBinding
 import com.lagradost.cloudstream3.sports.domain.models.Match
 
-class MatchAdapter : ListAdapter<Match, MatchAdapter.MatchViewHolder>(MatchDiffCallback()) {
+class MatchAdapter(private val onMatchClick: (Match) -> Unit) : ListAdapter<Match, MatchAdapter.MatchViewHolder>(MatchDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MatchViewHolder {
         val binding = ItemMatchBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return MatchViewHolder(binding)
+        return MatchViewHolder(binding, onMatchClick)
     }
 
     override fun onBindViewHolder(holder: MatchViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class MatchViewHolder(private val binding: ItemMatchBinding) : RecyclerView.ViewHolder(binding.root) {
+    class MatchViewHolder(private val binding: ItemMatchBinding, private val onMatchClick: (Match) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         fun bind(match: Match) {
             binding.apply {
+                root.setOnClickListener { onMatchClick(match) }
                 matchHomeTeamName.text = match.homeTeam.name
                 matchAwayTeamName.text = match.awayTeam.name
                 matchScore.text = if (match.homeScore != null && match.awayScore != null) {

@@ -12,7 +12,8 @@ data class Match(
     val awayScore: Int? = null,
     val startTime: Instant,
     val status: MatchStatus,
-    val leagueId: String
+    val leagueId: String,
+    val goals: List<Goal> = emptyList()
 )
 
 @Serializable

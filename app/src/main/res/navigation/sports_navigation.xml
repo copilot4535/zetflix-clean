@@ -9,5 +9,19 @@
         android:id="@+id/navigation_sports_home"
         android:name="com.lagradost.cloudstream3.ui.sports.SportsHomeFragment"
         android:label="Sports Home"
-        tools:layout="@layout/fragment_sports_home" />
+        tools:layout="@layout/fragment_sports_home">
+        <action
+            android:id="@+id/action_navigation_sports_home_to_matchDetailsFragment"
+            app:destination="@id/navigation_match_details" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_match_details"
+        android:name="com.lagradost.cloudstream3.ui.sports.MatchDetailsFragment"
+        android:label="Match Details"
+        tools:layout="@layout/fragment_match_details">
+        <argument
+            android:name="match_id"
+            app:argType="string" />
+    </fragment>
 </navigation>

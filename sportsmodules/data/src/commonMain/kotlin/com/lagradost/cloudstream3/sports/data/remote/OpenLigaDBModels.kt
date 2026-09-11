@@ -39,12 +39,32 @@ data class OLDBGoal(
     @SerialName("goalID") val goalId: Int,
     @SerialName("scoreTeam1") val scoreTeam1: Int,
     @SerialName("scoreTeam2") val scoreTeam2: Int,
-    @SerialName("matchMinute") val matchMinute: Int? = null
+    @SerialName("matchMinute") val matchMinute: Int? = null,
+    @SerialName("goalGetterName") val goalGetterName: String? = null,
+    @SerialName("isPenalty") val isPenalty: Boolean? = null,
+    @SerialName("isOwnGoal") val isOwnGoal: Boolean? = null
 )
 
 @Serializable
 data class OLDBLeague(
     @SerialName("leagueId") val leagueId: Int,
     @SerialName("leagueName") val leagueName: String,
-    @SerialName("leagueShortcut") val leagueShortcut: String
+    @SerialName("leagueShortcut") val leagueShortcut: String,
+    @SerialName("leagueSeason") val leagueSeason: String? = null
+)
+
+@Serializable
+data class OLDBStanding(
+    @SerialName("teamId") val teamId: Int,
+    @SerialName("teamName") val teamName: String,
+    @SerialName("shortName") val shortName: String? = null,
+    @SerialName("teamIconUrl") val teamIconUrl: String? = null,
+    @SerialName("points") val points: Int,
+    @SerialName("opponentGoals") val opponentGoals: Int,
+    @SerialName("goals") val goals: Int,
+    @SerialName("matches") val matches: Int,
+    @SerialName("won") val won: Int,
+    @SerialName("lost") val lost: Int,
+    @SerialName("draw") val draw: Int,
+    @SerialName("goalDiff") val goalDiff: Int
 )

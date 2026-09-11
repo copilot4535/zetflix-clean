@@ -24,4 +24,22 @@ class OpenLigaDBClient {
             emptyList()
         }
     }
+
+    suspend fun getMatch(matchId: String): OLDBMatch? {
+        val url = "$baseUrl/getmatchdata/$matchId"
+        return try {
+            app.get(url).parsed<OLDBMatch>()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun getTable(leagueShortcut: String, season: String): List<OLDBStanding> {
+        val url = "$baseUrl/getbltable/$leagueShortcut/$season"
+        return try {
+            app.get(url).parsed<List<OLDBStanding>>()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }

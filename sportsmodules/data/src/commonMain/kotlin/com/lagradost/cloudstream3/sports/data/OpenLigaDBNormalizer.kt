@@ -1,7 +1,9 @@
 package com.lagradost.cloudstream3.sports.data
 
+import com.lagradost.cloudstream3.sports.data.remote.OLDBGoal
 import com.lagradost.cloudstream3.sports.data.remote.OLDBMatch
 import com.lagradost.cloudstream3.sports.data.remote.OLDBTeam
+import com.lagradost.cloudstream3.sports.domain.models.Goal
 import com.lagradost.cloudstream3.sports.domain.models.Match
 import com.lagradost.cloudstream3.sports.domain.models.MatchStatus
 import com.lagradost.cloudstream3.sports.domain.models.Team
@@ -19,7 +21,8 @@ object OpenLigaDBNormalizer {
             awayScore = getAwayScore(oldbMatch),
             startTime = startTime,
             status = mapStatus(oldbMatch, startTime),
-            leagueId = oldbMatch.leagueShortcut ?: oldbMatch.leagueId?.toString() ?: ""
+            leagueId = oldbMatch.leagueShortcut ?: oldbMatch.leagueId?.toString() ?: "",
+            goals = oldbMatch.goals.map { normalizeGoal(it) }.sortedBy { it.minute }
         )
     }
 
@@ -28,6 +31,18 @@ object OpenLigaDBNormalizer {
             id = oldbTeam.teamId.toString(),
             name = oldbTeam.teamName,
             logoUrl = oldbTeam.teamIconUrl
+        )
+    }
+
+    private fun normalizeGoal(oldbGoal: OLDBGoal): Goal {
+        return Goal(
+            id = oldbGoal.goalId.toString(),
+            scorerName = oldbGoal.goalGetterName ?: "Unknown",
+            minute = oldbGoal.matchMinute ?: 0,
+            scoreHome = oldbGoal.scoreTeam1,
+            scoreAway = oldbGoal.scoreTeam2,
+            isPenalty = oldbGoal.isPenalty ?: false,
+            isOwnGoal = oldbGoal.isOwnGoal ?: false
         )
     }
 
@@ -61,6 +76,23 @@ object OpenLigaDBNormalizer {
             name = oldbLeague.leagueName,
             shortcut = oldbLeague.leagueShortcut,
             sportId = "1" // Default to football
+        )
+    }
+
+    fun normalizeStanding(oldbStanding: com.lagradost.cloudstream3.sports.data.remote.OLDBStanding, position: Int): com.lagradost.cloudstream3.sports.domain.models.Standing {
+        return com.lagradost.cloudstream3.sports.domain.models.Standing(
+            position = position,
+            teamId = oldbStanding.teamId.toString(),
+            teamName = oldbStanding.teamName,
+            teamLogoUrl = oldbStanding.teamIconUrl,
+            played = oldbStanding.matches,
+            won = oldbStanding.won,
+            drawn = oldbStanding.draw,
+            lost = oldbStanding.lost,
+            goalsFor = oldbStanding.goals,
+            goalsAgainst = oldbStanding.opponentGoals,
+            goalDifference = oldbStanding.goalDiff,
+            points = oldbStanding.points
         )
     }
 }
