@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class League(
     val id: String,
     val name: String,
+    val shortcut: String,
     val country: String? = null,
     val logoUrl: String? = null,
     val sportId: String

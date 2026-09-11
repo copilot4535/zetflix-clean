@@ -17,14 +17,58 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <HorizontalScrollView
+        android:id="@+id/sports_league_chips_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@+id/sports_home_title">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/sports_league_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            app:singleLine="true"
+            app:singleSelection="true" />
+    </HorizontalScrollView>
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/sports_filter_tabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:layout_constraintTop_toBottomOf="@+id/sports_league_chips_scroll"
+        app:tabIndicatorColor="@color/sports_accent"
+        app:tabSelectedTextColor="@color/white"
+        app:tabTextColor="@color/zetflix_text_secondary">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Live" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fixtures" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Results" />
+
+    </com.google.android.material.tabs.TabLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/sports_matches_recycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sports_home_title"
+        app:layout_constraintTop_toBottomOf="@+id/sports_filter_tabs"
         tools:listitem="@layout/item_match" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
