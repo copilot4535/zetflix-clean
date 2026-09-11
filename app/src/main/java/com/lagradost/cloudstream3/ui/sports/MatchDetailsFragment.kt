@@ -64,7 +64,7 @@ class MatchDetailsFragment : Fragment() {
                             "vs"
                         }
                         matchDetailsStatus.text = match.status.name
-                        matchDetailsLeague.text = match.leagueId // Shortcut for now
+                        matchDetailsLeague.text = match.leagueName ?: match.leagueId
                         
                         goalAdapter.submitList(match.goals)
                         matchDetailsNoGoals.isVisible = match.goals.isEmpty()

@@ -81,12 +81,13 @@ class SportsHomeFragment : Fragment() {
                     0 -> FilterMode.LIVE
                     1 -> FilterMode.FIXTURES
                     2 -> FilterMode.RESULTS
+                    3 -> FilterMode.STANDINGS
                     else -> FilterMode.LIVE
                 }
                 viewModel.setFilterMode(mode)
                 
-                binding?.sportsMatchesRecycler?.isVisible = mode != FilterMode.RESULTS
-                binding?.sportsStandingsRecycler?.isVisible = mode == FilterMode.RESULTS
+                binding?.sportsMatchesRecycler?.isVisible = mode != FilterMode.STANDINGS
+                binding?.sportsStandingsRecycler?.isVisible = mode == FilterMode.STANDINGS
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}

@@ -7,6 +7,7 @@ data class League(
     val id: String,
     val name: String,
     val shortcut: String,
+    val season: String? = null,
     val country: String? = null,
     val logoUrl: String? = null,
     val sportId: String

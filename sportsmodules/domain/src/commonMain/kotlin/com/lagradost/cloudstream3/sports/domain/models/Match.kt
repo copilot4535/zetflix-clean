@@ -13,6 +13,7 @@ data class Match(
     val startTime: Instant,
     val status: MatchStatus,
     val leagueId: String,
+    val leagueName: String? = null,
     val goals: List<Goal> = emptyList()
 )
 

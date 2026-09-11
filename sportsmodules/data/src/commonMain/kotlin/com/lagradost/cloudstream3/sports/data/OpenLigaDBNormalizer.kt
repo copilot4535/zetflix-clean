@@ -22,6 +22,7 @@ object OpenLigaDBNormalizer {
             startTime = startTime,
             status = mapStatus(oldbMatch, startTime),
             leagueId = oldbMatch.leagueShortcut ?: oldbMatch.leagueId?.toString() ?: "",
+            leagueName = oldbMatch.leagueName,
             goals = oldbMatch.goals.map { normalizeGoal(it) }.sortedBy { it.minute }
         )
     }
@@ -75,6 +76,7 @@ object OpenLigaDBNormalizer {
             id = oldbLeague.leagueId.toString(),
             name = oldbLeague.leagueName,
             shortcut = oldbLeague.leagueShortcut,
+            season = oldbLeague.leagueSeason,
             sportId = "1" // Default to football
         )
     }

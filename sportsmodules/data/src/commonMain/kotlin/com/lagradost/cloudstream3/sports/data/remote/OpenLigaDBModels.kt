@@ -9,6 +9,7 @@ data class OLDBMatch(
     @SerialName("matchDateTimeUTC") val matchDateTimeUTC: String,
     @SerialName("leagueId") val leagueId: Int? = null,
     @SerialName("leagueShortcut") val leagueShortcut: String? = null,
+    @SerialName("leagueName") val leagueName: String? = null,
     @SerialName("team1") val team1: OLDBTeam,
     @SerialName("team2") val team2: OLDBTeam,
     @SerialName("matchIsFinished") val matchIsFinished: Boolean,

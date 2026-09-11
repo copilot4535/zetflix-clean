@@ -21,7 +21,8 @@ import kotlinx.coroutines.launch
 enum class FilterMode {
     LIVE,
     FIXTURES,
-    RESULTS
+    RESULTS,
+    STANDINGS
 }
 
 class SportsViewModel : ViewModel() {
@@ -63,6 +64,7 @@ class SportsViewModel : ViewModel() {
                 FilterMode.LIVE -> resource.data.filter { it.status == MatchStatus.LIVE }
                 FilterMode.FIXTURES -> resource.data.filter { it.status == MatchStatus.UPCOMING }
                 FilterMode.RESULTS -> resource.data.filter { it.status == MatchStatus.FINISHED }
+                FilterMode.STANDINGS -> emptyList() // Standings has its own LiveData
             }
             _displayMatches.value = SportsResource.Success(filtered)
         } else {
@@ -86,15 +88,15 @@ class SportsViewModel : ViewModel() {
 
     fun setFilterMode(mode: FilterMode) {
         _filterMode.value = mode
-        if (mode == FilterMode.RESULTS) {
+        if (mode == FilterMode.STANDINGS) {
             loadStandings()
         }
     }
 
     fun loadStandings() = viewModelScope.launch {
         val league = _selectedLeague.value ?: return@launch
-        // Default to 2024 for now, future work will handle multi-season
-        repository.getStandings(league.shortcut, "2024").collectLatest {
+        val season = league.season ?: "2024" // Fallback if season missing, but should be there
+        repository.getStandings(league.shortcut, season).collectLatest {
             _standings.postValue(it)
         }
     }
