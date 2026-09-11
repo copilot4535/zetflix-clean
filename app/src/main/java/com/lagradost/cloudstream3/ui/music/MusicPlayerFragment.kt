@@ -696,6 +696,24 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             }
         }
 
+        viewModel.aboutSong.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    val description = resource.value
+                    val cleaned = cleanDescription(description)
+                    if (cleaned.isNotBlank()) {
+                        binding?.musicPlayerAboutSongCard?.isVisible = true
+                        binding?.musicPlayerAboutSongContent?.text = cleaned
+                    } else {
+                        binding?.musicPlayerAboutSongCard?.isVisible = false
+                    }
+                }
+                else -> {
+                    binding?.musicPlayerAboutSongCard?.isVisible = false
+                }
+            }
+        }
+
         viewModel.sleepTimerTimeLeft.observe(viewLifecycleOwner) { millis ->
             if (millis != null && millis > 0) {
                 binding?.musicPlayerSleepTimer?.isVisible = true
@@ -715,6 +733,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val cardBg = lyricsPalette.background
         
         // Locked sections remain visually integrated with the atmospheric theme
+        binding?.musicPlayerAboutSongCard?.setCardBackgroundColor(cardBg)
         binding?.musicPlayerLyricsPreviewCard?.setCardBackgroundColor(cardBg)
         binding?.musicPlayerSongDnaCard?.setCardBackgroundColor(cardBg)
         
@@ -737,6 +756,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
             b.musicPlayerMore.imageTintList = foregroundTint
             
             // Section labels
+            b.musicPlayerAboutSongLabel.setTextColor(secondaryForegroundColor)
             b.musicPlayerLyricsLabel.setTextColor(secondaryForegroundColor)
             b.musicPlayerSongDnaLabel.setTextColor(secondaryForegroundColor)
             
@@ -777,6 +797,26 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 updateRepeatIcon(it.repeatMode)
             }
         }
+    }
+
+    private fun cleanDescription(raw: String): String {
+        return raw.lines()
+            .map { it.trim() }
+            .filter { line ->
+                // Filter out social links and common YouTube noise
+                !line.contains("http://", ignoreCase = true) &&
+                !line.contains("https://", ignoreCase = true) &&
+                !line.startsWith("Follow ", ignoreCase = true) &&
+                !line.startsWith("Instagram:", ignoreCase = true) &&
+                !line.startsWith("Twitter:", ignoreCase = true) &&
+                !line.startsWith("Facebook:", ignoreCase = true) &&
+                !line.startsWith("Subscribe:", ignoreCase = true) &&
+                !line.startsWith("#") && // Strip hashtags
+                line.isNotBlank()
+            }
+            .take(15) // Limit length for player card
+            .joinToString("\n")
+            .trim()
     }
 
     override fun onDestroyView() {

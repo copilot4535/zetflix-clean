@@ -52,6 +52,9 @@ class MusicViewModel : ViewModel() {
     private val _streamUrl = MutableLiveData<Resource<Pair<String, MusicSearchResponse>>>()
     val streamUrl: LiveData<Resource<Pair<String, MusicSearchResponse>>> = _streamUrl
 
+    private val _aboutSong = MutableLiveData<Resource<String>?>()
+    val aboutSong: LiveData<Resource<String>?> = _aboutSong
+
     private val _lyricsUiState = MutableLiveData<LyricsUiState>(LyricsUiState())
     val lyricsUiState: LiveData<LyricsUiState> = _lyricsUiState
 
@@ -645,12 +648,24 @@ class MusicViewModel : ViewModel() {
 
         if (_currentPlayingSong.value?.videoId != song.videoId) {
             _currentPlayingSong.value = song
-            // Reset lyrics state immediately on track change to avoid showing stale lyrics
+            // Reset lyrics and about state immediately on track change to avoid showing stale data
             _lyricsUiState.value = LyricsUiState(status = LyricsStatus.LOADING, trackId = song.videoId)
+            _aboutSong.value = Resource.Loading()
             
             fetchLyrics(song)
+            fetchAboutSong(song.videoId)
             addToHistory(song)
             loadRelatedSongs(song.videoId)
+        }
+    }
+
+    private fun fetchAboutSong(videoId: String) {
+        viewModelScope.launch {
+            val result = repository.getAboutSong(videoId)
+            // Race condition protection: only update if this is still the current track
+            if (_currentPlayingSong.value?.videoId == videoId) {
+                _aboutSong.postValue(result)
+            }
         }
     }
 

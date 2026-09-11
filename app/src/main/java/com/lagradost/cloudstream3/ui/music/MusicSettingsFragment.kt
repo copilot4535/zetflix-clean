@@ -15,6 +15,7 @@ import com.lagradost.cloudstream3.services.music.MusicService
 import com.lagradost.cloudstream3.ui.BaseFragment
 import androidx.media3.session.SessionToken
 import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -94,15 +95,57 @@ class MusicSettingsFragment : BaseFragment<FragmentMusicSettingsBinding>(
     }
 
     private fun launchEqualizer() {
+        val activity = activity as? MusicActivity
+        val controller = activity?.getMediaControllerMedia3()
+        
+        if (controller == null) {
+            Toast.makeText(context, "Playback controller not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val command = SessionCommand("GET_AUDIO_SESSION_ID", Bundle.EMPTY)
+        val future = controller.sendCustomCommand(command, Bundle.EMPTY)
+        
+        future.addListener({
+            try {
+                val result = future.get()
+                if (result.resultCode == androidx.media3.session.SessionResult.RESULT_SUCCESS) {
+                    val sessionId = result.extras.getInt("AUDIO_SESSION_ID", 0)
+                    if (sessionId != 0) {
+                        launchEqualizerWithSession(sessionId)
+                    } else {
+                        showEqualizerError("Invalid audio session")
+                    }
+                } else {
+                    showEqualizerError("Failed to get audio session")
+                }
+            } catch (e: Exception) {
+                showEqualizerError("Error: ${e.message}")
+            }
+        }, MoreExecutors.directExecutor())
+    }
+
+    private fun launchEqualizerWithSession(sessionId: Int) {
         try {
-            val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
+            val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
+                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
+                putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context?.packageName)
+                putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
+            }
             if (intent.resolveActivity(requireContext().packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(context, "Equalizer not available on this device", Toast.LENGTH_SHORT).show()
+                showEqualizerError("No equalizer found on this device")
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Equalizer not available on this device", Toast.LENGTH_SHORT).show()
+            showEqualizerError("Equalizer launch failed")
+        }
+    }
+
+    private fun showEqualizerError(message: String) {
+        // Use post to ensure we are on main thread if callback came from elsewhere
+        binding?.root?.post {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 

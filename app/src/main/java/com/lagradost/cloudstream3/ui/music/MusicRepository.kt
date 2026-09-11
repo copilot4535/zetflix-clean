@@ -4,6 +4,7 @@ import android.util.Log
 import com.maxrave.kotlinytmusicscraper.YouTube
 import com.maxrave.kotlinytmusicscraper.models.*
 import com.maxrave.kotlinytmusicscraper.models.response.BrowseResponse
+import com.lagradost.cloudstream3.mvvm.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -36,6 +37,24 @@ object YouTubeInstance {
 class MusicRepository {
     private val youtube = YouTubeInstance.youtube
     private var cachedHomeSections: List<MusicHomeSection>? = null
+    private val aboutCache = mutableMapOf<String, String>()
+
+    suspend fun getAboutSong(videoId: String): Resource<String> = withContext(Dispatchers.IO) {
+        aboutCache[videoId]?.let { return@withContext Resource.Success(it) }
+        try {
+            val result = youtube.getSongInfo(videoId)
+            val info = result.getOrNull()
+            val description = info?.description
+            if (!description.isNullOrBlank()) {
+                aboutCache[videoId] = description
+                Resource.Success(description)
+            } else {
+                Resource.Failure(false, "No description available")
+            }
+        } catch (e: Exception) {
+            Resource.Failure(false, e.message ?: "Error fetching song info")
+        }
+    }
 
     suspend fun searchSongs(query: String, filter: YouTube.SearchFilter = YouTube.SearchFilter.FILTER_SONG): List<MusicSearchResponse> = withContext(Dispatchers.IO) {
         val result = youtube.search(query, filter)
