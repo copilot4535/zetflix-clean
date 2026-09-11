@@ -105,11 +105,17 @@ class SportsHomeFragment : Fragment() {
 
     private fun observeData() {
         viewModel.currentMatchday.observe(viewLifecycleOwner) { resource ->
-            if (resource is SportsResource.Success) {
-                binding?.sportsMatchdayInfo?.text = resource.data.name
-                binding?.sportsMatchdayInfo?.isVisible = true
-            } else {
-                binding?.sportsMatchdayInfo?.isVisible = false
+            when (resource) {
+                is SportsResource.Success -> {
+                    binding?.sportsMatchdayInfo?.text = resource.data.name
+                    binding?.sportsMatchdayInfo?.isVisible = true
+                }
+                is SportsResource.Loading -> {
+                    // Optionally show a small indicator or keep previous
+                }
+                else -> {
+                    binding?.sportsMatchdayInfo?.isVisible = false
+                }
             }
         }
 
@@ -118,7 +124,12 @@ class SportsHomeFragment : Fragment() {
                 is SportsResource.Success -> {
                     matchAdapter.submitList(resource.data)
                 }
-                else -> {}
+                is SportsResource.Loading -> {
+                    // Show loading overlay or shimmer if adapter is empty
+                }
+                is SportsResource.Error -> {
+                    // Show snackbar or error view
+                }
             }
         }
 
@@ -127,7 +138,12 @@ class SportsHomeFragment : Fragment() {
                 is SportsResource.Success -> {
                     standingAdapter.submitList(resource.data)
                 }
-                else -> {}
+                is SportsResource.Loading -> {
+                    // Show loading
+                }
+                is SportsResource.Error -> {
+                    // Show error
+                }
             }
         }
     }

@@ -94,10 +94,20 @@ class SportsViewModel : ViewModel() {
     }
 
     fun selectLeague(league: League?) {
+        if (_selectedLeague.value?.id == league?.id) return
+        
         _selectedLeague.value = league
+        // Clear previous state to prevent stale data visibility
+        _matches.value = SportsResource.Loading
+        _currentMatchday.value = SportsResource.Loading
+        _standings.value = SportsResource.Loading
+        
         league?.let { 
             loadMatchday(it.shortcut)
             restartPolling(it.shortcut) 
+            if (_filterMode.value == FilterMode.STANDINGS) {
+                loadStandings()
+            }
         }
     }
 

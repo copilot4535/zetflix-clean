@@ -8,65 +8,42 @@ class OpenLigaDBClient {
 
     suspend fun getMatches(leagueShortcut: String): List<OLDBMatch> {
         val url = "$baseUrl/getmatchdata/$leagueShortcut"
-        return try {
-            val response: NiceResponse = app.get(url)
-            response.parsed<List<OLDBMatch>>()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val response: NiceResponse = app.get(url)
+        return response.parsed<List<OLDBMatch>>()
     }
 
     suspend fun getAvailableLeagues(): List<OLDBLeague> {
         val url = "$baseUrl/getavailableleagues"
-        return try {
-            app.get(url).parsed<List<OLDBLeague>>()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        return app.get(url).parsed<List<OLDBLeague>>()
     }
 
     suspend fun getMatch(matchId: String): OLDBMatch? {
         val url = "$baseUrl/getmatchdata/$matchId"
-        return try {
-            app.get(url).parsed<OLDBMatch>()
-        } catch (e: Exception) {
-            null
-        }
+        val response = app.get(url)
+        // Some endpoints return 200 OK with empty body or null if not found
+        return if (response.text.isBlank() || response.text == "null") null else response.parsed<OLDBMatch>()
     }
 
     suspend fun getTable(leagueShortcut: String, season: String): List<OLDBStanding> {
         val url = "$baseUrl/getbltable/$leagueShortcut/$season"
-        return try {
-            app.get(url).parsed<List<OLDBStanding>>()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        return app.get(url).parsed<List<OLDBStanding>>()
     }
 
     suspend fun getCurrentGroup(leagueShortcut: String): OLDBGroup? {
         val url = "$baseUrl/getcurrentgroup/$leagueShortcut"
-        return try {
-            app.get(url).parsed<OLDBGroup>()
-        } catch (e: Exception) {
-            null
-        }
+        val response = app.get(url)
+        return if (response.text.isBlank() || response.text == "null") null else response.parsed<OLDBGroup>()
     }
 
     suspend fun getLastMatch(leagueShortcut: String, teamId: String): OLDBMatch? {
         val url = "$baseUrl/getlastmatchbyleagueteam/$leagueShortcut/$teamId"
-        return try {
-            app.get(url).parsed<OLDBMatch>()
-        } catch (e: Exception) {
-            null
-        }
+        val response = app.get(url)
+        return if (response.text.isBlank() || response.text == "null") null else response.parsed<OLDBMatch>()
     }
 
     suspend fun getNextMatch(leagueShortcut: String, teamId: String): OLDBMatch? {
         val url = "$baseUrl/getnextmatchbyleagueteam/$leagueShortcut/$teamId"
-        return try {
-            app.get(url).parsed<OLDBMatch>()
-        } catch (e: Exception) {
-            null
-        }
+        val response = app.get(url)
+        return if (response.text.isBlank() || response.text == "null") null else response.parsed<OLDBMatch>()
     }
 }

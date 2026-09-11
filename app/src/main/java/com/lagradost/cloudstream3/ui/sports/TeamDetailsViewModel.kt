@@ -19,7 +19,15 @@ class TeamDetailsViewModel : ViewModel() {
     private val _nextMatch = MutableLiveData<SportsResource<Match>>()
     val nextMatch: LiveData<SportsResource<Match>> = _nextMatch
 
+    private var currentTeamId: String? = null
+
     fun loadTeamData(leagueShortcut: String, teamId: String) {
+        if (currentTeamId == teamId) return
+        currentTeamId = teamId
+
+        _recentMatch.value = SportsResource.Loading
+        _nextMatch.value = SportsResource.Loading
+
         viewModelScope.launch {
             repository.getTeamRecentMatch(leagueShortcut, teamId).collectLatest {
                 _recentMatch.postValue(it)

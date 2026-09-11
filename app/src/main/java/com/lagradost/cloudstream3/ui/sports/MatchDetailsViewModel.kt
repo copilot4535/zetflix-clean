@@ -21,8 +21,13 @@ class MatchDetailsViewModel : ViewModel() {
     val match: LiveData<SportsResource<Match>> = _match
 
     private var pollingJob: Job? = null
+    private var currentMatchId: String? = null
 
     fun loadMatchDetails(matchId: String) {
+        if (currentMatchId == matchId && pollingJob?.isActive == true) return
+        currentMatchId = matchId
+        
+        _match.value = SportsResource.Loading
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch {
             while (isActive) {

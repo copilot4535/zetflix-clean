@@ -8,6 +8,9 @@ import com.lagradost.cloudstream3.sports.domain.models.Match
 import com.lagradost.cloudstream3.sports.domain.models.Matchday
 import com.lagradost.cloudstream3.sports.domain.models.Sport
 import com.lagradost.cloudstream3.sports.domain.models.Standing
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Mutex
@@ -22,6 +25,8 @@ class SportsRepositoryImpl : SportsRepository {
     private val groupCache = mutableMapOf<String, Pair<Long, Matchday>>()
     private val leagueCache = mutableListOf<League>()
     private val cacheMutex = Mutex()
+    private val requestMutex = Mutex()
+    private val inFlightRequests = mutableMapOf<String, Deferred<Any?>>()
 
     private val FRESHNESS_TTL = 15_000L // 15 seconds de-duplication
     private val MATCH_TTL = 60_000L // 1 minute for team matches
@@ -29,6 +34,22 @@ class SportsRepositoryImpl : SportsRepository {
     private val GROUP_TTL = 3_600_000L // 1 hour for matchday info
 
     private val featuredShortcuts = setOf("bl1", "pl", "ll")
+
+    private suspend fun <T> fetchDeduped(key: String, block: suspend () -> T): T = coroutineScope {
+        val deferred = requestMutex.withLock {
+            @Suppress("UNCHECKED_CAST")
+            inFlightRequests.getOrPut(key) {
+                async { 
+                    try {
+                        block()
+                    } finally {
+                        requestMutex.withLock { inFlightRequests.remove(key) }
+                    }
+                }
+            } as Deferred<T>
+        }
+        deferred.await()
+    }
 
     override fun getSports(): Flow<SportsResource<List<Sport>>> = flow {
         emit(SportsResource.Loading)
@@ -38,15 +59,17 @@ class SportsRepositoryImpl : SportsRepository {
 
     override fun getLeagues(): Flow<SportsResource<List<League>>> = flow {
         if (leagueCache.isNotEmpty()) {
-            emit(SportsResource.Success(leagueCache))
+            emit(SportsResource.Success(leagueCache.toList()))
             return@flow
         }
 
         emit(SportsResource.Loading)
         try {
-            val leagues = client.getAvailableLeagues()
-                .filter { it.leagueShortcut.lowercase() in featuredShortcuts }
-                .map { OpenLigaDBNormalizer.normalizeLeague(it) }
+            val leagues = fetchDeduped("leagues") {
+                client.getAvailableLeagues()
+                    .filter { it.leagueShortcut.lowercase() in featuredShortcuts }
+                    .map { OpenLigaDBNormalizer.normalizeLeague(it) }
+            }
             
             leagueCache.clear()
             leagueCache.addAll(leagues)
@@ -66,15 +89,16 @@ class SportsRepositoryImpl : SportsRepository {
                 emit(SportsResource.Success(cached.second))
                 return@flow
             }
-            // Emit stale cache while fetching fresh data
             emit(SportsResource.Success(cached.second))
         } else {
             emit(SportsResource.Loading)
         }
 
         try {
-            val matches = client.getMatches(leagueShortcut)
-                .map { OpenLigaDBNormalizer.normalizeMatch(it) }
+            val matches = fetchDeduped(cacheKey) {
+                client.getMatches(leagueShortcut)
+                    .map { OpenLigaDBNormalizer.normalizeMatch(it) }
+            }
 
             cacheMutex.withLock {
                 cache[cacheKey] = Pair(Clock.System.now().toEpochMilliseconds(), matches)
@@ -107,8 +131,10 @@ class SportsRepositoryImpl : SportsRepository {
         }
 
         try {
-            val matches = client.getMatches(leagueShortcut)
-                .map { OpenLigaDBNormalizer.normalizeMatch(it) }
+            val matches = fetchDeduped(cacheKey) {
+                client.getMatches(leagueShortcut)
+                    .map { OpenLigaDBNormalizer.normalizeMatch(it) }
+            }
 
             cacheMutex.withLock {
                 cache[cacheKey] = Pair(Clock.System.now().toEpochMilliseconds(), matches)
@@ -126,16 +152,42 @@ class SportsRepositoryImpl : SportsRepository {
     }
 
     override fun getMatchDetails(matchId: String): Flow<SportsResource<Match>> = flow {
-        emit(SportsResource.Loading)
+        val cacheKey = "match_$matchId"
+        val cached = cacheMutex.withLock { matchCache[cacheKey] }
+        if (cached != null) {
+            val now = Clock.System.now().toEpochMilliseconds()
+            if (now - cached.first < FRESHNESS_TTL) {
+                emit(SportsResource.Success(cached.second))
+                return@flow
+            }
+            emit(SportsResource.Success(cached.second))
+        } else {
+            emit(SportsResource.Loading)
+        }
+
         try {
-            val oldbMatch = client.getMatch(matchId)
-            if (oldbMatch != null) {
-                emit(SportsResource.Success(OpenLigaDBNormalizer.normalizeMatch(oldbMatch)))
+            val match = fetchDeduped(cacheKey) {
+                val oldbMatch = client.getMatch(matchId)
+                if (oldbMatch != null) {
+                    OpenLigaDBNormalizer.normalizeMatch(oldbMatch)
+                } else null
+            }
+
+            if (match != null) {
+                cacheMutex.withLock {
+                    matchCache[cacheKey] = Pair(Clock.System.now().toEpochMilliseconds(), match)
+                }
+                emit(SportsResource.Success(match))
             } else {
                 emit(SportsResource.Error("Match not found"))
             }
         } catch (e: Exception) {
-            emit(SportsResource.Error("Failed to fetch match details: ${e.message}", e))
+            val stale = cacheMutex.withLock { matchCache[cacheKey]?.second }
+            if (stale != null) {
+                emit(SportsResource.Success(stale))
+            } else {
+                emit(SportsResource.Error("Failed to fetch match details: ${e.message}", e))
+            }
         }
     }
 
@@ -149,13 +201,16 @@ class SportsRepositoryImpl : SportsRepository {
                 emit(SportsResource.Success(cached.second))
                 return@flow
             }
+            emit(SportsResource.Success(cached.second))
+        } else {
+            emit(SportsResource.Loading)
         }
 
-        emit(SportsResource.Loading)
         try {
-            val oldbTable = client.getTable(leagueShortcut, season)
-            val standings = oldbTable.mapIndexed { index, oldbStanding ->
-                OpenLigaDBNormalizer.normalizeStanding(oldbStanding, index + 1)
+            val standings = fetchDeduped(cacheKey) {
+                client.getTable(leagueShortcut, season).mapIndexed { index, oldbStanding ->
+                    OpenLigaDBNormalizer.normalizeStanding(oldbStanding, index + 1)
+                }
             }
 
             cacheMutex.withLock {
@@ -179,7 +234,7 @@ class SportsRepositoryImpl : SportsRepository {
             emit(SportsResource.Error("League metadata not found for $leagueShortcut"))
             return@flow
         }
-        val season = league.season ?: "" // Empty string if missing, still isolated by shortcut
+        val season = league.season ?: "" 
         val cacheKey = "group_${leagueShortcut}_$season"
 
         val cached = cacheMutex.withLock { groupCache[cacheKey] }
@@ -189,18 +244,23 @@ class SportsRepositoryImpl : SportsRepository {
                 emit(SportsResource.Success(cached.second))
                 return@flow
             }
+            emit(SportsResource.Success(cached.second))
+        } else {
+            emit(SportsResource.Loading)
         }
 
-        emit(SportsResource.Loading)
         try {
-            val oldbGroup = client.getCurrentGroup(leagueShortcut)
-            if (oldbGroup != null) {
-                val matchday = OpenLigaDBNormalizer.normalizeGroup(oldbGroup, leagueShortcut, season)
+            val matchday = fetchDeduped(cacheKey) {
+                val oldbGroup = client.getCurrentGroup(leagueShortcut)
+                if (oldbGroup != null) {
+                    OpenLigaDBNormalizer.normalizeGroup(oldbGroup, leagueShortcut, season)
+                } else null
+            }
 
+            if (matchday != null) {
                 cacheMutex.withLock {
                     groupCache[cacheKey] = Pair(Clock.System.now().toEpochMilliseconds(), matchday)
                 }
-
                 emit(SportsResource.Success(matchday))
             } else {
                 emit(SportsResource.Error("Current matchday not found"))
@@ -222,19 +282,27 @@ class SportsRepositoryImpl : SportsRepository {
             emit(SportsResource.Success(cached.second))
             return@flow
         }
+        if (cached != null) emit(SportsResource.Success(cached.second))
+        else emit(SportsResource.Loading)
 
-        emit(SportsResource.Loading)
         try {
-            val oldbMatch = client.getLastMatch(leagueShortcut, teamId)
-            if (oldbMatch != null) {
-                val match = OpenLigaDBNormalizer.normalizeMatch(oldbMatch)
+            val match = fetchDeduped(cacheKey) {
+                val oldbMatch = client.getLastMatch(leagueShortcut, teamId)
+                if (oldbMatch != null) {
+                    OpenLigaDBNormalizer.normalizeMatch(oldbMatch)
+                } else null
+            }
+
+            if (match != null) {
                 cacheMutex.withLock { matchCache[cacheKey] = Pair(Clock.System.now().toEpochMilliseconds(), match) }
                 emit(SportsResource.Success(match))
             } else {
                 emit(SportsResource.Error("Recent match not found"))
             }
         } catch (e: Exception) {
-            emit(SportsResource.Error("Failed to fetch recent match: ${e.message}", e))
+            val stale = cacheMutex.withLock { matchCache[cacheKey]?.second }
+            if (stale != null) emit(SportsResource.Success(stale))
+            else emit(SportsResource.Error("Failed to fetch recent match: ${e.message}", e))
         }
     }
 
@@ -245,19 +313,27 @@ class SportsRepositoryImpl : SportsRepository {
             emit(SportsResource.Success(cached.second))
             return@flow
         }
+        if (cached != null) emit(SportsResource.Success(cached.second))
+        else emit(SportsResource.Loading)
 
-        emit(SportsResource.Loading)
         try {
-            val oldbMatch = client.getNextMatch(leagueShortcut, teamId)
-            if (oldbMatch != null) {
-                val match = OpenLigaDBNormalizer.normalizeMatch(oldbMatch)
+            val match = fetchDeduped(cacheKey) {
+                val oldbMatch = client.getNextMatch(leagueShortcut, teamId)
+                if (oldbMatch != null) {
+                    OpenLigaDBNormalizer.normalizeMatch(oldbMatch)
+                } else null
+            }
+
+            if (match != null) {
                 cacheMutex.withLock { matchCache[cacheKey] = Pair(Clock.System.now().toEpochMilliseconds(), match) }
                 emit(SportsResource.Success(match))
             } else {
                 emit(SportsResource.Error("Next match not found"))
             }
         } catch (e: Exception) {
-            emit(SportsResource.Error("Failed to fetch next match: ${e.message}", e))
+            val stale = cacheMutex.withLock { matchCache[cacheKey]?.second }
+            if (stale != null) emit(SportsResource.Success(stale))
+            else emit(SportsResource.Error("Failed to fetch next match: ${e.message}", e))
         }
     }
 }
