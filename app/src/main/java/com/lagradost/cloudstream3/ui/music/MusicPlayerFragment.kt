@@ -95,13 +95,12 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         val currentIndex = currentLyrics.indexOfLast { it.timestampMs <= position }
         
         if (currentIndex != -1) {
-            // 1. Update the reserved 2-line inline lyric preview (between art and title)
+            // 1. Update the reserved 1-line inline lyric preview (below artist)
             val currentLine = currentLyrics[currentIndex].text
-            val nextLine = if (currentIndex + 1 < currentLyrics.size) currentLyrics[currentIndex + 1].text else ""
             
             binding?.musicPlayerLiveLyric?.apply {
-                text = if (nextLine.isNotBlank()) "$currentLine\n$nextLine" else currentLine
-                alpha = 1.0f
+                text = currentLine
+                alpha = 0.7f
             }
 
             // 2. Update the dedicated Lyrics Preview Card snippet (Spotify-style)

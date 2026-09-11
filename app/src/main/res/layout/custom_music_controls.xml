@@ -52,7 +52,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="12dp">
 
         <ImageButton
             android:id="@+id/music_player_shuffle"
@@ -128,7 +128,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp">
+        android:layout_marginTop="20dp">
 
         <ImageButton
             android:id="@+id/music_player_devices"

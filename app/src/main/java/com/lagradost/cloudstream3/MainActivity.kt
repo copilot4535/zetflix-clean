@@ -261,6 +261,12 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         finishWithOptimization()
     }
 
+    fun launchSports() {
+        val intent = Intent(this, com.lagradost.cloudstream3.ui.sports.SportsActivity::class.java)
+        startActivity(intent)
+        finishWithOptimization()
+    }
+
     private fun finishWithOptimization() {
         // 1. Clear Coil memory cache
         this.imageLoader.memoryCache?.clear()
@@ -1118,6 +1124,9 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             binding?.navRailView?.getHeaderView()?.apply {
                 findViewById<View>(R.id.nav_rail_livestream)?.setOnClickListener {
                     navController.navigate(R.id.navigation_livestream)
+                }
+                findViewById<View>(R.id.nav_rail_sports)?.setOnClickListener {
+                    launchSports()
                 }
                 findViewById<View>(R.id.nav_rail_avatar)?.setOnClickListener {
                     navController.navigate(R.id.navigation_account)

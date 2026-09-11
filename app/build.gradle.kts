@@ -323,6 +323,10 @@ dependencies {
     implementation(project(":musicmodules:domain"))
     implementation(project(":musicmodules:common"))
     implementation(project(":musicmodules:ktorExt"))
+
+    implementation(project(":sportsmodules:domain"))
+    implementation(project(":sportsmodules:common"))
+    implementation(project(":sportsmodules:data"))
 }
 
 tasks.register<Jar>("androidSourcesJar") {

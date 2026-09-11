@@ -41,3 +41,7 @@ include(":musicmodules:kotlinYtmusicScraper")
 include(":musicmodules:domain")
 include(":musicmodules:common")
 include(":musicmodules:ktorExt")
+
+include(":sportsmodules:domain")
+include(":sportsmodules:common")
+include(":sportsmodules:data")

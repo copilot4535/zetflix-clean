@@ -863,6 +863,14 @@
         <item name="colorSurface">@color/music_surface_dark</item>
         <item name="android:textColorSecondary">@color/music_text_secondary</item>
     </style>
+
+    <!-- Sports Specific Theme -->
+    <style name="Theme.ZetFlix.Sports" parent="AppTheme">
+        <item name="colorPrimary">@color/sports_accent</item>
+        <item name="colorSecondary">@color/sports_live_red</item>
+        <item name="android:windowBackground">@color/sports_background</item>
+    </style>
+
     <style name="MusicTabTextAppearance" parent="TextAppearance.Design.Tab">
         <item name="textAllCaps">false</item>
         <item name="android:textSize">14sp</item>

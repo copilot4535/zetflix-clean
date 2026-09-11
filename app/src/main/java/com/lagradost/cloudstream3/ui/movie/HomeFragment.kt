@@ -557,6 +557,10 @@ class HomeFragment : BaseHomeFragment<FragmentHomeBinding>(
                 (activity as? MainActivity)?.launchMusic()
             }
 
+            homeSportsFab.setOnClickListener {
+                (activity as? MainActivity)?.launchSports()
+            }
+
             val headerColor = context?.colorFromAttribute(R.attr.primaryBlackBackground) ?: android.graphics.Color.BLACK
             homeMasterRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {

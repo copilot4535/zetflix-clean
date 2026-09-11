@@ -56,6 +56,11 @@
     <color name="music_text_secondary">#B3B3B3</color>
     <color name="zetflix_white_20">#33FFFFFF</color>
 
+    <!-- Sports Module Colors -->
+    <color name="sports_accent">#2196F3</color>
+    <color name="sports_background">#000000</color>
+    <color name="sports_live_red">#FF0000</color>
+
     <color name="zetflix_accent_50">#80E50914</color>
     <color name="zetflix_white_30">#4DFFFFFF</color>
     <color name="music_scrim_gradient_start">#00000000</color>
