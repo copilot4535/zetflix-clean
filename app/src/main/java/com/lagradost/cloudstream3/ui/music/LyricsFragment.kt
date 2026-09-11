@@ -301,8 +301,9 @@ class LyricsFragment : BaseFragment<FragmentLyricsBinding>(
             b.lyricsPlayPause.imageTintList = ColorStateList.valueOf(Color.BLACK)
 
             // Theme the seek bar
-            b.lyricsExoProgress.setScrubberColor(Color.WHITE)
-            b.lyricsExoProgress.setPlayedColor(Color.WHITE)
+            val accentRed = b.root.context.getColor(R.color.zetflix_accent)
+            b.lyricsExoProgress.setScrubberColor(accentRed)
+            b.lyricsExoProgress.setPlayedColor(accentRed)
             
             // System bar icons - Always dark for immersion
             activity?.let { act ->

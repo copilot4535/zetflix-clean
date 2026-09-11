@@ -216,7 +216,7 @@
                 app:show_timeout="0"
                 app:hide_on_touch="false" />
 
-            <!-- Lyrics Preview Card (REPLACED About the Song) -->
+            <!-- Lyrics Preview Card -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/music_player_lyrics_preview_card"
                 android:layout_width="match_parent"
@@ -230,22 +230,22 @@
                 app:layout_constraintTop_toBottomOf="@id/music_player_view"
                 tools:visibility="visible">
 
-                <LinearLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
                     android:paddingHorizontal="20dp"
-                    android:paddingVertical="24dp">
+                    android:paddingVertical="20dp">
 
                     <TextView
                         android:id="@+id/music_player_lyrics_label"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="LYRICS"
+                        android:text="Lyrics preview"
                         android:textColor="@color/white"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:fontFamily="@font/metropolis_bold"
-                        android:letterSpacing="0.1" />
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:id="@+id/music_player_lyrics_snippet"
@@ -258,9 +258,27 @@
                         android:textColor="@color/white"
                         android:textSize="22sp"
                         android:lineSpacingMultiplier="1.2"
-                        tools:text="This is a snippet of the lyrics that will be displayed here in a large, bold format..." />
+                        app:layout_constraintTop_toBottomOf="@id/music_player_lyrics_label"
+                        tools:text="First things first, I ma say all the words inside my head\nI'm fired up, and tired of the way that things have been, oh-ooh\nThe way that things have been, oh-ooh" />
 
-                </LinearLayout>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/music_player_show_lyrics_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="20dp"
+                        android:text="Show lyrics"
+                        android:textAllCaps="false"
+                        android:textSize="14sp"
+                        android:paddingHorizontal="20dp"
+                        android:fontFamily="@font/metropolis_bold"
+                        android:textColor="@color/black"
+                        app:backgroundTint="@color/white"
+                        app:cornerRadius="20dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/music_player_lyrics_snippet"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- SongDNA Section -->

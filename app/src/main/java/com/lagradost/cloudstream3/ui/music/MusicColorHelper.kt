@@ -119,29 +119,72 @@ object MusicColorHelper {
     }
 
     /**
+     * Normalizes a color for atmospheric backgrounds.
+     * Prevents neutral colors from defaulting to Red by respecting low saturation.
+     */
+    private fun normalizeAtmosphericColor(
+        @ColorInt color: Int,
+        minSat: Float,
+        maxSat: Float,
+        minVal: Float,
+        maxVal: Float
+    ): Int {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+
+        // If the color is very desaturated (neutral), don't force a minimum saturation.
+        // This prevents gray/black from becoming muddy Red (Hue 0).
+        val isNeutral = hsv[1] < 0.08f
+        if (!isNeutral) {
+            hsv[1] = hsv[1].coerceIn(minSat, maxSat)
+        } else {
+            // Maintain neutral look for grays/blacks
+            hsv[1] = hsv[1].coerceAtMost(maxSat)
+        }
+
+        hsv[2] = hsv[2].coerceIn(minVal, maxVal)
+        return Color.HSVToColor(Color.alpha(color), hsv)
+    }
+
+    /**
      * Generates a Spotify-style background gradient.
      * Starts with a darker, desaturated version of the artwork color at the top,
      * fading to black at the bottom.
      */
     fun generateSpotifyGradient(palette: MusicPalette): IntArray {
-        // Prefer darkMuted or dominant for a moodier look
-        val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) palette.darkMutedColor else palette.dominantColor
-        
-        val hsv = FloatArray(3)
-        Color.colorToHSV(baseColor, hsv)
+        // Selection Logic: Blend dominant and darkMuted for a more stable atmosphere
+        val baseColor = when {
+            palette.darkMutedColor != DEFAULT_SURFACE -> {
+                // Blend darkMuted with dominant to ensure we have enough "color" if muted is too dark
+                blendColors(palette.darkMutedColor, palette.dominantColor, 0.7f)
+            }
+            palette.darkVibrantColor != DEFAULT_SURFACE -> {
+                blendColors(palette.darkVibrantColor, palette.dominantColor, 0.5f)
+            }
+            else -> palette.dominantColor
+        }
 
-        // Spotify top color is very desaturated (~20-30%) and dark (~15-25%)
-        hsv[1] = hsv[1].coerceIn(0.15f, 0.35f)
-        hsv[2] = hsv[2].coerceIn(0.15f, 0.25f)
-        val topColor = Color.HSVToColor(hsv)
+        // Spotify top color is very desaturated and dark
+        val topColor = normalizeAtmosphericColor(
+            baseColor,
+            minSat = 0.12f,
+            maxSat = 0.30f,
+            minVal = 0.12f,
+            maxVal = 0.22f
+        )
 
-        // Mid color is even darker
-        hsv[2] *= 0.5f
-        val midColor = Color.HSVToColor(hsv)
+        // Mid color is a deeper version of top
+        val midColor = normalizeAtmosphericColor(
+            topColor,
+            minSat = 0.08f,
+            maxSat = 0.25f,
+            minVal = 0.06f,
+            maxVal = 0.12f
+        )
 
-        // Bottom color is always near-black/black
-        val bottomColor = Color.parseColor("#0B0B0F")
-        
+        // Bottom color is always near-black for depth
+        val bottomColor = Color.parseColor("#08080A")
+
         return intArrayOf(topColor, midColor, bottomColor)
     }
 
@@ -153,15 +196,13 @@ object MusicColorHelper {
     fun generateSpotifyMiniPlayerBackground(palette: MusicPalette): Int {
         val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) palette.darkMutedColor else palette.dominantColor
         
-        val hsv = FloatArray(3)
-        Color.colorToHSV(baseColor, hsv)
-        
-        // Spotify mini player is slightly more saturated than the full player top tint
-        // but very dark (~10-15% value)
-        hsv[1] = hsv[1].coerceIn(0.2f, 0.4f)
-        hsv[2] = hsv[2].coerceIn(0.08f, 0.15f)
-        
-        return Color.HSVToColor(hsv)
+        return normalizeAtmosphericColor(
+            baseColor,
+            minSat = 0.15f,
+            maxSat = 0.35f,
+            minVal = 0.07f,
+            maxVal = 0.12f
+        )
     }
 
     /**
@@ -170,14 +211,15 @@ object MusicColorHelper {
     fun generateLyricsPalette(palette: MusicPalette): LyricsPalette {
         val baseColor = if (palette.darkMutedColor != DEFAULT_SURFACE) palette.darkMutedColor else palette.dominantColor
         
-        val hsv = FloatArray(3)
-        Color.colorToHSV(baseColor, hsv)
-        
-        // Lyrics background should be slightly more vibrant than full player top
-        // but still dark for text contrast
-        hsv[1] = hsv[1].coerceIn(0.3f, 0.5f)
-        hsv[2] = hsv[2].coerceIn(0.1f, 0.25f)
-        val lyricsBg = Color.HSVToColor(hsv)
+        // Lyrics background is slightly more saturated than the main player top
+        // to provide a distinct "sheet" feel while remaining atmospheric
+        val lyricsBg = normalizeAtmosphericColor(
+            baseColor,
+            minSat = 0.20f,
+            maxSat = 0.40f,
+            minVal = 0.10f,
+            maxVal = 0.20f
+        )
 
         return LyricsPalette(
             background = lyricsBg,

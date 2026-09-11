@@ -1,99 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ZetFlix Netflix-style palette -->
-    <color name="zetflix_background">#0b0b0f</color>       <!-- Main background -->
-    <color name="zetflix_surface">#141419</color>          <!-- Cards/inputs -->
-    <color name="zetflix_surface_2">#1B1B22</color>
-    <color name="zetflix_divider">#25252C</color>
-    <color name="zetflix_muted">#6F6F78</color>
-    <color name="zetflix_surface_light">#121218</color>    <!-- Elevated surfaces -->
-    <color name="zetflix_border">#2c2c3a</color>           <!-- Borders -->
-    <color name="zetflix_text_primary">#ffffff</color>     <!-- Primary text -->
-    <color name="zetflix_text_secondary">#a0a0a8</color>   <!-- Secondary text -->
-    <color name="zetflix_text_hint">#80ffffff</color>      <!-- Hint text -->
-    <color name="zetflix_text_high">#e6ffffff</color>      <!-- 90% white -->
-    <color name="zetflix_text_med">#b3ffffff</color>       <!-- 70% white -->
-    <color name="zetflix_white_20">#33ffffff</color>      <!-- 20% white -->
-    <color name="zetflix_white_30">#4dffffff</color>      <!-- 30% white -->
-    <color name="zetflix_accent_50">#80e50914</color>      <!-- 50% red -->
-    <color name="zetflix_error">#ff5c5c</color>            <!-- Error text -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- ZetFlix Premium Design System -->
+    <!-- Primary Palette -->
+    <color name="zetflix_background">#000000</color>
+    <color name="zetflix_surface">#121212</color>
+    <color name="zetflix_surface_variant">#1A1A1A</color>
     <color name="zetflix_accent">#e50914</color>           <!-- Brand red -->
+    <color name="zetflix_accent_dark">#80070F</color>
 
-    <!-- Music Module Spotify-style palette -->
-    <color name="music_spotify_green">#1ED760</color>
-    <color name="music_background_black">#000000</color> <!-- AMOLED black -->
-    <color name="music_surface_dark">#121212</color>    <!-- Surface matching -->
-    <color name="music_chip_button">#242424</color>
-    <color name="music_text_secondary">#888888</color>
-    <color name="music_card_overlay">#40000000</color>
+    <!-- Text Hierarchy -->
+    <color name="zetflix_text_primary">#FFFFFF</color>
+    <color name="zetflix_text_secondary">#B3B3B3</color>
+    <color name="zetflix_text_tertiary">#757575</color>
+
+    <!-- Music Module Colors -->
     <color name="music_accent_red">#e50914</color>
-    <color name="music_scrim_gradient_start">#00000000</color>
-    <color name="music_scrim_gradient_end">#CC000000</color>
+    <color name="music_background_black">#000000</color>
+    <color name="music_card_bg">#1A1A1A</color>
 
-    <!-- Player-Specific Design Tokens (Isolated from Home) -->
+    <!-- Player Colors -->
     <color name="player_text_primary">#FFFFFF</color>
     <color name="player_text_secondary">#B3B3B3</color>
-    <color name="player_text_muted">#777777</color>
-    <color name="player_accent">#E50914</color>
-    <color name="player_surface_base">#101010</color>
-    <color name="player_surface_elevated">#181818</color>
-    <color name="player_divider">#2A2A2A</color>
     <color name="player_progress_unplayed">#33FFFFFF</color>
-    <color name="player_progress_buffered">#1AFFFFFF</color>
+    <color name="player_progress_buffered">#4DFFFFFF</color>
+    <color name="player_accent">#E50914</color>
 
-    <color name="colorPrimary">@color/zetflix_accent</color>
-    <color name="colorPrimarySecond">@color/zetflix_accent</color>
-    <color name="colorSearch">@color/zetflix_surface</color>
-    <color name="colorOngoing">#F53B66</color>
-    <color name="colorPrimaryDark">#b0070f</color>
-    <color name="colorAccent">@color/zetflix_accent</color>
+    <!-- Navigation -->
+    <color name="nav_selected">#FFFFFF</color>
+    <color name="nav_unselected">#757575</color>
 
-    <color name="primaryGrayBackground">@color/zetflix_background</color>
-    <color name="primaryBlackBackground">@color/zetflix_background</color>
-    <color name="iconGrayBackground">@color/zetflix_surface_light</color>
-    <color name="boxItemBackground">@color/zetflix_surface</color>
-
-    <color name="textColor">@color/zetflix_text_primary</color>
-    <color name="grayTextColor">@color/zetflix_text_secondary</color>
-    <color name="grayShimmer">@color/zetflix_surface_light</color>
-
-    <color name="searchColorTransparent">#1AFFFFFF</color>
+    <!-- Baseline Fixes -->
     <color name="transparent">#00000000</color>
+    <color name="colorPrimaryDark">#80070F</color>
+    <color name="primaryBlackBackground">#000000</color>
+    <color name="zetflix_surface_light">#2A2A2A</color>
+    <color name="iconColor">#FFFFFF</color>
+    <color name="video_button_ripple">#4DFFFFFF</color>
+    <color name="zetflix_border">#33FFFFFF</color>
+    <color name="dubColorBg">#FFC107</color>
+    <color name="colorPrimary">#e50914</color>
+    <color name="textColor">#FFFFFF</color>
+    <color name="colorTestWarning">#FFC107</color>
+    <color name="colorTestPass">#4CAF50</color>
+    <color name="colorTestFail">#F44336</color>
+    <color name="music_spotify_green">#1DB954</color>
+    <color name="music_surface_dark">#121212</color>
+    <color name="music_text_secondary">#B3B3B3</color>
+    <color name="zetflix_white_20">#33FFFFFF</color>
 
-    <color name="white">#FFF</color>
-    <color name="black">#000</color>
-    <color name="gray_200">#EEEEEE</color>
-    <color name="gray_400">#BDBDBD</color>
+    <color name="zetflix_accent_50">#80E50914</color>
+    <color name="zetflix_white_30">#4DFFFFFF</color>
+    <color name="music_scrim_gradient_start">#00000000</color>
+    <color name="music_scrim_gradient_end">#CC000000</color>
+    <color name="music_chip_button">#2A2A2A</color>
+    <color name="progressBackgroundColor">#33FFFFFF</color>
+    <color name="subColorBg">#2A2A2A</color>
+    <color name="typeColorBg">#2A2A2A</color>
+    <color name="video_ripple">#4DFFFFFF</color>
 
-    <color name="whiteText">#FFF</color>
-    <color name="blackText">#000</color>
+    <!-- UI Component Colors -->
+    <color name="skipOpTransparent">#00000000</color>
+    <color name="primaryGrayBackground">#0B0B0F</color>
+    <color name="zetflix_text_hint">#757575</color>
+    <color name="grayShimmer">#1A1A1A</color>
+    <color name="zetflix_error">#E50914</color>
 
-    <color name="progressBackgroundColor">#1AFFFFFF</color>
+    <!-- Additional UI Colors -->
+    <color name="zetflix_text_med">#B3B3B3</color>
+    <color name="zetflix_text_high">#FFFFFF</color>
+    <color name="black_overlay">#99000000</color>
+    <color name="darkBar">#1A1A1A</color>
+    <color name="videoProgress">#E50914</color>
+    <color name="adultColor">#E50914</color>
+    <color name="player_surface_base">#121212</color>
 
-    <color name="dubColorText">#121950</color>
-
-
-    <color name="dubColorBg">#3B65F5</color>
-    <color name="subColorText">#571711</color>
-    <color name="subColorBg">#F53B66</color>
-    <color name="typeColorText">#BEC8FF</color>
-    <color name="typeColorBg">#3700B3</color>
-
-    <color name="adultColor">#FF6F63</color>
-
-    <color name="video_ripple">#80FFFFFF</color>
-    <color name="video_button_ripple">#32FFFFFF</color>
-
-    <color name="black_overlay">#66000000</color>
-    <color name="darkBarTransparent">#C0121212</color>
-    <color name="skipOpTransparent">#4D121212</color>
-    <color name="darkBar">#121212</color>
-    <color name="videoProgress">#66B5B5B5</color>
-
-    <color name="iconColor">#9ba0a6</color>
-
-    <color name="colorTestPass">#48E484</color>
-    <color name="colorTestFail">#ea596e</color>
-    <color name="colorTestWarning">#FF9800</color>
-    <color name="playIconBackground">#B3000000</color>
+    <!-- Semantic Colors -->
+    <color name="success">#4CAF50</color>
+    <color name="error">#F44336</color>
+    <color name="warning">#FFC107</color>
+    <color name="info">#2196F3</color>
 </resources>

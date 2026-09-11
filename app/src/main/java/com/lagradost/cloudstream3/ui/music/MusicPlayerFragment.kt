@@ -104,12 +104,12 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 alpha = 1.0f
             }
 
-            // 2. Update the dedicated Lyrics Preview Card snippet (large bold text)
+            // 2. Update the dedicated Lyrics Preview Card snippet (Spotify-style)
             val builder = SpannableStringBuilder()
-            val maxLines = 4
-            val endIdx = minOf(currentIndex + maxLines, currentLyrics.size)
+            val startIdx = maxOf(0, currentIndex - 1)
+            val endIdx = minOf(currentIndex + 4, currentLyrics.size)
             
-            for (i in currentIndex until endIdx) {
+            for (i in startIdx until endIdx) {
                 val line = currentLyrics[i]
                 val start = builder.length
                 builder.append(line.text)
@@ -284,6 +284,10 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         }
 
         binding?.musicPlayerLyricsPreviewCard?.setOnClickListener {
+            openLyricsPanel()
+        }
+
+        binding?.musicPlayerShowLyricsButton?.setOnClickListener {
             openLyricsPanel()
         }
         

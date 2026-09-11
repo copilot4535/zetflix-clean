@@ -73,15 +73,18 @@ class TestResultAdapter() :
         languageText.text = getFlagFromIso(api.lang)
         providerTitle.text = api.name
 
-        val (resultText, resultColor) = if (result.success) {
+        val resultPair: Pair<Int, Int> = if (result.success) {
             if (result.log.any { it.level == TestingUtils.Logger.LogLevel.Warning }) {
-                R.string.test_warning to R.color.colorTestWarning
+                Pair(R.string.test_warning, R.color.colorTestWarning)
             } else {
-                R.string.test_passed to R.color.colorTestPass
+                Pair(R.string.test_passed, R.color.colorTestPass)
             }
         } else {
-            R.string.test_failed to R.color.colorTestFail
+            Pair(R.string.test_failed, R.color.colorTestFail)
         }
+
+        val resultText = resultPair.first
+        val resultColor = resultPair.second
 
         statusText.setText(resultText)
         statusText.setTextColor(ContextCompat.getColor(itemView.context, resultColor))
