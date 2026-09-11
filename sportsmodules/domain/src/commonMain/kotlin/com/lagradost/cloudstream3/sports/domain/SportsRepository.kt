@@ -16,4 +16,6 @@ interface SportsRepository {
     fun getMatchDetails(matchId: String): Flow<SportsResource<Match>>
     fun getStandings(leagueShortcut: String, season: String): Flow<SportsResource<List<Standing>>>
     fun getCurrentMatchday(leagueShortcut: String): Flow<SportsResource<Matchday>>
+    fun getTeamRecentMatch(leagueShortcut: String, teamId: String): Flow<SportsResource<Match>>
+    fun getTeamNextMatch(leagueShortcut: String, teamId: String): Flow<SportsResource<Match>>
 }

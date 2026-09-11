@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_navigation_sports_home_to_matchDetailsFragment"
             app:destination="@id/navigation_match_details" />
+        <action
+            android:id="@+id/action_navigation_sports_home_to_teamDetailsFragment"
+            app:destination="@id/navigation_team_details" />
     </fragment>
 
     <fragment
@@ -24,4 +27,33 @@
             android:name="match_id"
             app:argType="string" />
     </fragment>
+
+    <fragment
+        android:id="@+id/navigation_team_details"
+        android:name="com.lagradost.cloudstream3.ui.sports.TeamDetailsFragment"
+        android:label="Team Details"
+        tools:layout="@layout/fragment_team_details">
+        <argument
+            android:name="team_id"
+            app:argType="string" />
+        <argument
+            android:name="team_name"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="team_logo"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="league_shortcut"
+            app:argType="string" />
+        <argument
+            android:name="league_name"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_navigation_match_details"
+        app:destination="@id/navigation_match_details" />
 </navigation>

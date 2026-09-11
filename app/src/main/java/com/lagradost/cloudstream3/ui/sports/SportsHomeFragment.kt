@@ -23,7 +23,16 @@ class SportsHomeFragment : Fragment() {
         }
         findNavController().navigate(R.id.action_navigation_sports_home_to_matchDetailsFragment, bundle)
     }
-    private val standingAdapter = StandingAdapter()
+    private val standingAdapter = StandingAdapter { standing ->
+        val bundle = Bundle().apply {
+            putString(TeamDetailsFragment.ARG_TEAM_ID, standing.teamId)
+            putString(TeamDetailsFragment.ARG_TEAM_NAME, standing.teamName)
+            putString(TeamDetailsFragment.ARG_TEAM_LOGO, standing.teamLogoUrl)
+            putString(TeamDetailsFragment.ARG_LEAGUE_SHORTCUT, viewModel.selectedLeague.value?.shortcut)
+            putString(TeamDetailsFragment.ARG_LEAGUE_NAME, viewModel.selectedLeague.value?.name)
+        }
+        findNavController().navigate(R.id.action_navigation_sports_home_to_teamDetailsFragment, bundle)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

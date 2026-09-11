@@ -51,4 +51,22 @@ class OpenLigaDBClient {
             null
         }
     }
+
+    suspend fun getLastMatch(leagueShortcut: String, teamId: String): OLDBMatch? {
+        val url = "$baseUrl/getlastmatchbyleagueteam/$leagueShortcut/$teamId"
+        return try {
+            app.get(url).parsed<OLDBMatch>()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun getNextMatch(leagueShortcut: String, teamId: String): OLDBMatch? {
+        val url = "$baseUrl/getnextmatchbyleagueteam/$leagueShortcut/$teamId"
+        return try {
+            app.get(url).parsed<OLDBMatch>()
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

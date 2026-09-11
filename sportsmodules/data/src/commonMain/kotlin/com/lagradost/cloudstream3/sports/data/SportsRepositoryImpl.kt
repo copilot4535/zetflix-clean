@@ -17,12 +17,14 @@ import kotlin.time.Clock
 class SportsRepositoryImpl : SportsRepository {
     private val client = OpenLigaDBClient()
     private val cache = mutableMapOf<String, Pair<Long, List<Match>>>()
+    private val matchCache = mutableMapOf<String, Pair<Long, Match>>()
     private val tableCache = mutableMapOf<String, Pair<Long, List<Standing>>>()
     private val groupCache = mutableMapOf<String, Pair<Long, Matchday>>()
     private val leagueCache = mutableListOf<League>()
     private val cacheMutex = Mutex()
 
     private val FRESHNESS_TTL = 15_000L // 15 seconds de-duplication
+    private val MATCH_TTL = 60_000L // 1 minute for team matches
     private val TABLE_TTL = 3_600_000L // 1 hour for standings
     private val GROUP_TTL = 3_600_000L // 1 hour for matchday info
 
@@ -210,6 +212,52 @@ class SportsRepositoryImpl : SportsRepository {
             } else {
                 emit(SportsResource.Error("Failed to fetch matchday: ${e.message}", e))
             }
+        }
+    }
+
+    override fun getTeamRecentMatch(leagueShortcut: String, teamId: String): Flow<SportsResource<Match>> = flow {
+        val cacheKey = "recent_${leagueShortcut}_$teamId"
+        val cached = cacheMutex.withLock { matchCache[cacheKey] }
+        if (cached != null && Clock.System.now().toEpochMilliseconds() - cached.first < MATCH_TTL) {
+            emit(SportsResource.Success(cached.second))
+            return@flow
+        }
+
+        emit(SportsResource.Loading)
+        try {
+            val oldbMatch = client.getLastMatch(leagueShortcut, teamId)
+            if (oldbMatch != null) {
+                val match = OpenLigaDBNormalizer.normalizeMatch(oldbMatch)
+                cacheMutex.withLock { matchCache[cacheKey] = Pair(Clock.System.now().toEpochMilliseconds(), match) }
+                emit(SportsResource.Success(match))
+            } else {
+                emit(SportsResource.Error("Recent match not found"))
+            }
+        } catch (e: Exception) {
+            emit(SportsResource.Error("Failed to fetch recent match: ${e.message}", e))
+        }
+    }
+
+    override fun getTeamNextMatch(leagueShortcut: String, teamId: String): Flow<SportsResource<Match>> = flow {
+        val cacheKey = "next_${leagueShortcut}_$teamId"
+        val cached = cacheMutex.withLock { matchCache[cacheKey] }
+        if (cached != null && Clock.System.now().toEpochMilliseconds() - cached.first < MATCH_TTL) {
+            emit(SportsResource.Success(cached.second))
+            return@flow
+        }
+
+        emit(SportsResource.Loading)
+        try {
+            val oldbMatch = client.getNextMatch(leagueShortcut, teamId)
+            if (oldbMatch != null) {
+                val match = OpenLigaDBNormalizer.normalizeMatch(oldbMatch)
+                cacheMutex.withLock { matchCache[cacheKey] = Pair(Clock.System.now().toEpochMilliseconds(), match) }
+                emit(SportsResource.Success(match))
+            } else {
+                emit(SportsResource.Error("Next match not found"))
+            }
+        } catch (e: Exception) {
+            emit(SportsResource.Error("Failed to fetch next match: ${e.message}", e))
         }
     }
 }

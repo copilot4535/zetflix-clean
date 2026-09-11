@@ -9,20 +9,21 @@ import com.lagradost.cloudstream3.databinding.ItemStandingBinding
 import com.lagradost.cloudstream3.sports.domain.models.Standing
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
 
-class StandingAdapter : ListAdapter<Standing, StandingAdapter.StandingViewHolder>(StandingDiffCallback()) {
+class StandingAdapter(private val onTeamClick: (Standing) -> Unit) : ListAdapter<Standing, StandingAdapter.StandingViewHolder>(StandingDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StandingViewHolder {
         val binding = ItemStandingBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return StandingViewHolder(binding)
+        return StandingViewHolder(binding, onTeamClick)
     }
 
     override fun onBindViewHolder(holder: StandingViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class StandingViewHolder(private val binding: ItemStandingBinding) : RecyclerView.ViewHolder(binding.root) {
+    class StandingViewHolder(private val binding: ItemStandingBinding, private val onTeamClick: (Standing) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         fun bind(standing: Standing) {
             binding.apply {
+                root.setOnClickListener { onTeamClick(standing) }
                 standingPos.text = standing.position.toString()
                 standingTeamName.text = standing.teamName
                 standingLogo.loadImage(standing.teamLogoUrl)
