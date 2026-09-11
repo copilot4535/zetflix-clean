@@ -296,6 +296,21 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
                 shareCurrentSong()
             }
 
+            playerView.findViewById<View>(R.id.music_player_download)?.setOnClickListener {
+                viewModel.currentPlayingSong.value?.let { song ->
+                    viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        val isDownloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == song.videoId }
+                        viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                            if (isDownloaded) {
+                                viewModel.removeDownload(song.videoId)
+                            } else {
+                                viewModel.downloadSong(song)
+                            }
+                        }
+                    }
+                }
+            }
+
             playerView.findViewById<View>(R.id.music_player_queue)?.setOnClickListener {
                 activity?.navigate(R.id.navigation_music_queue_sheet)
             }
@@ -528,11 +543,30 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     }
 
     private fun updateDownloadProgress(state: MusicDownloadState) {
-        // Removed old download progress update
+        val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_download)
+        button?.let {
+            when (state.state) {
+                androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING -> {
+                    it.setImageResource(R.drawable.download_icon_load)
+                    it.alpha = 0.5f + (state.progress / 200f) // Simple visual progress
+                }
+                androidx.media3.exoplayer.offline.Download.STATE_COMPLETED -> {
+                    updateDownloadIcon(true)
+                }
+                else -> {
+                    it.setImageResource(R.drawable.netflix_download)
+                    it.alpha = 1.0f
+                }
+            }
+        }
     }
 
     private fun updateDownloadIcon(downloaded: Boolean) {
-        // Removed old download icon update
+        val button = binding?.musicPlayerView?.findViewById<ImageButton>(R.id.music_player_download)
+        button?.let {
+            it.setImageResource(if (downloaded) R.drawable.download_icon_done else R.drawable.netflix_download)
+            it.drawable?.setTint(if (downloaded) context?.getColor(R.color.zetflix_accent) ?: android.graphics.Color.RED else android.graphics.Color.WHITE)
+        }
     }
 
     private fun shareCurrentSong() {
@@ -613,8 +647,24 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.downloadStates.collect { _ ->
-                    // Removed old download progress update as UI button is gone from full player
+                viewModel.downloadStates.collect { states ->
+                    val currentSong = viewModel.currentPlayingSong.value ?: return@collect
+                    val videoId = currentSong.videoId
+                    val state = states[videoId]
+                    if (state != null) {
+                        updateDownloadProgress(state)
+                    } else {
+                        viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            val isDownloaded = MusicPersistence.getDownloadedSongs().any { it.videoId == videoId }
+                            if (viewModel.currentPlayingSong.value?.videoId == videoId) {
+                                viewLifecycleOwner.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                                    if (viewModel.currentPlayingSong.value?.videoId == videoId) {
+                                        updateDownloadIcon(isDownloaded)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -702,6 +752,7 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
 
             playerView.findViewById<ImageButton>(R.id.music_player_devices)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.music_player_share)?.imageTintList = foregroundTint
+            playerView.findViewById<ImageButton>(R.id.music_player_download)?.imageTintList = foregroundTint
             playerView.findViewById<ImageButton>(R.id.music_player_queue)?.imageTintList = foregroundTint
             
             // Handle Media3 TextViews

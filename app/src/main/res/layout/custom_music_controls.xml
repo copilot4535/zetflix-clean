@@ -158,11 +158,24 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_outline_share_24"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/music_player_queue"
+            app:layout_constraintEnd_toStartOf="@+id/music_player_download"
             app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/player_text_primary"
             android:alpha="0.7"
             android:contentDescription="@string/result_share" />
+
+        <ImageButton
+            android:id="@+id/music_player_download"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/netflix_download"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/music_player_queue"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/player_text_primary"
+            android:alpha="0.7"
+            android:contentDescription="@string/download" />
 
         <ImageButton
             android:id="@+id/music_player_queue"
