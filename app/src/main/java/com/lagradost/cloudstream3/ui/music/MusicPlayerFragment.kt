@@ -419,9 +419,12 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
     }
 
     private fun updateMetadata(mediaMetadata: androidx.media3.common.MediaMetadata) {
+        val currentMediaItem = mediaController?.currentMediaItem
+        val mediaId = currentMediaItem?.mediaId
         val song = viewModel.currentPlayingSong.value
-        val title = if (!mediaMetadata.title.isNullOrBlank()) mediaMetadata.title else song?.title
-        val artist = if (!mediaMetadata.artist.isNullOrBlank()) mediaMetadata.artist else song?.artist
+        
+        val title = if (!mediaMetadata.title.isNullOrBlank()) mediaMetadata.title else song?.takeIf { it.videoId == mediaId }?.title
+        val artist = if (!mediaMetadata.artist.isNullOrBlank()) mediaMetadata.artist else song?.takeIf { it.videoId == mediaId }?.artist
         val album = if (!mediaMetadata.albumTitle.isNullOrBlank()) mediaMetadata.albumTitle else "Unknown Album"
 
         binding?.musicPlayerTitle?.apply {
@@ -432,9 +435,9 @@ class MusicPlayerFragment : BaseFragment<FragmentMusicPlayerBinding>(
         binding?.musicPlayerAlbumName?.text = album
         
         val artworkUri = mediaMetadata.artworkUri?.toString()
-        val rawUrl = if (!artworkUri.isNullOrBlank()) artworkUri else song?.thumbnailUrl
-        val highResUrl = getHighResArtwork(rawUrl, song?.videoId) ?: rawUrl
-        loadArtworkAndTheme(highResUrl, song?.videoId)
+        val rawUrl = if (!artworkUri.isNullOrBlank()) artworkUri else song?.takeIf { it.videoId == mediaId }?.thumbnailUrl
+        val highResUrl = getHighResArtwork(rawUrl, mediaId) ?: rawUrl
+        loadArtworkAndTheme(highResUrl, mediaId)
     }
 
     private fun getHighResArtwork(url: String?, videoId: String?): String? {

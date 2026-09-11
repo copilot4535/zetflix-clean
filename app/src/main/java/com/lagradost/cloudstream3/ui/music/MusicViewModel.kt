@@ -14,6 +14,7 @@ import com.lagradost.cloudstream3.utils.StringUtils.encodeUrl
 import com.maxrave.kotlinytmusicscraper.YouTube
 import com.lagradost.cloudstream3.services.music.MusicService
 import androidx.media3.common.Player
+import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.*
@@ -98,6 +99,7 @@ class MusicViewModel : ViewModel() {
     private val accountRepository = YtmAccountRepository()
     private val radioManager = RadioManager()
 
+    private var lastRequestedTrackId: String? = null
     private var sleepTimerJob: kotlinx.coroutines.Job? = null
     private var queueJob: Job? = null
     var currentQueueRequestId = 0
@@ -150,13 +152,9 @@ class MusicViewModel : ViewModel() {
             currentQueueList.addAll(newQueue)
             _currentQueue.postValue(newQueue)
 
-            // 3. Update current song
-            val currentSong = newQueue.find { it.videoId == mediaId }
-            if (currentSong != null) {
-                _currentPlayingSong.postValue(currentSong)
-                // Trigger metadata-dependent loads (lyrics, etc.)
-                fetchLyrics(currentSong)
-                loadRelatedSongs(currentSong.videoId)
+            // 3. Update current song via canonical sync
+            launch(Dispatchers.Main) {
+                updateCurrentSong(currentItem)
             }
         }
     }
@@ -545,23 +543,22 @@ class MusicViewModel : ViewModel() {
 
     fun loadStreamAndPlay(song: MusicSearchResponse) {
         _streamUrl.postValue(Resource.Loading())
-        _currentPlayingSong.postValue(song)
         val trackId = song.videoId
+        lastRequestedTrackId = trackId
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val streamUrlFound = extractStreamUrl(song.videoId, song.params)
 
                 if (!streamUrlFound.isNullOrBlank()) {
-                    if (_currentPlayingSong.value?.videoId != trackId) return@launchSafe
+                    if (lastRequestedTrackId != trackId) return@launchSafe
                     _streamUrl.postValue(Resource.Success(streamUrlFound to song))
-                    fetchLyrics(song)
-                    addToHistory(song)
+                    // fetchLyrics and addToHistory moved to updateCurrentSong (confirmed by Media3)
                 } else {
-                    if (_currentPlayingSong.value?.videoId != trackId) return@launchSafe
+                    if (lastRequestedTrackId != trackId) return@launchSafe
                     _streamUrl.postValue(Resource.Failure(false, "Could not extract audio stream for: ${song.title}"))
                 }
             } catch (e: Exception) {
-                if (_currentPlayingSong.value?.videoId != trackId) return@launchSafe
+                if (lastRequestedTrackId != trackId) return@launchSafe
                 Log.e("MusicViewModel", "Total stream extraction failure", e)
                 _streamUrl.postValue(Resource.Failure(false, e.message ?: "Unknown error"))
             }
@@ -629,15 +626,31 @@ class MusicViewModel : ViewModel() {
         }
     }
 
-    fun updateCurrentSong(mediaId: String?) {
-        if (mediaId == null) return
-        val song = currentQueueList.find { it.videoId == mediaId }
-        if (song != null && _currentPlayingSong.value?.videoId != song.videoId) {
-            _currentPlayingSong.postValue(song)
+    @UnstableApi
+    fun updateCurrentSong(mediaItem: MediaItem?) {
+        val mediaId = mediaItem?.mediaId ?: return
+        val metadata = mediaItem.mediaMetadata
+
+        var song = currentQueueList.find { it.videoId == mediaId }
+        if (song == null) {
+            // Reconstruct from metadata if not in current local queue
+            song = MusicSearchResponse(
+                title = metadata.title?.toString() ?: "Unknown",
+                artist = metadata.artist?.toString(),
+                videoId = mediaId,
+                thumbnailUrl = metadata.artworkUri?.toString(),
+                params = null
+            )
+        }
+
+        if (_currentPlayingSong.value?.videoId != song.videoId) {
+            _currentPlayingSong.value = song
             // Reset lyrics state immediately on track change to avoid showing stale lyrics
-            _lyricsUiState.postValue(LyricsUiState(status = LyricsStatus.LOADING, trackId = song.videoId))
+            _lyricsUiState.value = LyricsUiState(status = LyricsStatus.LOADING, trackId = song.videoId)
+            
             fetchLyrics(song)
             addToHistory(song)
+            loadRelatedSongs(song.videoId)
         }
     }
 
@@ -670,16 +683,13 @@ class MusicViewModel : ViewModel() {
                 // 1. Extract selected song immediately for fast start
                 val firstUrl = extractAndCache(selectedSong.videoId, selectedSong.params)
                 if (firstUrl != null) {
-                    if (!isActive) return@launch
+                    if (!isActive || requestId != currentQueueRequestId) return@launch
 
                     // Post initial single-item queue to start playback ASAP
                     val initialQueue = listOf(selectedSong to firstUrl)
                     _queueReady.postValue(Event(Resource.Success(initialQueue to 0) to requestId))
                     
-                    // Update current song UI
-                    _currentPlayingSong.postValue(selectedSong)
-                    fetchLyrics(selectedSong)
-                    addToHistory(selectedSong)
+                    // fetchLyrics and addToHistory moved to updateCurrentSong (confirmed by Media3)
 
                     // 2. Extract remaining songs in parallel but throttled
                     val maxQueueSize = 30
@@ -820,9 +830,6 @@ class MusicViewModel : ViewModel() {
         val artist = song.artist ?: ""
         val title = song.title
         val trackId = song.videoId
-        
-        // Ensure we are in LOADING state for the new track
-        _lyricsUiState.postValue(LyricsUiState(status = LyricsStatus.LOADING, trackId = trackId))
         
         viewModelScope.launchSafe(kotlinx.coroutines.Dispatchers.IO) {
             try {

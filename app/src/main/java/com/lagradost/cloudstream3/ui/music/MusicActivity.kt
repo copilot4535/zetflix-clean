@@ -400,7 +400,7 @@ class MusicActivity : AppCompatActivity() {
                     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                         mediaItem?.mediaMetadata?.let { updateMiniPlayerMetadata(it) }
                         updateMiniPlayerVisibility()
-                        viewModel.updateCurrentSong(mediaItem?.mediaId)
+                        viewModel.updateCurrentSong(mediaItem)
                         mediaController?.let { viewModel.updatePlaybackState(it.isPlaying) }
                     }
                 })
@@ -409,7 +409,7 @@ class MusicActivity : AppCompatActivity() {
                     updatePlayPauseIcon(it.isPlaying)
                     it.currentMediaItem?.mediaMetadata?.let { metadata -> updateMiniPlayerMetadata(metadata) }
                     updateMiniPlayerVisibility()
-                    viewModel.updateCurrentSong(it.currentMediaItem?.mediaId)
+                    viewModel.updateCurrentSong(it.currentMediaItem)
                     viewModel.updatePlaybackState(it.isPlaying)
                     viewModel.reconcileWithPlayer(it)
                 }
