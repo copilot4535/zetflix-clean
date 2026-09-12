@@ -701,10 +701,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
     var binding: ActivityMainBinding? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        app.initClient(this, ignoreSSL = false)
-        @OptIn(UnsafeSSL::class)
-        insecureApp.initClient(this, ignoreSSL = true)
-
         val settingsManager = PreferenceManager.getDefaultSharedPreferences(this)
 
         setLastError(this)

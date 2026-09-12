@@ -76,9 +76,6 @@ class MusicActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        app.initClient(this, ignoreSSL = false)
-        @OptIn(UnsafeSSL::class)
-        insecureApp.initClient(this, ignoreSSL = true)
         CommonActivity.init(this)
 
         super.onCreate(savedInstanceState)

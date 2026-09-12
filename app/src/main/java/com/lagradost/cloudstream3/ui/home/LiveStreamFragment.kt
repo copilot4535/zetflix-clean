@@ -28,7 +28,7 @@ import com.lagradost.cloudstream3.utils.BackPressedCallbackHelper.detachBackPres
 import com.lagradost.cloudstream3.utils.UIHelper.fixSystemBarsPadding
 import com.lagradost.cloudstream3.utils.UIHelper.hideKeyboard
 
-class LiveStreamFragment : BaseHomeFragment<FragmentLivestreamBinding>(
+open class LiveStreamFragment : BaseHomeFragment<FragmentLivestreamBinding>(
     R.layout.fragment_livestream,
     FragmentLivestreamBinding::bind
 ) {

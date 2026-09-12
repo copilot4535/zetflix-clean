@@ -3,7 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/sports_navigation"
-    app:startDestination="@id/navigation_sports_home">
+    app:startDestination="@id/navigation_zet_sports">
+
+    <fragment
+        android:id="@+id/navigation_zet_sports"
+        android:name="com.lagradost.cloudstream3.ui.sports.ZetSportsFragment"
+        android:label="ZetSports"
+        tools:layout="@layout/fragment_livestream" />
 
     <fragment
         android:id="@+id/navigation_sports_home"
