@@ -57,22 +57,86 @@ class LiveStreamViewModel : BaseHomeViewModel() {
     private val _loadMoreLoading = MutableLiveData<Boolean>(false)
     val loadMoreLoading: LiveData<Boolean> = _loadMoreLoading
 
+    val categories = MutableLiveData<List<String>>(listOf("All", "Football", "Cricket", "Basketball", "WWE", "Other"))
+    val selectedCategory = MutableLiveData<String>("All")
+    val selectedLeague = MutableLiveData<String>("All")
+    val leaguesList = MutableLiveData<List<String>>(listOf("All"))
+
+    fun selectCategory(category: String) {
+        selectedCategory.value = category
+        selectedLeague.value = "All"
+        leaguesList.value = when (category) {
+            "Cricket" -> listOf("All", "NPL", "IPL", "PPL", "BBL", "PSL", "Other")
+            "Football" -> listOf("All", "Premier League", "La Liga", "Champions League", "Serie A", "Bundesliga", "Other")
+            else -> listOf("All")
+        }
+        updateFilteredPage()
+    }
+    
+    fun selectLeague(league: String) {
+        selectedLeague.value = league
+        updateFilteredPage()
+    }
+
+    fun updateFilteredPage() {
+        val baseRes = if (!searchQuery.value.isNullOrBlank()) _searchPage.value else page.value
+        _filteredPage.postValue(applyFilters(baseRes) ?: Resource.Loading())
+    }
+
+    private fun applyFilters(res: Resource<Map<String, ExpandableHomepageList>>?): Resource<Map<String, ExpandableHomepageList>>? {
+        if (res !is Resource.Success) return res
+        val category = selectedCategory.value ?: "All"
+        val league = selectedLeague.value ?: "All"
+        
+        if (category == "All" && league == "All") return res
+        
+        val filteredMap = java.util.LinkedHashMap<String, ExpandableHomepageList>()
+        res.value.forEach { (key, expandableList) ->
+            val filteredCards = expandableList.list.list.filter { item ->
+                val title = item.name.lowercase()
+                
+                val matchesCategory = when (category) {
+                    "All" -> true
+                    "Football" -> title.contains("football") || title.contains("soccer") || title.contains("premier league") || title.contains("laliga") || title.contains("la liga") || title.contains("serie a") || title.contains("bundesliga") || title.contains("champions league")
+                    "Cricket" -> title.contains("cricket") || title.contains("ipl") || title.contains("psl") || title.contains("bbl") || title.contains("npl") || title.contains("ppl")
+                    "Basketball" -> title.contains("basketball") || title.contains("nba")
+                    "WWE" -> title.contains("wwe") || title.contains("wrestling") || title.contains("raw") || title.contains("smackdown")
+                    "Other" -> !title.contains("football") && !title.contains("soccer") && !title.contains("cricket") && !title.contains("basketball") && !title.contains("wwe") && !title.contains("wrestling")
+                    else -> true
+                }
+                
+                if (!matchesCategory) return@filter false
+                
+                val matchesLeague = when (league) {
+                    "All" -> true
+                    "Other" -> {
+                        if (category == "Cricket") {
+                            !title.contains("ipl") && !title.contains("psl") && !title.contains("bbl") && !title.contains("npl") && !title.contains("ppl")
+                        } else if (category == "Football") {
+                            !title.contains("premier league") && !title.contains("la liga") && !title.contains("laliga") && !title.contains("champions league") && !title.contains("serie a") && !title.contains("bundesliga")
+                        } else true
+                    }
+                    else -> title.contains(league.lowercase())
+                }
+                
+                matchesLeague
+            }
+            
+            if (filteredCards.isNotEmpty()) {
+                filteredMap[key] = ExpandableHomepageList(
+                    expandableList.list.copy(list = filteredCards),
+                    expandableList.currentPage,
+                    expandableList.hasNext
+                )
+            }
+        }
+        return Resource.Success(filteredMap)
+    }
+
     init {
-        _filteredPage.addSource(page) { res ->
-            if (searchQuery.value.isNullOrBlank()) {
-                _filteredPage.value = res
-            }
-        }
-        _filteredPage.addSource(_searchPage) { res ->
-            if (!searchQuery.value.isNullOrBlank()) {
-                _filteredPage.value = res
-            }
-        }
-        _filteredPage.addSource(searchQuery) { query ->
-            if (query.isNullOrBlank()) {
-                _filteredPage.value = page.value
-            }
-        }
+        _filteredPage.addSource(page) { updateFilteredPage() }
+        _filteredPage.addSource(_searchPage) { updateFilteredPage() }
+        _filteredPage.addSource(searchQuery) { updateFilteredPage() }
     }
 
     override fun expand(name: String) = viewModelScope.launchSafe {

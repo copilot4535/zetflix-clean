@@ -174,7 +174,10 @@ object APIHolder {
                     lifecycleState = ProviderLifecycleState.INITIALIZED
                     resolved
                 } catch (t: Throwable) {
-                    lifecycleState = ProviderLifecycleState.FAILED
+                    val isStructural = t is Error || t.message?.contains("failed", ignoreCase = true) == true || t.message?.contains("not found", ignoreCase = true) == true
+                    if (isStructural) {
+                        lifecycleState = ProviderLifecycleState.FAILED
+                    }
                     throw t
                 }
             }
@@ -269,7 +272,8 @@ object APIHolder {
 
     fun addPluginMapping(plugin: MainAPI) {
         apis.withLock {
-            apis += plugin
+            val filtered = apis.filter { it != plugin }
+            apis = filtered + plugin
         }
         initMap(forcedUpdate = true)
     }
@@ -641,6 +645,19 @@ fun List<SearchResponse>.toNewSearchResponseList(hasNext: Boolean? = null) : Sea
 
 /**Every provider will **not** have try catch built in, so handle exceptions when calling these functions*/
 abstract class MainAPI {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is MainAPI) return false
+        return name == other.name && mainUrl == other.mainUrl && lang == other.lang
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + mainUrl.hashCode()
+        result = 31 * result + lang.hashCode()
+        return result
+    }
+
     companion object {
         var overrideData: HashMap<String, ProvidersInfoJson>? = null
         var settingsForProvider: SettingsJson = SettingsJson()

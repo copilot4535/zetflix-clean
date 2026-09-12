@@ -84,6 +84,9 @@ versionName = "4.8.0"
 arch-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "archCoreTesting" }
 activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
 androidx-paging-common = { group = "androidx.paging", name = "paging-common", version.ref = "pagingCommon" }
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version = "1.6.0" }
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version = "1.6.0" }
+google-id = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version = "1.2.0" }
 anime-db = { module = "com.github.recloudstream:anime-db", version.ref = "animeDb" }
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }

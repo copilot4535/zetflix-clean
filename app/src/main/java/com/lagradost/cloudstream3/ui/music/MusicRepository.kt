@@ -86,7 +86,25 @@ class MusicRepository {
                 return@withContext emptyList()
             }
 
-            val sections = parseBrowseResponse(response)
+            val sections = parseBrowseResponse(response).toMutableList()
+            
+            // Add personalized sections if authenticated
+            if (youtube.cookie != null) {
+                try {
+                    youtube.getLibraryPlaylists().getOrNull()?.let { browseResponse ->
+                        val libSections = parseBrowseResponse(browseResponse)
+                        sections.addAll(0, libSections)
+                    }
+                    
+                    youtube.getMixedForYou().getOrNull()?.let { browseResponse ->
+                        val mixedSections = parseBrowseResponse(browseResponse)
+                        sections.addAll(0, mixedSections)
+                    }
+                } catch (e: Exception) {
+                    Log.e("MusicHome", "Error loading personalized sections", e)
+                }
+            }
+
             sections.also { cachedHomeSections = it }
         } catch (e: Exception) {
             Log.e("MusicHome", "Error loading home sections", e)

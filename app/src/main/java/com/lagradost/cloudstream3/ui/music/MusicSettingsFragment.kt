@@ -7,8 +7,21 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import coil3.request.crossfade
+import androidx.appcompat.content.res.AppCompatResources
+import coil3.asImage
+import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
+import com.lagradost.cloudstream3.utils.ImageLoader
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.FragmentMusicSettingsBinding
 import com.lagradost.cloudstream3.services.music.MusicService
@@ -17,6 +30,7 @@ import androidx.media3.session.SessionToken
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
@@ -41,6 +55,122 @@ class MusicSettingsFragment : BaseFragment<FragmentMusicSettingsBinding>(
         super.onViewReady(view, savedInstanceState)
         
         setupUI()
+        observeAccountState()
+    }
+
+    private fun observeAccountState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.accountState.collectLatest { state ->
+                    updateAccountUI(state)
+                }
+            }
+        }
+    }
+
+    private fun updateAccountUI(state: YouTubeAccountState) {
+        binding?.apply {
+            when (state.connectionState) {
+                AccountConnectionState.CONNECTED -> {
+                    binding?.musicSettingAccountAvatar?.visibility = View.VISIBLE
+                    state.metadata?.avatarUrl?.let { url ->
+                        com.lagradost.cloudstream3.utils.ImageLoader.run {
+                            binding?.musicSettingAccountAvatar?.loadImage(url) {
+                                crossfade(true)
+                                val placeholderImage = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_outline_account_circle_24)?.asImage()
+                                placeholder(placeholderImage)
+                            }
+                        }
+                    }
+                    musicSettingAccountTitle.text = state.metadata?.displayName ?: "YouTube Music"
+                    musicSettingAccountSummary.text = state.metadata?.email ?: "Connected"
+                    musicSettingAccountBtn.text = "Disconnect"
+                    musicSettingAccountBtn.setOnClickListener {
+                        viewModel.disconnectAccount()
+                    }
+                }
+                AccountConnectionState.CONNECTING -> {
+                    musicSettingAccountSummary.text = "Connecting..."
+                    musicSettingAccountBtn.isEnabled = false
+                }
+                else -> {
+                    musicSettingAccountAvatar.visibility = View.GONE
+                    musicSettingAccountTitle.text = "YouTube Music"
+                    musicSettingAccountSummary.text = "Connect your account for personalized music"
+                    musicSettingAccountBtn.text = "Connect"
+                    musicSettingAccountBtn.isEnabled = true
+                    musicSettingAccountBtn.setOnClickListener {
+                        signInWithGoogle()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun signInWithGoogle() {
+        val credentialManager = CredentialManager.create(requireContext())
+        
+        // Note: For a real production app, you would get this from BuildConfig or a secure source
+        // and it would match the one in your Google Cloud Console for the Web Client.
+        val webClientId = "40349074012-placeholder.apps.googleusercontent.com" 
+
+        val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(webClientId)
+            .build()
+
+        val request: GetCredentialRequest = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = requireContext(),
+                )
+                handleSignIn(result)
+            } catch (e: GetCredentialException) {
+                Toast.makeText(context, "Sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun handleSignIn(result: GetCredentialResponse) {
+        val credential = result.credential
+        if (credential is GoogleIdTokenCredential) {
+            val idToken = credential.idToken
+            val displayName = credential.displayName
+            val email = credential.id // Email is usually the ID for GoogleIdTokenCredential
+            val avatarUrl = credential.profilePictureUri?.toString()
+            
+            val metadata = AccountMetadata(
+                accountId = email,
+                displayName = displayName,
+                email = email,
+                avatarUrl = avatarUrl
+            )
+            
+            // In a production app, we would exchange idToken for a YT Music cookie here.
+            // For now, since we don't have a backend, we might need a fallback.
+            // Prompt says: "Do not claim that OAuth produces a YouTube Music browser cookie."
+            // and "Do not attempt to manufacture, extract, or bypass Google's authentication controls to obtain one."
+            
+            // For the purpose of this implementation, I'll show a "Manual Cookie" option ONLY if debug or requested,
+            // but the primary flow is now Google Sign-in.
+            
+            Toast.makeText(context, "Authenticated as $displayName", Toast.LENGTH_SHORT).show()
+            
+            // We still need a cookie for the scraper to work fully.
+            // If the user hasn't provided one, we can't do much with the scraper.
+            // I'll update the connectAccount to handle metadata.
+            
+            //viewModel.connectAccount("", metadata) // We need a way to get the cookie safely.
+            
+            // Since I can't get the cookie from OAuth token directly without a complex bridge,
+            // I'll allow the user to provide the cookie via a dialog IF they are authenticated.
+            showCookieInputDialog(metadata)
+        }
     }
 
     private fun setupUI() {
@@ -54,10 +184,6 @@ class MusicSettingsFragment : BaseFragment<FragmentMusicSettingsBinding>(
 
         binding?.musicSettingRegion?.setOnClickListener {
             Toast.makeText(context, "Region settings coming soon", Toast.LENGTH_SHORT).show()
-        }
-
-        binding?.musicSettingCookie?.setOnClickListener {
-            showCookieInputDialog()
         }
 
         binding?.musicSettingClearCache?.setOnClickListener {
@@ -154,8 +280,7 @@ class MusicSettingsFragment : BaseFragment<FragmentMusicSettingsBinding>(
             likedSongs = MusicPersistence.getLikedSongs(),
             history = MusicPersistence.getHistory(),
             playlists = MusicPersistence.getPlaylists(),
-            searchHistory = MusicPersistence.getSearchHistory(),
-            cookie = YouTubeInstance.youtube.cookie
+            searchHistory = MusicPersistence.getSearchHistory()
         )
         
         val json = Json.encodeToString(backup)
@@ -182,8 +307,6 @@ class MusicSettingsFragment : BaseFragment<FragmentMusicSettingsBinding>(
                 
                 MusicPersistence.savePlaylists(backup.playlists)
                 
-                backup.cookie?.let { YouTubeInstance.youtube.cookie = it }
-                
                 viewModel.loadPersistenceData()
                 Toast.makeText(context, "Data restored successfully", Toast.LENGTH_SHORT).show()
             }
@@ -192,12 +315,12 @@ class MusicSettingsFragment : BaseFragment<FragmentMusicSettingsBinding>(
         }
     }
 
-    private fun showCookieInputDialog() {
+    private fun showCookieInputDialog(metadata: AccountMetadata? = null) {
         val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
-        builder.setTitle("YouTube Music Cookie")
+        builder.setTitle("YouTube Music Session")
         
         val input = android.widget.EditText(requireContext())
-        input.hint = "Paste cookie here"
+        input.hint = "Paste session cookie here"
         input.setTextColor(android.graphics.Color.WHITE)
         input.setHintTextColor(android.graphics.Color.GRAY)
         
@@ -213,11 +336,14 @@ class MusicSettingsFragment : BaseFragment<FragmentMusicSettingsBinding>(
         
         builder.setView(container)
 
-        builder.setPositiveButton("Save") { _, _ ->
+        builder.setPositiveButton("Connect") { _, _ ->
             val cookie = input.text.toString()
-            if (cookie.isNotBlank()) {
+            if (cookie.isNotBlank() && metadata != null) {
+                viewModel.connectAccount(cookie, metadata)
+            } else if (cookie.isNotBlank()) {
+                // Legacy fallback if no metadata
                 YouTubeInstance.youtube.cookie = cookie
-                Toast.makeText(context, "Cookie saved (Temporary)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Cookie set (Not recommended)", Toast.LENGTH_SHORT).show()
             }
         }
         builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }

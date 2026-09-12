@@ -39,6 +39,9 @@ class MusicViewModel : ViewModel() {
     val isInitialized: LiveData<Boolean> = _isInitialized
 
     private val repository = MusicRepository()
+    private val accountRepository = YtmAccountRepository()
+
+    val accountState = accountRepository.accountState
 
     private val _searchResult = MutableLiveData<Resource<List<MusicSearchResponse>>>()
     val searchResult: LiveData<Resource<List<MusicSearchResponse>>> = _searchResult
@@ -91,15 +94,26 @@ class MusicViewModel : ViewModel() {
     private val _downloadedSongs = MutableLiveData<List<MusicSearchResponse>>()
     val downloadedSongs: LiveData<List<MusicSearchResponse>> = _downloadedSongs
 
+    private val _rateStatus = MutableLiveData<RateStatus>()
+    val rateStatus: LiveData<RateStatus> = _rateStatus
+
     val downloadStates = com.lagradost.cloudstream3.services.music.MusicDownloadManager.downloadStates
 
     private val _sleepTimerTimeLeft = MutableLiveData<Long?>()
     val sleepTimerTimeLeft: LiveData<Long?> = _sleepTimerTimeLeft
 
-    private val _rateStatus = MutableLiveData<RateStatus>()
-    val rateStatus: LiveData<RateStatus> = _rateStatus
+    fun disconnectAccount() {
+        viewModelScope.launch {
+            accountRepository.disconnect()
+        }
+    }
 
-    private val accountRepository = YtmAccountRepository()
+    fun connectAccount(cookie: String, metadata: AccountMetadata) {
+        viewModelScope.launch {
+            accountRepository.connect(cookie, metadata)
+        }
+    }
+
     private val radioManager = RadioManager()
 
     private var lastRequestedTrackId: String? = null

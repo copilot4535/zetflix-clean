@@ -378,7 +378,13 @@ abstract class BaseHomeViewModel : ViewModel() {
         }
 
         suspend fun loadPlugins(plugins: List<MainAPI>, stageDeadline: Long) {
-            plugins.chunked(maxConcurrentPluginLoads).forEach { chunk ->
+            val targetPlugins = if (currentApiName == "Home") {
+                plugins.filter { it !is com.lagradost.cloudstream3.APIHolder.MainApiLazyProxy }
+            } else {
+                plugins
+            }
+
+            targetPlugins.chunked(maxConcurrentPluginLoads).forEach { chunk ->
                 if (System.currentTimeMillis() - startTime > totalLoadTimeoutMs) return@forEach
                 if (System.currentTimeMillis() - startTime > stageDeadline) return@forEach
 

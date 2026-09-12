@@ -229,7 +229,7 @@ class Ytmusic {
                     val currentTime = now().toInstant(TimeZone.currentSystemDefault()).epochSeconds / 1000
                     val sapisidCookie = cookieMap["SAPISID"] ?: cookieMap["__Secure-3PAPISID"]
                     val sapisidHash = sha1("$currentTime $sapisidCookie https://music.youtube.com")
-                    Logger.d(TAG, "SAPI SID Hash: SAPISIDHASH ${currentTime}_$sapisidHash")
+                    Logger.d(TAG, "SAPI SID Hash generated")
                     append("Authorization", "SAPISIDHASH ${currentTime}_$sapisidHash")
                 }
             }
@@ -245,7 +245,7 @@ class Ytmusic {
             val currentTime = now().toInstant(TimeZone.currentSystemDefault()).epochSeconds / 1000
             val sapisidCookie = cookieMap["SAPISID"] ?: cookieMap["__Secure-3PAPISID"]
             val sapisidHash = sha1("$currentTime $sapisidCookie https://music.youtube.com")
-            Logger.d(TAG, "SAPI SID Hash: SAPISIDHASH ${currentTime}_$sapisidHash")
+            Logger.d(TAG, "SAPI SID Hash generated")
             "SAPISIDHASH ${currentTime}_$sapisidHash"
         }
 

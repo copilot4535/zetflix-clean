@@ -133,6 +133,56 @@ class LiveStreamFragment : BaseHomeFragment<FragmentLivestreamBinding>(
                 return true
             }
         })
+
+        val categories = listOf("All", "Football", "Cricket", "Basketball", "WWE", "Other")
+        binding.categoryChipGroup.removeAllViews()
+        categories.forEach { cat ->
+            val chip = com.google.android.material.chip.Chip(context).apply {
+                text = cat
+                isCheckable = true
+                isClickable = true
+                isChecked = cat == viewModel.selectedCategory.value
+                setOnClickListener {
+                    viewModel.selectCategory(cat)
+                }
+            }
+            binding.categoryChipGroup.addView(chip)
+        }
+
+        observe(viewModel.leaguesList) { leagues ->
+            binding.leagueChipGroup.removeAllViews()
+            if (leagues.size <= 1) {
+                binding.leagueScrollView.visibility = View.GONE
+            } else {
+                binding.leagueScrollView.visibility = View.VISIBLE
+                leagues.forEach { league ->
+                    val chip = com.google.android.material.chip.Chip(context).apply {
+                        text = league
+                        isCheckable = true
+                        isClickable = true
+                        isChecked = league == viewModel.selectedLeague.value
+                        setOnClickListener {
+                            viewModel.selectLeague(league)
+                        }
+                    }
+                    binding.leagueChipGroup.addView(chip)
+                }
+            }
+        }
+        
+        observe(viewModel.selectedCategory) { cat ->
+            for (i in 0 until binding.categoryChipGroup.childCount) {
+                val chip = binding.categoryChipGroup.getChildAt(i) as? com.google.android.material.chip.Chip
+                chip?.isChecked = chip?.text == cat
+            }
+        }
+
+        observe(viewModel.selectedLeague) { league ->
+            for (i in 0 until binding.leagueChipGroup.childCount) {
+                val chip = binding.leagueChipGroup.getChildAt(i) as? com.google.android.material.chip.Chip
+                chip?.isChecked = chip?.text == league
+            }
+        }
     }
 
     override fun observeViewModel() {

@@ -63,6 +63,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -213,43 +214,48 @@ object PluginManager {
 
     var currentlyLoading: String? = null
 
+    private val lazyLoadSemaphore = kotlinx.coroutines.sync.Semaphore(permits = 3)
+
     class AppMainApiLazyProxy(
         override val metadata: APIHolder.ProviderMetadata,
-        private val context: Context
+        context: Context
     ) : APIHolder.MainApiLazyProxy() {
+        private val context = context.applicationContext
         override suspend fun loadDelegate(): MainAPI {
-            val startTime = System.currentTimeMillis()
-            Log.d(TAG, "Lazy resolving provider: ${metadata.name} from ${metadata.pluginFilePath}")
+            return lazyLoadSemaphore.withPermit {
+                val startTime = System.currentTimeMillis()
+                Log.d(TAG, "Lazy resolving provider: ${metadata.name} from ${metadata.pluginFilePath}")
 
-            if (metadata.name == "Simulated Failure Provider") {
-                Log.w(TAG, "PILOT: Simulating provider load failure for: ${metadata.name}")
-                throw Error("Simulated failure")
-            }
-            
-            // 1. Ensure plugin is loaded
-            val loaded = loadPlugin(
-                context,
-                File(metadata.pluginFilePath),
-                PluginData(metadata.internalName, null, false, metadata.pluginFilePath, PLUGIN_VERSION_NOT_SET),
-                quiet = true
-            )
-            
-            if (!loaded) {
-                Log.e(TAG, "Failed to load plugin for lazy provider: ${metadata.name}")
-                throw Error("Failed to load plugin for lazy provider: ${metadata.name}")
-            }
-            
-            // 2. Find the registered MainAPI instance
-            val realApi = APIHolder.allProviders.withLock {
-                APIHolder.allProviders.firstOrNull { 
-                    it.name == metadata.name && it.sourcePlugin == metadata.pluginFilePath 
+                if (metadata.name == "Simulated Failure Provider") {
+                    Log.w(TAG, "PILOT: Simulating provider load failure for: ${metadata.name}")
+                    throw Error("Simulated failure")
                 }
-            } ?: throw Error("Provider ${metadata.name} not found after loading plugin ${metadata.pluginFilePath}")
-            
-            totalLazyResolutions++
-            val duration = System.currentTimeMillis() - startTime
-            Log.i(TAG, "Successfully resolved lazy provider: ${metadata.name} in ${duration}ms")
-            return realApi
+                
+                // 1. Ensure plugin is loaded
+                val loaded = loadPlugin(
+                    context,
+                    File(metadata.pluginFilePath),
+                    PluginData(metadata.internalName, null, false, metadata.pluginFilePath, PLUGIN_VERSION_NOT_SET),
+                    quiet = true
+                )
+                
+                if (!loaded) {
+                    Log.e(TAG, "Failed to load plugin for lazy provider: ${metadata.name}")
+                    throw Error("Failed to load plugin for lazy provider: ${metadata.name}")
+                }
+                
+                // 2. Find the registered MainAPI instance
+                val realApi = APIHolder.allProviders.withLock {
+                    APIHolder.allProviders.firstOrNull { 
+                        it.name == metadata.name && it.sourcePlugin == metadata.pluginFilePath 
+                    }
+                } ?: throw Error("Provider ${metadata.name} not found after loading plugin ${metadata.pluginFilePath}")
+                
+                totalLazyResolutions++
+                val duration = System.currentTimeMillis() - startTime
+                Log.i(TAG, "Successfully resolved lazy provider: ${metadata.name} in ${duration}ms")
+                realApi
+            }
         }
     }
 
@@ -299,40 +305,58 @@ object PluginManager {
     private val classLoaders: MutableMap<PathClassLoader, BasePlugin> =
         HashMap<PathClassLoader, BasePlugin>()
 
-    private val PILOT_LAZY_PROVIDERS = setOf("GogoAnime", "9Anime", "Fred TV", "IPTV-Org Sports")
-
     var loadedLocalPlugins = false
-        private set
+        internal set
 
     var loadedOnlinePlugins = false
-        private set
+        internal set
 
-    private suspend fun maybeLoadPlugin(context: Context, file: File, quiet: Boolean = false) {
-        val name = file.name
+    private suspend fun registerLazyOrFullLoad(context: Context, file: File, pluginData: PluginData, quiet: Boolean = false) {
         val filePath = file.absolutePath
-
-        // PILOT: Check if we have cached lazy metadata for this plugin
-        val cached = getLazyMetadataCache()[filePath]
-        if (cached != null && PILOT_LAZY_PROVIDERS.contains(cached.metadata.name)) {
-            Log.d(TAG, "PILOT: Registering lazy proxy for pilot provider: ${cached.metadata.name}")
-            val proxy = AppMainApiLazyProxy(cached.metadata, context)
-            APIHolder.allProviders.add(proxy)
-            APIHolder.addPluginMapping(proxy)
-            totalLazyRegistrations++
+        if (file.extension != "zip" && file.extension != "cs3") {
+            Log.i(TAG, "Skipping invalid plugin file: $file")
             return
         }
 
-        if (file.extension == "zip" || file.extension == "cs3") {
-            totalFullLoads++
-            loadPlugin(
-                context,
-                file,
-                PluginData(name, null, false, file.absolutePath, PLUGIN_VERSION_NOT_SET),
-                quiet = quiet
-            )
-        } else {
-            Log.i(TAG, "Skipping invalid plugin file: $file")
+        val cached = getLazyMetadataCache()[filePath]
+        if (cached != null) {
+            val metadata = cached.metadata
+            val currentHome = com.lagradost.cloudstream3.utils.DataStoreHelper.currentHomePage
+            val isCurrentHome = metadata.name == currentHome
+            val isTemplateOrMeta = metadata.name.contains("Template", ignoreCase = true) || 
+                                   metadata.name.contains("Factory", ignoreCase = true) || 
+                                   metadata.name.contains("Meta", ignoreCase = true) || 
+                                   metadata.pluginClassName.contains("Template", ignoreCase = true) || 
+                                   metadata.pluginClassName.contains("Factory", ignoreCase = true) || 
+                                   metadata.pluginClassName.contains("Meta", ignoreCase = true) || 
+                                   metadata.pluginClassName.contains("Cross", ignoreCase = true)
+
+            if (!isCurrentHome && !isTemplateOrMeta) {
+                Log.d(TAG, "Global Lazy: Registering lazy proxy for provider: ${metadata.name}")
+                val proxy = AppMainApiLazyProxy(metadata, context)
+                proxy.sourcePlugin = filePath
+                APIHolder.allProviders.withLock {
+                    APIHolder.allProviders.removeAll { it == proxy }
+                    APIHolder.allProviders.add(proxy)
+                }
+                APIHolder.addPluginMapping(proxy)
+                totalLazyRegistrations++
+                return
+            }
         }
+
+        totalFullLoads++
+        loadPlugin(context, file, pluginData, quiet = quiet)
+    }
+
+    private suspend fun maybeLoadPlugin(context: Context, file: File, quiet: Boolean = false) {
+        val name = file.name
+        registerLazyOrFullLoad(
+            context,
+            file,
+            PluginData(name, null, false, file.absolutePath, PLUGIN_VERSION_NOT_SET),
+            quiet = quiet
+        )
     }
 
 
@@ -579,9 +603,9 @@ object PluginManager {
     suspend fun ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(context: Context) = withContext(Dispatchers.IO) {
         assertNonRecursiveCallstack()
 
-        // Load all plugins as fast as possible!
+        // Load all plugins as fast as possible with global lazy policy
         (getPluginsOnline()).toList().amap(concurrencyLimit = 5) { pluginData ->
-            loadPlugin(
+            registerLazyOrFullLoad(
                 context,
                 File(pluginData.filePath),
                 pluginData,

@@ -8,6 +8,5 @@ data class MusicBackupData(
     val history: List<MusicSearchResponse>,
     val playlists: List<MusicPlaylist>,
     val searchHistory: List<String>,
-    val cookie: String?,
     val timestamp: Long = System.currentTimeMillis()
 )
