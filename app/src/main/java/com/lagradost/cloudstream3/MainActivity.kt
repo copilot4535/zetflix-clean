@@ -28,6 +28,8 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -797,14 +799,17 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                 showToast(R.string.safe_mode_file, Toast.LENGTH_LONG)
             }
         } else if (lastError == null) {
-            ioSafe {
-                DataStoreHelper.currentHomePage?.let { homeApi ->
-                    mainPluginsLoadedEvent.invoke(loadSinglePlugin(this@MainActivity, homeApi))
-                } ?: run {
-                    mainPluginsLoadedEvent.invoke(false)
-                }
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                Log.d("MainActivity", "Startup plugin phase started")
+                PluginManager.isStartupPhase = true
 
-                ioSafe {
+                try {
+                    DataStoreHelper.currentHomePage?.let { homeApi ->
+                        mainPluginsLoadedEvent.invoke(loadSinglePlugin(this@MainActivity, homeApi))
+                    } ?: run {
+                        mainPluginsLoadedEvent.invoke(false)
+                    }
+
                     if (settingsManager.getBoolean(
                             getString(R.string.auto_update_plugins_key),
                             true
@@ -814,7 +819,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                             this@MainActivity
                         )
                     } else {
-                        ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(this@MainActivity)
+                        PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(this@MainActivity)
                     }
 
                     //Automatically download not existing plugins, using mode specified.
@@ -830,13 +835,17 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                             autoDownloadPlugin
                         )
                     }
-                }
 
-                ioSafe {
                     PluginManager.___DO_NOT_CALL_FROM_A_PLUGIN_loadAllLocalPlugins(
                         this@MainActivity,
                         false
                     )
+                } catch (t: Throwable) {
+                    Log.e("MainActivity", "Error during startup plugin loading phase", t)
+                } finally {
+                    PluginManager.completeStartupPhase()
+                    Log.d("MainActivity", "Startup plugin phase ended. Effective afterPluginsLoadedEvent count: ${PluginManager.getEffectiveEventCount()}")
+                    Log.i("MainActivity", "PILOT Lazy Stats: totalLazyRegistrations=${PluginManager.totalLazyRegistrations} totalFullLoads=${PluginManager.totalFullLoads} totalLazyResolutions=${PluginManager.totalLazyResolutions}")
                 }
             }
         } else {

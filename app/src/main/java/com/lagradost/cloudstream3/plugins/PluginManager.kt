@@ -73,6 +73,8 @@ import java.io.InputStreamReader
 const val PLUGINS_KEY = "PLUGINS_KEY"
 const val PLUGINS_KEY_LOCAL = "PLUGINS_KEY_LOCAL"
 
+const val LAZY_METADATA_CACHE_KEY = "LAZY_METADATA_CACHE_KEY"
+
 const val EXTENSIONS_CHANNEL_ID = "cloudstream3.extensions"
 const val EXTENSIONS_CHANNEL_NAME = "Extensions"
 const val EXTENSIONS_CHANNEL_DESCRIPT = "Extension notification channel"
@@ -186,12 +188,105 @@ object PluginManager {
         return getKey<Array<PluginData>>(PLUGINS_KEY_LOCAL) ?: emptyArray()
     }
 
+    private fun getLazyMetadataCache(): Map<String, APIHolder.LazyProviderState> {
+        return getKey<Map<String, APIHolder.LazyProviderState>>(LAZY_METADATA_CACHE_KEY) ?: emptyMap()
+    }
+
+    private fun updateLazyMetadataCache(filePath: String, state: APIHolder.LazyProviderState) {
+        val cache = getLazyMetadataCache().toMutableMap()
+        cache[filePath] = state
+        setKey(LAZY_METADATA_CACHE_KEY, cache)
+    }
+
+    private fun invalidateLazyMetadata(filePath: String) {
+        val cache = getLazyMetadataCache().toMutableMap()
+        if (cache.remove(filePath) != null) {
+            setKey(LAZY_METADATA_CACHE_KEY, cache)
+            Log.d(TAG, "Invalidated lazy metadata for: $filePath")
+        }
+    }
+
     private val CLOUD_STREAM_FOLDER =
         Environment.getExternalStorageDirectory().absolutePath + "/Cloudstream3/"
 
     private val LOCAL_PLUGINS_PATH = CLOUD_STREAM_FOLDER + "plugins"
 
     var currentlyLoading: String? = null
+
+    class AppMainApiLazyProxy(
+        override val metadata: APIHolder.ProviderMetadata,
+        private val context: Context
+    ) : APIHolder.MainApiLazyProxy() {
+        override suspend fun loadDelegate(): MainAPI {
+            val startTime = System.currentTimeMillis()
+            Log.d(TAG, "Lazy resolving provider: ${metadata.name} from ${metadata.pluginFilePath}")
+
+            if (metadata.name == "Simulated Failure Provider") {
+                Log.w(TAG, "PILOT: Simulating provider load failure for: ${metadata.name}")
+                throw Error("Simulated failure")
+            }
+            
+            // 1. Ensure plugin is loaded
+            val loaded = loadPlugin(
+                context,
+                File(metadata.pluginFilePath),
+                PluginData(metadata.internalName, null, false, metadata.pluginFilePath, PLUGIN_VERSION_NOT_SET),
+                quiet = true
+            )
+            
+            if (!loaded) {
+                Log.e(TAG, "Failed to load plugin for lazy provider: ${metadata.name}")
+                throw Error("Failed to load plugin for lazy provider: ${metadata.name}")
+            }
+            
+            // 2. Find the registered MainAPI instance
+            val realApi = APIHolder.allProviders.withLock {
+                APIHolder.allProviders.firstOrNull { 
+                    it.name == metadata.name && it.sourcePlugin == metadata.pluginFilePath 
+                }
+            } ?: throw Error("Provider ${metadata.name} not found after loading plugin ${metadata.pluginFilePath}")
+            
+            totalLazyResolutions++
+            val duration = System.currentTimeMillis() - startTime
+            Log.i(TAG, "Successfully resolved lazy provider: ${metadata.name} in ${duration}ms")
+            return realApi
+        }
+    }
+
+    var isStartupPhase = false
+    private var startupEventPending = false
+    private var startupForceReloadPending = false
+    private var effectiveEventCount = 0
+
+    var totalLazyRegistrations = 0
+    var totalLazyResolutions = 0
+    var totalFullLoads = 0
+
+    fun getEffectiveEventCount(): Int = effectiveEventCount
+
+    fun invokeAfterPluginsLoadedEvent(forceReload: Boolean) {
+        if (isStartupPhase) {
+            startupEventPending = true
+            if (forceReload) {
+                startupForceReloadPending = true
+            }
+            Log.d(TAG, "Coalescing afterPluginsLoadedEvent during startup phase. forceReload=$forceReload")
+        } else {
+            effectiveEventCount++
+            afterPluginsLoadedEvent.invoke(forceReload)
+        }
+    }
+
+    fun completeStartupPhase() {
+        isStartupPhase = false
+        if (startupEventPending) {
+            Log.d(TAG, "Firing single coalesced afterPluginsLoadedEvent at completion of startup phase. forceReload=$startupForceReloadPending")
+            effectiveEventCount++
+            afterPluginsLoadedEvent.invoke(startupForceReloadPending)
+            startupEventPending = false
+            startupForceReloadPending = false
+        }
+    }
 
     // Maps filepath to plugin
     val plugins: MutableMap<String, BasePlugin> =
@@ -204,6 +299,8 @@ object PluginManager {
     private val classLoaders: MutableMap<PathClassLoader, BasePlugin> =
         HashMap<PathClassLoader, BasePlugin>()
 
+    private val PILOT_LAZY_PROVIDERS = setOf("GogoAnime", "9Anime", "Fred TV", "IPTV-Org Sports")
+
     var loadedLocalPlugins = false
         private set
 
@@ -212,7 +309,21 @@ object PluginManager {
 
     private suspend fun maybeLoadPlugin(context: Context, file: File, quiet: Boolean = false) {
         val name = file.name
+        val filePath = file.absolutePath
+
+        // PILOT: Check if we have cached lazy metadata for this plugin
+        val cached = getLazyMetadataCache()[filePath]
+        if (cached != null && PILOT_LAZY_PROVIDERS.contains(cached.metadata.name)) {
+            Log.d(TAG, "PILOT: Registering lazy proxy for pilot provider: ${cached.metadata.name}")
+            val proxy = AppMainApiLazyProxy(cached.metadata, context)
+            APIHolder.allProviders.add(proxy)
+            APIHolder.addPluginMapping(proxy)
+            totalLazyRegistrations++
+            return
+        }
+
         if (file.extension == "zip" || file.extension == "cs3") {
+            totalFullLoads++
             loadPlugin(
                 context,
                 file,
@@ -280,7 +391,7 @@ object PluginManager {
 
         // Load all plugins as fast as possible!
         ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(activity)
-        afterPluginsLoadedEvent.invoke(false)
+        invokeAfterPluginsLoadedEvent(false)
 
         val urls = RepositoryManager.getRepositories()
 
@@ -335,7 +446,7 @@ object PluginManager {
 
         // ioSafe {
         loadedOnlinePlugins = true
-        afterPluginsLoadedEvent.invoke(false)
+        invokeAfterPluginsLoadedEvent(false)
         // }
 
         Log.i(TAG, "Plugin update done!")
@@ -443,7 +554,7 @@ object PluginManager {
         }
 
         // ioSafe {
-        afterPluginsLoadedEvent.invoke(false)
+        invokeAfterPluginsLoadedEvent(false)
         // }
 
         Log.i(TAG, "Plugin download done!")
@@ -570,7 +681,7 @@ object PluginManager {
         }
 
         loadedLocalPlugins = true
-        afterPluginsLoadedEvent.invoke(forceReload)
+        invokeAfterPluginsLoadedEvent(forceReload)
     }
 
     /** @return true if safe mode is enabled in any possible way. */
@@ -599,6 +710,12 @@ object PluginManager {
     private suspend fun loadPlugin(context: Context, file: File, data: PluginData, quiet: Boolean = false): Boolean = withContext(Dispatchers.IO) {
         val fileName = file.nameWithoutExtension
         val filePath = file.absolutePath
+        val alreadyLoaded = synchronized(plugins) { plugins.containsKey(filePath) }
+        if (alreadyLoaded) {
+            Log.i(TAG, "Plugin at $filePath already loaded (early check)")
+            Log.d(TAG, "Duplicate plugin-load prevention event for path: $filePath")
+            return@withContext true
+        }
         currentlyLoading = fileName
         Log.i(TAG, "Loading plugin: $data")
 
@@ -642,8 +759,10 @@ object PluginManager {
             // Sets with the proper version
             setPluginData(data.copy(version = version))
 
-            if (plugins.containsKey(filePath)) {
-                Log.i(TAG, "Plugin with name $name already exists")
+            val isDuplicate = synchronized(plugins) { plugins.containsKey(filePath) }
+            if (isDuplicate) {
+                Log.i(TAG, "Plugin with name $name already exists (late check)")
+                Log.d(TAG, "Duplicate plugin-load prevention event for path: $filePath")
                 return@withContext true
             }
 
@@ -677,6 +796,42 @@ object PluginManager {
             } else {
                 pluginInstance.load()
             }
+
+            // Persist plugin provider metadata to lazy cache for infrastructure verification
+            try {
+                APIHolder.allProviders.withLock {
+                    APIHolder.allProviders.filter { it.sourcePlugin == filePath }.forEach { provider ->
+                        val metadata = APIHolder.ProviderMetadata(
+                            internalName = data.internalName,
+                            name = provider.name,
+                            mainUrl = provider.mainUrl,
+                            lang = provider.lang,
+                            supportedTypesList = provider.supportedTypes.map { it.name },
+                            pluginClassName = manifest.pluginClassName ?: "",
+                            pluginFilePath = filePath,
+                            hasMainPage = provider.hasMainPage,
+                            hasQuickSearch = provider.hasQuickSearch,
+                            providerType = provider.providerType.name,
+                            vpnStatus = provider.vpnStatus.name,
+                            mainPageDataList = provider.mainPage,
+                            loadLinksTimeoutMs = provider.loadLinksTimeoutMs,
+                            getMainPageTimeoutMs = provider.getMainPageTimeoutMs,
+                            searchTimeoutMs = provider.searchTimeoutMs,
+                            quickSearchTimeoutMs = provider.quickSearchTimeoutMs,
+                            loadTimeoutMs = provider.loadTimeoutMs
+                        )
+                        val lazyState = APIHolder.LazyProviderState(
+                            metadata = metadata,
+                            state = APIHolder.ProviderLifecycleState.INITIALIZED
+                        )
+                        updateLazyMetadataCache(filePath, lazyState)
+                        Log.d(TAG, "Cached provider metadata into lazy storage for verification: ${provider.name}")
+                    }
+                }
+            } catch (t: Throwable) {
+                Log.e(TAG, "Failed to cache lazy provider metadata contract payload", t)
+            }
+
             Log.i(TAG, "Loaded plugin ${data.internalName} successfully")
             currentlyLoading = null
             true
@@ -719,6 +874,8 @@ object PluginManager {
         APIHolder.allProviders.withLock {
             APIHolder.allProviders.removeAll { provider -> provider.sourcePlugin == plugin.filename }
         }
+
+        invalidateLazyMetadata(absolutePath)
 
         extractorApis.withLock {
             extractorApis.removeAll { provider -> provider.sourcePlugin == plugin.filename }
@@ -847,7 +1004,7 @@ object PluginManager {
         showToast(activity.getString(R.string.starting_plugin_update_manually), Toast.LENGTH_LONG)
 
         ___DO_NOT_CALL_FROM_A_PLUGIN_loadAllOnlinePlugins(activity)
-        afterPluginsLoadedEvent.invoke(false)
+        invokeAfterPluginsLoadedEvent(false)
 
         val urls = RepositoryManager.getRepositories()
         val onlinePlugins = urls.toList().amap(concurrencyLimit = 5) {
@@ -906,7 +1063,7 @@ object PluginManager {
         }
 
         loadedOnlinePlugins = true
-        afterPluginsLoadedEvent.invoke(false)
+        invokeAfterPluginsLoadedEvent(false)
 
         Log.i("PluginManager", "Plugin update done!")
     }

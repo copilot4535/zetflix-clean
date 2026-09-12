@@ -18,6 +18,8 @@ import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.Coroutines.atomicListOf
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import com.lagradost.cloudstream3.utils.Coroutines.mainWork
 import com.lagradost.cloudstream3.utils.SubtitleHelper.fromCodeToLangTagIETF
 import com.lagradost.cloudstream3.utils.SubtitleHelper.fromLanguageToTagIETF
@@ -113,11 +115,147 @@ object APIHolder {
 
     val allProviders = atomicListOf<MainAPI>()
 
-    suspend fun initAll() {
-        val snapshot = allProviders.toList()
-        snapshot.amap(concurrencyLimit = 4) { api ->
-            api.init()
+    @Serializable
+    data class ProviderMetadata(
+        val internalName: String,
+        val name: String,
+        val mainUrl: String,
+        val lang: String,
+        val supportedTypesList: List<String>,
+        val pluginClassName: String,
+        val pluginFilePath: String,
+        val hasMainPage: Boolean,
+        val hasQuickSearch: Boolean,
+        val providerType: String,
+        val vpnStatus: String,
+        val mainPageDataList: List<MainPageData>,
+        val loadLinksTimeoutMs: Long?,
+        val getMainPageTimeoutMs: Long?,
+        val searchTimeoutMs: Long?,
+        val quickSearchTimeoutMs: Long?,
+        val loadTimeoutMs: Long?
+    )
+
+    enum class ProviderLifecycleState {
+        DISCOVERED,
+        LOADED,
+        INITIALIZED,
+        FAILED
+    }
+
+    @Serializable
+    data class LazyProviderState(
+        val metadata: ProviderMetadata,
+        val state: ProviderLifecycleState
+    )
+
+    abstract class MainApiLazyProxy : MainAPI() {
+        abstract val metadata: ProviderMetadata
+        
+        private var delegate: MainAPI? = null
+        private val lock = Mutex()
+        private var lifecycleState = ProviderLifecycleState.DISCOVERED
+
+        abstract suspend fun loadDelegate(): MainAPI
+
+        suspend fun resolve(): MainAPI {
+            delegate?.let { return it }
+            if (lifecycleState == ProviderLifecycleState.FAILED) {
+                throw Error("Provider ${metadata.name} previously failed to load")
+            }
+            return lock.withLock {
+                delegate?.let { return@withLock it }
+                if (lifecycleState == ProviderLifecycleState.FAILED) {
+                    throw Error("Provider ${metadata.name} previously failed to load")
+                }
+                try {
+                    val resolved = loadDelegate()
+                    delegate = resolved
+                    lifecycleState = ProviderLifecycleState.INITIALIZED
+                    resolved
+                } catch (t: Throwable) {
+                    lifecycleState = ProviderLifecycleState.FAILED
+                    throw t
+                }
+            }
         }
+
+        override var name: String
+            get() = metadata.name
+            set(_) {}
+        override var mainUrl: String
+            get() = metadata.mainUrl
+            set(_) {}
+        override var lang: String
+            get() = metadata.lang
+            set(_) {}
+        override val supportedTypes: Set<TvType>
+            get() = metadata.supportedTypesList.map { TvType.valueOf(it) }.toSet()
+        override val hasMainPage: Boolean
+            get() = metadata.hasMainPage
+        override val hasQuickSearch: Boolean
+            get() = metadata.hasQuickSearch
+        override val providerType: ProviderType
+            get() = ProviderType.valueOf(metadata.providerType)
+        override val vpnStatus: VPNStatus
+            get() = VPNStatus.valueOf(metadata.vpnStatus)
+        override val mainPage: List<MainPageData>
+            get() = metadata.mainPageDataList
+        override val loadLinksTimeoutMs: Long?
+            get() = metadata.loadLinksTimeoutMs
+        override val getMainPageTimeoutMs: Long?
+            get() = metadata.getMainPageTimeoutMs
+        override val searchTimeoutMs: Long?
+            get() = metadata.searchTimeoutMs
+        override val quickSearchTimeoutMs: Long?
+            get() = metadata.quickSearchTimeoutMs
+        override val loadTimeoutMs: Long?
+            get() = metadata.loadTimeoutMs
+
+        // Operations that must trigger resolution
+        override suspend fun load(url: String): LoadResponse? = resolve().load(url)
+        override suspend fun search(query: String, page: Int): SearchResponseList? = resolve().search(query, page)
+        override suspend fun quickSearch(query: String): List<SearchResponse>? = resolve().quickSearch(query)
+        override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? = resolve().getMainPage(page, request)
+        override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean = 
+            resolve().loadLinks(data, isCasting, subtitleCallback, callback)
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is MainAPI) return false
+            return metadata.name == other.name && metadata.mainUrl == other.mainUrl && metadata.lang == other.lang
+        }
+
+        override fun hashCode(): Int {
+            var result = metadata.name.hashCode()
+            result = 31 * result + metadata.mainUrl.hashCode()
+            result = 31 * result + metadata.lang.hashCode()
+            return result
+        }
+    }
+
+    suspend fun initAll() {
+        val snapshot = allProviders.withLock { allProviders.toList() }
+        val results = snapshot.amap(concurrencyLimit = 4) { api ->
+            if (api.isInitialized) {
+                // Already initialized during plugin registration, skip redundant work
+                true
+            } else {
+                try {
+                    api.init()
+                    // Log success with provider name
+                    println("APIHolder: Successfully initialized provider: ${api.name}")
+                    true
+                } catch (t: Throwable) {
+                    // Fail-safety isolation: log failure and continue with other providers
+                    println("APIHolder: Failed to initialize provider ${api.name}: ${t.message}")
+                    false
+                }
+            }
+        }
+        val successCount = results.count { it }
+        val failureCount = results.count { !it }
+        println("APIHolder: Provider initialization phase complete. successCount=$successCount failureCount=$failureCount")
         apiMap = null
     }
 
@@ -417,10 +555,11 @@ data class SettingsJson(
     @JsonProperty("enableAdult") @SerialName("enableAdult") val enableAdult: Boolean = false,
 )
 
+@Serializable
 data class MainPageData(
-    val name: String,
-    val data: String,
-    val horizontalImages: Boolean = false
+    @JsonProperty("name") @SerialName("name") val name: String,
+    @JsonProperty("data") @SerialName("data") val data: String,
+    @JsonProperty("horizontalImages") @SerialName("horizontalImages") val horizontalImages: Boolean = false
 )
 
 data class MainPageRequest(

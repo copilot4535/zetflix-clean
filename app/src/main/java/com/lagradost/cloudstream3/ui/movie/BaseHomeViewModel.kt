@@ -328,6 +328,7 @@ abstract class BaseHomeViewModel : ViewModel() {
     protected abstract val cacheKey: String?
 
     protected open fun load(): Job = ioSafe {
+        println("BaseHomeViewModel: load() invoked for api: $currentApiName")
         repo = null
 
         _apiName.postValue(currentApiName)
